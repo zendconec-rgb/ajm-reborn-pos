@@ -4398,68 +4398,110 @@
         }
 
         function buildEscPosReceiptBytes(trx) {
+            // Cetak native ESC/POS: printer membentuk huruf sendiri, bukan bitmap/PDF browser.
             const encoder = new TextEncoder();
-            const width = settings.paperSize === '80mm' ? 48 : 32;
-            const lineSep = '-'.repeat(width) + '\n';
+            const width = (settings.paperSize || settings.printPreset) === '80mm' ? 48 : 32;
             const payInfo = getTransactionPaymentBreakdown(trx);
-
             const chunks = [];
-            // Init printer ESC @
-            chunks.push(new Uint8Array([0x1B, 0x40]));
-            // Cash Drawer Kick ESC p 0 25 250 jika aktif
-            if (settings.printerOpenDrawer) {
-                chunks.push(new Uint8Array([0x1B, 0x70, 0x00, 0x19, 0xFA]));
+            const cmd = (...bytes) => chunks.push(new Uint8Array(bytes));
+            const safe = (value) => String(value ?? '')
+                .normalize('NFKD')
+                .replace(/[\\u0300-\\u036f]/g, '')
+                .replace(/[\\u2010-\\u2015\\u2212]/g, '-')
+                .replace(/[\\u2018\\u2019]/g, "'")
+                .replace(/[\\u201c\\u201d]/g, '"')
+                .replace(/[^\\x20-\\x7E\\n]/g, '?');
+            const text = (value) => chunks.push(encoder.encode(safe(value)));
+            const feed = (n = 1) => cmd(0x1B, 0x64, Math.max(0, Math.min(.feedLimit || 20, n)));
+            const wrap = (value, limit = width) => {
+                const words = safe(value).split(/\\s+/).filter(Boolean);
+                const lines = [];
+                let line = '';
+                words.forEach(word => {
+                    while (word.length > limit) {
+                        if (line) { lines.push(line); line = ''; }
+                        lines.push(word.slice(0, limit));
+                        word = word.slice(limit);
+                    }
+                    if (!word) return;
+                    const next = line ? line + ' ' + word : word;
+                    if (next.length > limit) { lines.push(line); line = word; }
+                    else line = next;
+                });
+                if (line) lines.push(line);
+                return lines.length ? lines : [''];
+            };
+            const line = (value = '') => { text(value + '\\n'); };
+            const wrapped = (value, indent = '') => wrap(value, Math.max(8, width - indent.length)).forEach((part, i) => line((i ? indent : '') + part));
+            const money = value => Number(value || 0).toLocaleString('id-ID');
+            const leftRight = (left, right) => {
+                const l = safe(left), r = safe(right);
+                const gap = Math.max(1, width - l.length - r.length);
+                if (l.length + r.length >= width) {
+                    wrapped(l);
+                    line(r.padStart(width));
+                } else line(l + ' '.repeat(gap) + r);
+            };
+
+            // Reset dan pilih font thermal bawaan printer (Font A), tanpa smoothing/bitmap.
+            cmd(0x1B, 0x40);             // ESC @ initialize
+            cmd(0x1B, 0x74, 0x00);       // ESC t 0: CP437 / ASCII-safe
+            cmd(0x1B, 0x4D, 0x00);       // ESC M 0: Font A
+            cmd(0x1B, 0x21, 0x00);       // ESC ! 0: normal size
+            cmd(0x1B, 0x32);             // ESC 2: default line spacing
+            cmd(0x1B, 0x45, 0x00);       // bold off
+            cmd(0x1B, 0x61, 0x01);       // center
+            cmd(0x1B, 0x45, 0x01);
+            wrapped(String(settings.storeName || 'AJM REBORN').toUpperCase());
+            cmd(0x1B, 0x45, 0x00);
+            wrapped(settings.storeAddress || '');
+            if (settings.storePhone) wrapped('Telp: ' + settings.storePhone);
+            if (settings.receiptHeader) wrapped(settings.receiptHeader);
+            line();
+
+            cmd(0x1B, 0x61, 0x00);       // left
+            leftRight('No Nota:', trx.invoice || '-');
+            leftRight('Tanggal:', formatDateTime(trx.date));
+            if (settings.cashierName || trx.cashier) leftRight('Kasir:', trx.cashier || settings.cashierName);
+            if (settings.showPlate) wrapped('Motor: ' + (trx.plateMotor || 'Umum'));
+            if (settings.showCustomerNameOnReceipt) {
+                const customerName = resolveCustomerDebtDisplayInfo(trx).customerName || 'Pelanggan Umum';
+                wrapped('Pelanggan: ' + customerName);
             }
-            // Center align ESC a 1
-            chunks.push(new Uint8Array([0x1B, 0x61, 0x01]));
-            chunks.push(encoder.encode(`${settings.storeName.toUpperCase()}\n`));
-            chunks.push(encoder.encode(`${settings.storeAddress}\n`));
-            chunks.push(encoder.encode(`Telp: ${settings.storePhone}\n`));
-            chunks.push(encoder.encode(lineSep));
+            if (settings.showMechanic) wrapped('Mekanik: ' + (trx.mechanic || 'Umum'));
+            line();
 
-            // Left align ESC a 0
-            chunks.push(new Uint8Array([0x1B, 0x61, 0x00]));
-            chunks.push(encoder.encode(`No   : ${trx.invoice}\n`));
-            chunks.push(encoder.encode(`Tgl  : ${formatDateTime(trx.date)}\n`));
-            chunks.push(encoder.encode(`Kasir: ${trx.cashier || settings.cashierName}\n`));
-            if (settings.showPlate) chunks.push(encoder.encode(`Motor: ${trx.plateMotor || 'Umum'}\n`));
-            if (settings.showMechanic) chunks.push(encoder.encode(`Mek  : ${trx.mechanic || 'Umum'}\n`));
-            chunks.push(encoder.encode(lineSep));
-
-            trx.items.forEach(it => {
-                chunks.push(encoder.encode(`${it.name}\n`));
-                const left = `${it.qty} x ${Number(it.price).toLocaleString('id-ID')}`;
-                const right = Number(it.price * it.qty).toLocaleString('id-ID');
-                const spaces = Math.max(1, width - left.length - right.length);
-                chunks.push(encoder.encode(left + ' '.repeat(spaces) + right + '\n'));
+            (Array.isArray(trx.items) ? trx.items : []).forEach(item => {
+                wrapped(item.name || 'Item');
+                const qty = Number(item.qty) || 1;
+                const unit = Number(item.price) || 0;
+                leftRight(qty + ' x ' + money(unit), money(qty * unit));
             });
+            line();
 
-            chunks.push(encoder.encode(lineSep));
-            chunks.push(encoder.encode(`TOTAL  : Rp ${Number(trx.total).toLocaleString('id-ID')}\n`));
-            chunks.push(encoder.encode(`BAYAR  : Rp ${Number(payInfo.paidAmount).toLocaleString('id-ID')} (${trx.paymentMethod})\n`));
-            if (trx.change > 0) chunks.push(encoder.encode(`KEMBALI: Rp ${Number(trx.change).toLocaleString('id-ID')}\n`));
-            if (payInfo.remainingDebt > 0) chunks.push(encoder.encode(`PIUTANG: Rp ${Number(payInfo.remainingDebt).toLocaleString('id-ID')}\n`));
-            chunks.push(encoder.encode(lineSep));
+            if (trx.subtotal !== undefined) leftRight('Subtotal', 'Rp ' + money(trx.subtotal));
+            if (Number(trx.discount) > 0) leftRight('Diskon', '-Rp ' + money(trx.discount));
+            if (Number(trx.tax) > 0) leftRight('Biaya/Pajak', 'Rp ' + money(trx.tax));
+            cmd(0x1B, 0x45, 0x01);
+            leftRight('TOTAL', 'Rp ' + money(trx.total));
+            cmd(0x1B, 0x45, 0x00);
+            if (settings.receiptShowPaymentMethod !== false) leftRight('Bayar:', 'Rp ' + money(payInfo.paidAmount));
+            if (Number(trx.change) > 0) leftRight('Kembalian:', 'Rp ' + money(trx.change));
+            if (payInfo.remainingDebt > 0) leftRight('Sisa Piutang:', 'Rp ' + money(payInfo.remainingDebt));
+            if (settings.receiptShowStatusBadge !== false) leftRight('Status:', String(trx.status || 'LUNAS').toUpperCase());
 
-            // Center footer
-            chunks.push(new Uint8Array([0x1B, 0x61, 0x01]));
-            chunks.push(encoder.encode(`${settings.receiptFooter || 'Terima kasih'}\n\n\n`));
-
-            // Auto-cut GS V 66 0
-            if (settings.printerAutoCut !== false) {
-                chunks.push(new Uint8Array([0x1D, 0x56, 0x42, 0x00]));
+            if (settings.receiptPromoNote && settings.receiptShowPromoNote !== false) {
+                line(); cmd(0x1B, 0x61, 0x01); wrapped(settings.receiptPromoNote); cmd(0x1B, 0x61, 0x00);
             }
-
-            const totalLen = chunks.reduce((s, a) => s + a.length, 0);
-            const merged = new Uint8Array(totalLen);
-            let offset = 0;
-            chunks.forEach(arr => {
-                merged.set(arr, offset);
-                offset += arr.length;
-            });
-            return merged;
+            if (settings.receiptFooter && settings.receiptShowFooter !== false) {
+                line(); cmd(0x1B, 0x61, 0x01); wrapped(settings.receiptFooter); cmd(0x1B, 0x61, 0x00);
+            }
+            cmd(0x1B, 0x61, 0x00);
+            cmd(0x1B, 0x45, 0x00);
+            feed(4);
+            if (settings.printerAutoCut !== false) cmd(0x1D, 0x56, 0x42, 0x00);
+            return new Uint8Array(chunks.reduce((all, part) => all.concat(Array.from(part)), []));
         }
-
         async function sendRawEscPosToConnectedPrinter(trx) {
             const copies = Math.max(1, Number(settings.printerCopies) || 1);
             const payload = buildEscPosReceiptBytes(trx);
@@ -4491,7 +4533,7 @@
             return false;
         }
 
-        function executeReceiptPrintAction() {
+        async function executeReceiptPrintAction() {
             const btn = document.getElementById('receipt-print-action');
             const label = document.getElementById('receipt-print-btn-label');
             const source = document.getElementById('printable-receipt-area');
@@ -4503,6 +4545,25 @@
 
             if (btn) btn.disabled = true;
             if (label) label.textContent = 'MENYIAPKAN CETAK...';
+
+            // Jika printer dipilih sebagai Bluetooth/USB, kirim teks ESC/POS langsung.
+            // Ini menghindari jalur PDF/browser yang pada printer thermal tertentu
+            // menyebabkan karakter berbayang, baris berulang, atau cetakan terputus.
+            const connectionType = settings.printerConnectionType || 'browser';
+            if (connectionType === 'bluetooth' || connectionType === 'usb') {
+                try {
+                    const sent = await sendRawEscPosToConnectedPrinter(activeReceiptTrx);
+                    if (sent) {
+                        if (btn) btn.disabled = false;
+                        if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                        return;
+                    }
+                    showToast('Printer belum tersambung langsung. Membuka dialog cetak sistem sebagai alternatif.', 'warning');
+                } catch (rawError) {
+                    console.error('Cetak ESC/POS langsung gagal:', rawError);
+                    showToast('Koneksi cetak langsung gagal. Mencoba dialog cetak sistem.', 'warning');
+                }
+            }
 
             const preset = settings.printPreset || settings.paperSize || '58mm';
             const paperWidthMm = preset === '58mm' ? 58 : preset === '80mm' ? 80 : Number(settings.customPaperWidth) || (preset === 'A4' ? 210 : preset === 'A5' ? 148 : preset === 'Letter' ? 215.9 : 58);
