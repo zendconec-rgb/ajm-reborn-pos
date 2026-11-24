@@ -8670,13 +8670,33 @@ window.addEventListener('afterprint', function () {
                 options: { scales: { x: { stacked: false, grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { size: 10 } }, border: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v) }, border: { display: false } } } }
             });
 
+            // Siapkan seluruh metode pembayaran dari pengaturan, termasuk yang belum pernah dipakai.
             const payment = { Tunai: 0, QRIS: 0, Transfer: 0, Piutang: 0 };
+            const paymentLists = getPaymentMethodLists();
+            paymentLists.transfer.forEach(name => { payment[`Transfer - ${name}`] = 0; });
+            paymentLists.ewallet.forEach(name => { payment[`E-Wallet - ${name}`] = 0; });
             list.forEach(t => {
                 const p = getTransactionPaymentBreakdown(t);
-                if (t.status === 'Piutang') { payment.Piutang += p.remainingDebt; if (p.paidAmount) payment[t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai')] = (payment[t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai')] || 0) + p.paidAmount; }
-                else payment[t.paymentMethod || 'Tunai'] = (payment[t.paymentMethod || 'Tunai'] || 0) + p.paidAmount;
+                if (t.status === 'Piutang') {
+                    payment.Piutang += p.remainingDebt;
+                    if (p.paidAmount) {
+                        const method = t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai');
+                        payment[method] = (payment[method] || 0) + p.paidAmount;
+                    }
+                } else {
+                    const method = t.paymentMethod || 'Tunai';
+                    payment[method] = (payment[method] || 0) + p.paidAmount;
+                }
             });
-            createReportChart('payment', 'rep-payment-chart', { type: 'doughnut', data: { labels: Object.keys(payment), datasets: [{ data: Object.values(payment), backgroundColor: ['#2563eb','#10b981','#8b5cf6','#f59e0b'], borderColor: '#fff', borderWidth: 4, hoverOffset: 9 }] }, options: { cutout: '68%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + reportChartMoney(ctx.raw) } } } } });
+            // Warna dibuat dari indeks label dengan jarak hue merata agar setiap metode selalu berbeda.
+            const paymentLabels = Object.keys(payment);
+            const paymentColors = paymentLabels.map((_, index) => {
+                const hue = Math.round((index * 137.508) % 360);
+                const saturation = 72;
+                const lightness = index % 3 === 0 ? 48 : (index % 3 === 1 ? 42 : 55);
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            });
+            createReportChart('payment', 'rep-payment-chart', { type: 'doughnut', data: { labels: paymentLabels, datasets: [{ data: paymentLabels.map(label => payment[label]), backgroundColor: paymentColors, borderColor: '#fff', borderWidth: 4, hoverOffset: 9 }] }, options: { cutout: '68%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + reportChartMoney(ctx.raw) } } } } });
 
             const mechanic = {};
             list.forEach(t => { const name = t.mechanic || 'Tanpa Mekanik'; mechanic[name] = (mechanic[name] || 0) + getTransactionPaymentBreakdown(t).total; });
