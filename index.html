@@ -4317,9 +4317,9 @@
                 }
             } else if (pType === 'usb') {
                 if (isUsbConnected) {
-                    nameLbl.textContent = `Terhubung USB: ${usbPrinterDevice.productName || 'USB Thermal Printer'} (${settings.paperSize})`;
+                    nameLbl.textContent = `Terhubung USB: ${qzPrinterName || 'USB Thermal Printer'} (${settings.paperSize})`;
                     hintLbl.textContent = 'Siap mencetak struk ESC/POS langsung via kabel USB.';
-                    pillEl.textContent = `USB: ${usbPrinterDevice.productName || 'Terhubung'}`;
+                    pillEl.textContent = `USB: ${qzPrinterName || 'Terhubung'}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat USB Thermal: Belum Terhubung';
@@ -4818,7 +4818,7 @@ window.addEventListener('afterprint', function () {
             if (prDot && prText) {
                 const pType = settings.printerConnectionType || 'browser';
                 const isBtConnected = isBluetoothPrinterConnected();
-                const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+                const isUsbConnected = Boolean(qzTrayConnected && qzPrinterName);
 
                 if (pType === 'bluetooth') {
                     prDot.className = isBtConnected ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
