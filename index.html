@@ -3307,7 +3307,7 @@
             printerAutoCut: true,
             printerOpenDrawer: false,
             printPreset: '58mm', customPaperWidth: 58, customPaperHeight: 100,
-            printFontSize: 10, printFontFamily: 'JetBrains Mono', printMargin: 3,
+            printFontSize: 11, printFontFamily: 'Arial', printMargin: 2,
             appTheme: 'blue', appFontFamily: 'Inter', appCompact: false, itemCodeType: 'EAN13', historyDeletePassword: '', paymentTransferMethods: ['BCA', 'BRI', 'BNI', 'Mandiri'], paymentEwalletMethods: ['QRIS', 'DANA', 'OVO', 'GoPay', 'ShopeePay']
         };
 
@@ -3632,6 +3632,13 @@
             customers = JSON.parse(localStorage.getItem(DB_KEYS.CUSTOMERS)) || JSON.parse(JSON.stringify(DEFAULT_CUSTOMERS));
             mechanics = JSON.parse(localStorage.getItem(DB_KEYS.MECHANICS)) || JSON.parse(JSON.stringify(DEFAULT_MECHANICS));
             settings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS)) || {});
+            // Migrasi hanya konfigurasi cetak bawaan versi lama; pilihan khusus pengguna tetap dipertahankan.
+            if (settings.printFontSize === 10 && settings.printFontFamily === 'JetBrains Mono' && settings.printMargin === 3) {
+                settings.printFontSize = 11;
+                settings.printFontFamily = 'Arial';
+                settings.printMargin = 2;
+                localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
+            }
             users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)) || JSON.parse(JSON.stringify(DEFAULT_USERS));
             currentSession = readPersistedSession();
             syncQueue = JSON.parse(localStorage.getItem(DB_KEYS.SYNC_QUEUE)) || [];
@@ -4590,7 +4597,8 @@
         function buildEscPosReceiptBytes(trx) {
             // Cetak native ESC/POS: printer membentuk huruf sendiri, bukan bitmap/PDF browser.
             const encoder = new TextEncoder();
-            const width = (settings.paperSize || settings.printPreset) === '80mm' ? 48 : 32;
+            const paperPreset = settings.printPreset || settings.paperSize || '58mm';
+            const width = paperPreset === '80mm' ? 48 : 32;
             const payInfo = getTransactionPaymentBreakdown(trx);
             const chunks = [];
             const cmd = (...bytes) => chunks.push(new Uint8Array(bytes));
@@ -4672,9 +4680,12 @@
             if (trx.subtotal !== undefined) leftRight('Subtotal', 'Rp ' + money(trx.subtotal));
             if (Number(trx.discount) > 0) leftRight('Diskon', '-Rp ' + money(trx.discount));
             if (Number(trx.tax) > 0) leftRight('Biaya/Pajak', 'Rp ' + money(trx.tax));
-            cmd(0x1B, 0x45, 0x01);
+            // Total dibuat tebal dan dua kali tinggi (bukan lebar) agar mudah dibaca pada kertas 58 mm.
+            cmd(0x1B, 0x21, 0x10);       // ESC !: double-height, normal-width
+            cmd(0x1B, 0x45, 0x01);       // bold on
             leftRight('TOTAL', 'Rp ' + money(trx.total));
-            cmd(0x1B, 0x45, 0x00);
+            cmd(0x1B, 0x45, 0x00);       // bold off
+            cmd(0x1B, 0x21, 0x00);       // normal size
             if (settings.receiptShowPaymentMethod !== false) leftRight('Bayar (' + (trx.paymentMethod || 'Tunai') + '):', 'Rp ' + money(payInfo.paidAmount));
             if (Number(trx.change) > 0) leftRight('Kembalian:', 'Rp ' + money(trx.change));
             if (payInfo.remainingDebt > 0) leftRight('Sisa Piutang:', 'Rp ' + money(payInfo.remainingDebt));
@@ -4800,7 +4811,7 @@
 @page { size: ${paperWidth} ${paperHeightMm}; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#fff; color:#000; }
-body { font-family: Arial, Helvetica, sans-serif; font-size:12px; font-weight:500; line-height:1.45; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body { font-family: Arial, Helvetica, sans-serif; font-size:10pt; font-weight:500; line-height:1.35; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 #paper { width:${paperWidth}; max-width:100%; margin:0; padding:2mm 2.2mm; overflow-wrap:anywhere; word-break:normal; color:#000; }
 .text-center { text-align:center; }
 .text-right { text-align:right; }
