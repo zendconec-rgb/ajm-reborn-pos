@@ -896,10 +896,10 @@
                     <span id="header-wo-badge" class="hidden absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <!-- Tombol Scan Barcode -->
-                <button onclick="openBarcodeModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs">
-                    <i data-lucide="scan-line" class="w-4 h-4"></i>
-                    <span class="hidden lg:inline">Scan</span>
+                <!-- Tombol Koneksi Printer USB -->
+                <button id="header-usb-connect-btn" type="button" onclick="connectUsbPrinter()" title="Hubungkan printer USB" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap">
+                    <i data-lucide="usb" class="w-4 h-4"></i>
+                    <span>Hubungkan USB</span>
                 </button>
 
                 <!-- Tombol Logout -->
@@ -4452,6 +4452,7 @@
                 qzTrayConnected = Boolean(window.qz && qz.websocket && qz.websocket.isActive());
                 qzPrinterName = '';
                 renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
                 const detail = [err?.name, err?.message].filter(Boolean).join(': ');
                 showToast(detail ? ('QZ Tray gagal — ' + detail) : 'QZ Tray tidak dapat dihubungi. Pastikan aplikasinya aktif.', 'warning');
             }
@@ -4811,6 +4812,19 @@ window.addEventListener('afterprint', function () {
         }
 
         function updateHardwareBadgesUI() {
+            const usbHeaderBtn = document.getElementById('header-usb-connect-btn');
+            if (usbHeaderBtn) {
+                const usbReady = Boolean(qzTrayConnected && qzPrinterName);
+                usbHeaderBtn.innerHTML = usbReady
+                    ? '<i data-lucide="usb" class="w-4 h-4"></i><span>USB Terhubung</span>'
+                    : '<i data-lucide="usb" class="w-4 h-4"></i><span>Hubungkan USB</span>';
+                usbHeaderBtn.title = usbReady ? ('Printer USB aktif: ' + qzPrinterName) : 'Klik untuk menghubungkan printer USB';
+                usbHeaderBtn.className = usbReady
+                    ? 'px-2.5 py-1.5 rounded-xl bg-emerald-400 text-emerald-950 hover:bg-emerald-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap'
+                    : 'px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap';
+                if (window.lucide) lucide.createIcons({ nodes: [usbHeaderBtn] });
+            }
+
             const scanDot = document.getElementById('header-scanner-dot');
             const scanText = document.getElementById('header-scanner-text');
             if (scanDot && scanText) {
