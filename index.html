@@ -16,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.3.0/qz-tray.js"></script>
     <script>
@@ -1536,6 +1537,33 @@
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm xl:col-span-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                    <div>
+                                        <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Tren Performa Keuangan</h3>
+                                        <p class="text-[11px] text-slate-500">Omzet, uang diterima, dan laba kotor sesuai periode laporan di atas</p>
+                                    </div>
+                                    <select id="rep-chart-style" onchange="renderFinancialReportCharts()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
+                                        <option value="line">Garis modern</option>
+                                        <option value="area">Area bertumpuk</option>
+                                        <option value="bar">Batang</option>
+                                    </select>
+                                </div>
+                                <div class="relative h-64 sm:h-72"><canvas id="rep-trend-chart"></canvas></div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                <h3 class="font-extrabold text-slate-800 text-xs mb-1">Komposisi Pembayaran</h3>
+                                <p class="text-[11px] text-slate-500 mb-3">Pembayaran tunai, QRIS, transfer, dan sisa piutang</p>
+                                <div class="relative h-60"><canvas id="rep-payment-chart"></canvas></div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                <h3 class="font-extrabold text-slate-800 text-xs mb-1">Peringkat Mekanik</h3>
+                                <p class="text-[11px] text-slate-500 mb-3">Omzet berdasarkan mekanik pada periode terpilih</p>
+                                <div class="relative h-60"><canvas id="rep-mechanic-chart"></canvas></div>
+                            </div>
+                        </div>
+
                         <div class="bg-white p-4 rounded-2xl border border-royal-200/90 shadow-xs space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                                 <div>
@@ -1632,6 +1660,11 @@
                                 <span>Catat Kas Baru</span>
                             </button>
                         </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-extrabold text-slate-800 text-sm">Tren Arus Kas Operasional</h3>
+                            <p class="text-[11px] text-slate-500 mb-3">Perbandingan kas masuk dan kas keluar berdasarkan catatan kas</p>
+                            <div class="relative h-64"><canvas id="rep-cashflow-chart"></canvas></div>
+                        </div>
                         <div id="cashflow-list" class="space-y-2"></div>
                     </div>
 
@@ -1640,6 +1673,11 @@
                         <div class="bg-white p-4 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 text-sm">Laporan Aktivitas Pelanggan</h3>
                             <p class="text-xs text-slate-500 mt-1">Ringkasan jumlah transaksi, total belanja, dan kunjungan setiap pelanggan berdasarkan data nota.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-extrabold text-slate-800 text-sm">Pelanggan dengan Nilai Transaksi Tertinggi</h3>
+                            <p class="text-[11px] text-slate-500 mb-3">Peringkat berdasarkan akumulasi belanja dari transaksi tercatat</p>
+                            <div class="relative h-64"><canvas id="rep-customer-chart"></canvas></div>
                         </div>
                         <div id="customer-report-list" class="space-y-2"></div>
                     </div>
@@ -1688,6 +1726,11 @@
                             </button>
                         </div>
 
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-extrabold text-slate-800 text-sm">Analisis Piutang Pelanggan</h3>
+                            <p class="text-[11px] text-slate-500 mb-3">Grafik mengikuti pilihan status dan pencarian pelanggan di atas</p>
+                            <div class="relative h-64"><canvas id="rep-debt-chart"></canvas></div>
+                        </div>
                         <div id="customer-receivables-list" class="space-y-3">
                             <!-- Kartu piutang per pelanggan dirender via JS -->
                         </div>
@@ -8294,7 +8337,7 @@ window.addEventListener('afterprint', function () {
             });
             if (tab === 'laporan-utama') renderFinancialReport();
             else if (tab === 'laporan-piutang') renderCustomerReceivablesReport();
-            else if (tab === 'kas-keuangan') renderCashflowList();
+            else if (tab === 'kas-keuangan') { renderCashflowList(); renderCashflowChart(); }
             else renderCustomerActivityReport();
         }
 
@@ -8311,6 +8354,7 @@ window.addEventListener('afterprint', function () {
                 if (new Date(t.date) > new Date(item.lastDate)) item.lastDate = t.date;
             });
             const rows = [...grouped.values()].sort((a,b) => b.total - a.total);
+            renderCustomerActivityChart(rows);
             if (!rows.length) { container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-5 text-center text-xs text-slate-500">Belum ada data transaksi pelanggan.</div>'; return; }
             container.innerHTML = rows.map((c,i) => `
                 <div class="bg-white rounded-xl border border-slate-200 p-3 flex items-center justify-between gap-3">
@@ -8426,6 +8470,7 @@ window.addEventListener('afterprint', function () {
                 return matchHeader || matchInv;
             });
 
+            renderReceivablesChart(filteredGroups);
             const listEl = document.getElementById('customer-receivables-list');
             if (filteredGroups.length === 0) {
                 listEl.innerHTML = `
@@ -8536,6 +8581,113 @@ window.addEventListener('afterprint', function () {
             const csvContent = '\uFEFF' + rows.map(r => r.map(escapeCsvValue).join(';')).join('\r\n');
             downloadXlsx(rows, `laporan_piutang_pelanggan_ajm_reborn_${new Date().toISOString().slice(0,10)}.xlsx`, 'Piutang');
             showToast('Laporan piutang pelanggan (Excel) berhasil diunduh!');
+        }
+
+        // Grafik laporan interaktif — seluruh dataset dibentuk dari filter laporan aktif.
+        const reportChartInstances = {};
+        function destroyReportChart(key) {
+            if (reportChartInstances[key]) { reportChartInstances[key].destroy(); delete reportChartInstances[key]; }
+        }
+        function reportChartMoney(value) {
+            const n = Number(value) || 0;
+            return n >= 1000000 ? 'Rp ' + (n / 1000000).toFixed(1).replace('.', ',') + ' jt' : n >= 1000 ? 'Rp ' + Math.round(n / 1000) + ' rb' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
+        }
+        function createReportChart(key, canvasId, config) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            destroyReportChart(key);
+            if (typeof Chart === 'undefined') {
+                const parent = canvas.parentElement;
+                if (parent) parent.innerHTML = '<p class="text-xs text-slate-400 text-center py-12">Pustaka grafik belum termuat. Periksa koneksi internet lalu muat ulang.</p>';
+                return;
+            }
+            const common = {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16, color: '#475569', font: { family: 'Inter', size: 10, weight: '600' } } },
+                    tooltip: { backgroundColor: '#0f172a', padding: 11, cornerRadius: 10, titleFont: { family: 'Inter', weight: '700' }, bodyFont: { family: 'Inter', size: 11 },
+                        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + reportChartMoney(ctx.parsed.y ?? ctx.parsed) } }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { family: 'Inter', size: 10 } }, border: { display: false } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v), font: { family: 'Inter', size: 9 } }, border: { display: false } }
+                }
+            };
+            reportChartInstances[key] = new Chart(canvas, { ...config, options: { ...common, ...(config.options || {}), plugins: { ...common.plugins, ...(config.options?.plugins || {}) }, scales: config.options?.scales || common.scales } });
+        }
+
+        function renderFinancialReportCharts() {
+            const period = activeReportPeriod || 'all';
+            const list = transactions.filter(t => t.status !== 'Batal' && filterByPeriod(t.date, period));
+            const bucketMap = new Map();
+            const dateKey = d => {
+                const x = new Date(d);
+                if (period === 'today') return String(x.getHours()).padStart(2, '0') + ':00';
+                if (period === 'month') return String(x.getDate()).padStart(2, '0') + ' ' + x.toLocaleDateString('id-ID', { month: 'short' });
+                return x.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+            };
+            list.forEach(t => {
+                const key = dateKey(t.date);
+                if (!bucketMap.has(key)) bucketMap.set(key, { omzet: 0, paid: 0, profit: 0, sort: new Date(t.date).getTime() });
+                const row = bucketMap.get(key);
+                const pay = getTransactionPaymentBreakdown(t);
+                row.omzet += pay.total; row.paid += pay.paidAmount;
+                (t.items || []).forEach(item => { row.profit += (Number(item.price) - Number(item.cost || 0)) * Number(item.qty || 0); });
+            });
+            const buckets = [...bucketMap.entries()].sort((a,b) => a[1].sort - b[1].sort);
+            const style = document.getElementById('rep-chart-style')?.value || 'line';
+            const chartType = style === 'bar' ? 'bar' : 'line';
+            const area = style === 'area';
+            createReportChart('trend', 'rep-trend-chart', {
+                type: chartType,
+                data: { labels: buckets.map(x => x[0]), datasets: [
+                    { label: 'Omzet', data: buckets.map(x => x[1].omzet), borderColor: '#2563eb', backgroundColor: chartType === 'bar' ? 'rgba(37,99,235,.78)' : 'rgba(37,99,235,.12)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 },
+                    { label: 'Diterima', data: buckets.map(x => x[1].paid), borderColor: '#10b981', backgroundColor: chartType === 'bar' ? 'rgba(16,185,129,.78)' : 'rgba(16,185,129,.10)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 },
+                    { label: 'Laba Kotor Item', data: buckets.map(x => x[1].profit), borderColor: '#f59e0b', backgroundColor: chartType === 'bar' ? 'rgba(245,158,11,.78)' : 'rgba(245,158,11,.08)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: false, pointRadius: 2.5 }
+                ] },
+                options: { scales: { x: { stacked: false, grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { size: 10 } }, border: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v) }, border: { display: false } } } }
+            });
+
+            const payment = { Tunai: 0, QRIS: 0, Transfer: 0, Piutang: 0 };
+            list.forEach(t => {
+                const p = getTransactionPaymentBreakdown(t);
+                if (t.status === 'Piutang') { payment.Piutang += p.remainingDebt; if (p.paidAmount) payment[t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai')] = (payment[t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai')] || 0) + p.paidAmount; }
+                else payment[t.paymentMethod || 'Tunai'] = (payment[t.paymentMethod || 'Tunai'] || 0) + p.paidAmount;
+            });
+            createReportChart('payment', 'rep-payment-chart', { type: 'doughnut', data: { labels: Object.keys(payment), datasets: [{ data: Object.values(payment), backgroundColor: ['#2563eb','#10b981','#8b5cf6','#f59e0b'], borderColor: '#fff', borderWidth: 4, hoverOffset: 9 }] }, options: { cutout: '68%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + reportChartMoney(ctx.raw) } } } } });
+
+            const mechanic = {};
+            list.forEach(t => { const name = t.mechanic || 'Tanpa Mekanik'; mechanic[name] = (mechanic[name] || 0) + getTransactionPaymentBreakdown(t).total; });
+            const topMechanics = Object.entries(mechanic).sort((a,b) => b[1]-a[1]).slice(0,8);
+            createReportChart('mechanic', 'rep-mechanic-chart', { type: 'bar', data: { labels: topMechanics.map(x => x[0]), datasets: [{ label: 'Omzet', data: topMechanics.map(x => x[1]), backgroundColor: ['#2563eb','#0d9488','#8b5cf6','#f59e0b','#64748b','#06b6d4','#84cc16','#ec4899'], borderRadius: 8, borderSkipped: false }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { callback: v => reportChartMoney(v), font: { size: 9 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } } });
+        }
+
+        function renderReceivablesChart(groups) {
+            const rows = [...groups].sort((a,b) => b.totalRemaining - a.totalRemaining).slice(0,10);
+            createReportChart('debt', 'rep-debt-chart', { type: 'bar', data: { labels: rows.map(g => g.customerName.length > 18 ? g.customerName.slice(0,17)+'…' : g.customerName), datasets: [
+                { label: 'Sisa Piutang', data: rows.map(g => g.totalRemaining), backgroundColor: '#f59e0b', borderRadius: 7 },
+                { label: 'Sudah Dibayar', data: rows.map(g => g.totalPaid), backgroundColor: '#10b981', borderRadius: 7 }
+            ] }, options: { indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { callback: v => reportChartMoney(v) } }, y: { grid: { display: false } } } } });
+        }
+
+        function renderCustomerActivityChart(rows) {
+            const top = rows.slice(0,10);
+            createReportChart('customers', 'rep-customer-chart', { type: 'bar', data: { labels: top.map(c => c.name.length > 18 ? c.name.slice(0,17)+'…' : c.name), datasets: [{ label: 'Total Belanja', data: top.map(c => c.total), backgroundColor: '#2563eb', borderRadius: 7 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { callback: v => reportChartMoney(v) } }, y: { grid: { display: false } } } } });
+        }
+
+        function renderCashflowChart() {
+            const buckets = new Map();
+            cashflows.forEach(cf => {
+                const d = new Date(cf.date); const key = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+                if (!buckets.has(key)) buckets.set(key, { masuk: 0, keluar: 0, sort: d.getTime() });
+                const row = buckets.get(key); if (cf.type === 'Masuk') row.masuk += Number(cf.amount)||0; else row.keluar += Number(cf.amount)||0;
+            });
+            const rows = [...buckets.entries()].sort((a,b) => a[1].sort-b[1].sort);
+            createReportChart('cashflow', 'rep-cashflow-chart', { type: 'bar', data: { labels: rows.map(x=>x[0]), datasets: [
+                { label: 'Kas Masuk', data: rows.map(x=>x[1].masuk), backgroundColor: '#10b981', borderRadius: 7 },
+                { label: 'Kas Keluar', data: rows.map(x=>x[1].keluar), backgroundColor: '#f43f5e', borderRadius: 7 }
+            ] } });
         }
 
         function setReportPeriod(period) {
@@ -8777,6 +8929,7 @@ window.addEventListener('afterprint', function () {
                         <span class="font-extrabold text-royal-600">${formatRupiah(data.omzet)}</span>
                     </div>
                 `).join('');
+            renderFinancialReportCharts();
         }
 
         function openCashflowModal() {
@@ -8820,6 +8973,7 @@ window.addEventListener('afterprint', function () {
                 </div>
             `).join('');
             lucide.createIcons();
+            renderCashflowChart();
         }
 
         function deleteCashflow(id) {
