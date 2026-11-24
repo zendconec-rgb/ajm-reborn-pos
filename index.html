@@ -4411,6 +4411,23 @@
                 return;
             }
             try {
+                // QZ Tray signing: sertifikat publik dan tanda tangan diambil dari helper lokal laptop.
+                qz.security.setCertificatePromise(function(resolve, reject) {
+                    fetch('http://127.0.0.1:8181/certificate', { cache: 'no-store' })
+                        .then(response => response.ok ? response.text() : Promise.reject(new Error('Sertifikat lokal tidak dapat dibaca')))
+                        .then(resolve).catch(reject);
+                });
+                qz.security.setSignatureAlgorithm('SHA512');
+                qz.security.setSignaturePromise(function(toSign) {
+                    return function(resolve, reject) {
+                        fetch('http://127.0.0.1:8181/sign', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ toSign: toSign })
+                        }).then(response => response.ok ? response.text() : Promise.reject(new Error('Penandatanganan lokal gagal')))
+                          .then(resolve).catch(reject);
+                    };
+                });
                 if (!qz.websocket.isActive()) await qz.websocket.connect({ retries: 2, delay: 1 });
                 qzTrayConnected = true;
                 const printers = await qz.printers.find();
