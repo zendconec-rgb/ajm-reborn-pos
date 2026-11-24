@@ -133,7 +133,9 @@ public class MainActivity extends Activity {
                 disconnectInternal();
                 BluetoothDevice device;
                 try {
-                    bluetoothAdapter.cancelDiscovery();
+                    // No discovery is started by this app. Avoid cancelDiscovery(),
+                    // which requires BLUETOOTH_SCAN on Android 12+ and is unnecessary
+                    // when connecting to an already paired RPP210A device.
                     device = bluetoothAdapter.getRemoteDevice(address);
                     Exception lastError = null;
                     BluetoothSocket connected = null;
