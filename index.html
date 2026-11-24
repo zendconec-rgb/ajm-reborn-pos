@@ -1846,6 +1846,26 @@
                         </button>
                     </div>
 
+                    <!-- Android Native Bluetooth Classic SPP Bridge -->
+                    <div id="ajm-native-printer-card" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-3 mb-3 text-xs">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div>
+                                <p class="font-extrabold text-indigo-900">Bluetooth Android Langsung (SPP)</p>
+                                <p class="text-[11px] text-indigo-700">Untuk PANDA PRJ-58D / RPP210A. Pasangkan printer terlebih dahulu melalui Pengaturan Bluetooth Android.</p>
+                            </div>
+                            <span id="ajm-native-printer-status" class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">Belum terhubung</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <select id="ajm-native-printer-select" class="flex-1 min-w-0 border border-indigo-200 rounded-xl px-3 py-2 bg-white text-slate-800">
+                                <option value="">Muat perangkat Bluetooth tersimpan</option>
+                            </select>
+                            <button type="button" onclick="refreshNativeBluetoothDevices()" class="px-3 py-2 rounded-xl bg-indigo-700 text-white font-bold">Muat Perangkat</button>
+                            <button type="button" onclick="connectNativeBluetoothPrinter()" class="px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold">Hubungkan SPP</button>
+                            <button type="button" onclick="disconnectNativeBluetoothPrinter()" class="px-3 py-2 rounded-xl bg-rose-100 text-rose-700 font-bold">Putuskan</button>
+                        </div>
+                        <p id="ajm-native-printer-message" class="mt-2 text-[11px] text-indigo-800">Komponen Android native belum diperiksa.</p>
+                    </div>
+
                     <!-- Bar Status & Tombol Pairing Perangkat Printer -->
                     <div class="bg-slate-50 border border-slate-200/90 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                         <div>
@@ -3215,6 +3235,8 @@
         let cameraDetectTimer = null;
 
         let btPrinterDevice = null;
+        let ajmNativePrinterConnected = false;
+        let ajmNativePrinterName = "";
         let btPrinterCharacteristic = null;
         let usbPrinterDevice = null;
         let usbPrinterEndpoint = null;
@@ -4179,12 +4201,13 @@
 
             if (!nameLbl) return;
 
-            const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+            const isBtConnected = Boolean((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) || (isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true'));
+            const isNativeBtConnected = Boolean(isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true');
             const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
 
             btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected);
             btnUsb.classList.toggle('hidden', pType !== 'usb' || isUsbConnected);
-            btnDisc.classList.toggle('hidden', !(isBtConnected || isUsbConnected));
+            btnDisc.classList.toggle('hidden', !(isBtConnected || isNativeBtConnected || isUsbConnected));
 
             if (pType === 'browser') {
                 nameLbl.textContent = `Perangkat Aktif: Printer Sistem / OS (${settings.paperSize})`;
@@ -4192,7 +4215,12 @@
                 pillEl.textContent = `Printer Sistem (${settings.paperSize})`;
                 pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
             } else if (pType === 'bluetooth') {
-                if (isBtConnected) {
+                if (isNativeBtConnected) {
+                    nameLbl.textContent = 'Terhubung Bluetooth SPP: ' + (ajmNativePrinterName || 'RPP210A') + ' (' + settings.paperSize + ')';
+                    hintLbl.textContent = 'Terhubung melalui Bluetooth Classic SPP Android. Cetak ESC/POS langsung tanpa RawBT.';
+                    pillEl.textContent = 'BT SPP: ' + (ajmNativePrinterName || 'Terhubung');
+                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
+                } else if (isBtConnected) {
                     nameLbl.textContent = `Terhubung Bluetooth: ${btPrinterDevice.name || 'Thermal Printer BT'} (${settings.paperSize})`;
                     hintLbl.textContent = 'Terhubung via BLE/GATT. Cetak ESC/POS langsung jika printer mendukung karakteristik tulis.';
                     pillEl.textContent = `BT: ${btPrinterDevice.name || 'Terhubung'}`;
@@ -4224,6 +4252,87 @@
             document.getElementById('set-printer-autoprint').checked = Boolean(settings.printerAutoPrint);
             document.getElementById('set-printer-autocut').checked = settings.printerAutoCut !== false;
             document.getElementById('set-printer-drawer').checked = Boolean(settings.printerOpenDrawer);
+        }
+
+        // Android native Bluetooth Classic SPP bridge (AJM companion APK).
+        function isAjmNativePrinterAvailable() {
+            return !!(window.AJMNativePrinter && window.AJMNativePrinter.isAvailable && window.AJMNativePrinter.isAvailable() === 'true');
+        }
+
+        function refreshNativeBluetoothDevices() {
+            const card = document.getElementById('ajm-native-printer-card');
+            const select = document.getElementById('ajm-native-printer-select');
+            const msg = document.getElementById('ajm-native-printer-message');
+            if (!isAjmNativePrinterAvailable()) {
+                if (card) card.classList.add('hidden');
+                showToast('Fitur Bluetooth SPP memerlukan aplikasi pendamping AJM Android.', 'warning');
+                return;
+            }
+            if (card) card.classList.remove('hidden');
+            try {
+                const devices = JSON.parse(window.AJMNativePrinter.getBondedDevices() || '[]');
+                select.innerHTML = '<option value="">Pilih printer yang sudah dipasangkan</option>';
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.address;
+                    option.textContent = device.name + ' (' + device.address + ')';
+                    if ((device.name || '').toUpperCase().includes('RPP210A')) option.selected = true;
+                    select.appendChild(option);
+                });
+                msg.textContent = devices.length ? devices.length + ' perangkat tersimpan ditemukan. Pilih RPP210A lalu tekan Hubungkan SPP.' : 'Belum ada perangkat Bluetooth tersimpan atau izin Nearby Devices belum diberikan. Pasangkan RPP210A di Pengaturan Android.';
+            } catch (error) {
+                msg.textContent = 'Gagal membaca perangkat Bluetooth: ' + (error.message || error);
+            }
+        }
+
+        function connectNativeBluetoothPrinter() {
+            if (!isAjmNativePrinterAvailable()) return showToast('Buka AJM melalui aplikasi pendamping Android.', 'warning');
+            const select = document.getElementById('ajm-native-printer-select');
+            const address = select && select.value;
+            if (!address) return showToast('Pilih RPP210A dari daftar perangkat Bluetooth tersimpan.', 'warning');
+            const msg = document.getElementById('ajm-native-printer-message');
+            msg.textContent = 'Menghubungkan Bluetooth Classic SPP...';
+            const result = window.AJMNativePrinter.connectBluetooth(address);
+            if (String(result).startsWith('ERROR:')) msg.textContent = String(result).slice(6);
+            else msg.textContent = 'Permintaan koneksi dikirim. Tunggu status berhasil atau pesan kesalahan.';
+        }
+
+        function disconnectNativeBluetoothPrinter() {
+            if (!isAjmNativePrinterAvailable()) return;
+            window.AJMNativePrinter.disconnect();
+        }
+
+        window.ajmNativePrinterStatus = function(raw) {
+            try {
+                const data = JSON.parse(raw);
+                const pill = document.getElementById('ajm-native-printer-status');
+                const msg = document.getElementById('ajm-native-printer-message');
+                ajmNativePrinterConnected = data.status === 'connected';
+                if (ajmNativePrinterConnected) {
+                    ajmNativePrinterName = data.message || 'RPP210A';
+                    settings.printerConnectionType = 'bluetooth';
+                    savePrinterSettingsLive();
+                    if (pill) { pill.textContent = 'SPP Terhubung'; pill.className = 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold'; }
+                    if (msg) msg.textContent = 'Terhubung ke ' + ajmNativePrinterName + '. Siap mengirim struk ESC/POS.';
+                    showToast('Bluetooth SPP terhubung: ' + ajmNativePrinterName);
+                } else {
+                    ajmNativePrinterConnected = false;
+                    if (pill) { pill.textContent = data.status === 'error' ? 'Koneksi gagal' : 'Belum terhubung'; pill.className = 'px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold'; }
+                    if (msg) msg.textContent = data.message || 'Printer belum terhubung.';
+                    if (data.status === 'error') showToast(data.message || 'Koneksi Bluetooth gagal.', 'error');
+                }
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+            } catch (e) { console.warn('Status native printer tidak valid', e); }
+        };
+
+        function ajmBytesToBase64(bytes) {
+            let binary = '';
+            const chunk = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunk) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+            }
+            return btoa(binary);
         }
 
         async function connectBluetoothPrinter() {
@@ -4480,6 +4589,20 @@
             const copies = Math.max(1, Number(settings.printerCopies) || 1);
             const payload = buildEscPosReceiptBytes(trx);
 
+            if (settings.printerConnectionType === 'bluetooth' && isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true') {
+                const encoded = ajmBytesToBase64(payload);
+                for (let c = 0; c < copies; c++) {
+                    const result = window.AJMNativePrinter.sendBase64(encoded);
+                    if (result !== 'OK') throw new Error(String(result).replace(/^ERROR:/, ''));
+                }
+                showToast('Struk (' + copies + 'x) terkirim langsung melalui Bluetooth SPP!');
+                return true;
+            }
+
+
+            const copies = Math.max(1, Number(settings.printerCopies) || 1);
+            const payload = buildEscPosReceiptBytes(trx);
+
             if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
                 for (let c = 0; c < copies; c++) {
                     const chunkSize = 100;
@@ -4524,7 +4647,7 @@
             // tersambung melalui BLE/GATT atau USB. Bluetooth Classic SPP Android
             // tidak dapat diakses langsung oleh browser; gunakan dialog sistem/RawBT.
             const directReady =
-                (settings.printerConnectionType === 'bluetooth' && btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) ||
+                (settings.printerConnectionType === 'bluetooth' && ((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) || (isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true'))) ||
                 (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened);
             if (settings.printerConnectionType === 'usb' && !(usbPrinterDevice && usbPrinterDevice.opened)) {
                 showToast('Printer USB belum aktif. Buka Pengaturan Printer lalu tekan Aktifkan Printer via USB.', 'warning');
