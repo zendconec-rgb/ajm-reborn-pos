@@ -3312,6 +3312,9 @@
 
         let btPrinterDevice = null;
         let btPrinterCharacteristic = null;
+        // Bluetooth Classic SPP via Web Serial (Chrome Android 138+ / desktop).
+        let btSerialPort = null;
+        let btSerialPortLabel = '';
         let usbPrinterDevice = null;
         let usbPrinterEndpoint = null;
 
@@ -4257,6 +4260,16 @@
             renderPrinterSettingsUI();
         }
 
+        function isBluetoothPrinterConnected() {
+            const serialConnected = Boolean(btSerialPort && btSerialPort.readable && btSerialPort.writable);
+            const bleConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic);
+            return serialConnected || bleConnected;
+        }
+
+        function getBluetoothPrinterLabel() {
+            return btSerialPort ? (btSerialPortLabel || 'Bluetooth SPP') : (btPrinterDevice && btPrinterDevice.name) || 'Thermal Printer BT';
+        }
+
         function renderPrinterSettingsUI() {
             const pType = settings.printerConnectionType || 'browser';
             document.querySelectorAll('.printer-type-card').forEach(card => {
@@ -4275,7 +4288,7 @@
 
             if (!nameLbl) return;
 
-            const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+            const isBtConnected = isBluetoothPrinterConnected();
             const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
 
             btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected);
@@ -4284,14 +4297,14 @@
 
             if (pType === 'browser') {
                 nameLbl.textContent = `Perangkat Aktif: Printer Sistem / OS (${settings.paperSize})`;
-                hintLbl.textContent = 'Menggunakan dialog cetak bawaan Android/Windows atau aplikasi RawBT Bluetooth Print.';
+                hintLbl.textContent = 'Menggunakan dialog cetak bawaan Android/Windows.';
                 pillEl.textContent = `Printer Sistem (${settings.paperSize})`;
                 pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
             } else if (pType === 'bluetooth') {
                 if (isBtConnected) {
-                    nameLbl.textContent = `Terhubung Bluetooth: ${btPrinterDevice.name || 'Thermal Printer BT'} (${settings.paperSize})`;
-                    hintLbl.textContent = 'Siap mencetak struk ESC/POS langsung ke printer Bluetooth.';
-                    pillEl.textContent = `BT: ${btPrinterDevice.name || 'Terhubung'}`;
+                    nameLbl.textContent = `Terhubung Bluetooth: ${getBluetoothPrinterLabel()} (${settings.paperSize})`;
+                    hintLbl.textContent = 'Siap mencetak ESC/POS langsung melalui Bluetooth Classic SPP / BLE.';
+                    pillEl.textContent = `BT: ${getBluetoothPrinterLabel()}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat Bluetooth: Belum Dipasangkan';
@@ -4323,8 +4336,36 @@
         }
 
         async function connectBluetoothPrinter() {
+            // Prioritaskan Bluetooth Classic SPP. Chrome Android 138+ mendukung
+            // Web Serial RFCOMM sehingga printer ESC/POS dapat menerima byte mentah.
+            if (navigator.serial && typeof navigator.serial.requestPort === 'function') {
+                try {
+                    const port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 9600 });
+                    btSerialPort = port;
+                    btSerialPortLabel = 'Bluetooth Classic SPP';
+                    port.addEventListener('disconnect', () => {
+                        btSerialPort = null;
+                        btSerialPortLabel = '';
+                        renderPrinterSettingsUI();
+                        updateHardwareBadgesUI();
+                    });
+                    renderPrinterSettingsUI();
+                    updateHardwareBadgesUI();
+                    showToast('Printer Bluetooth Classic SPP terhubung! Siap menerima ESC/POS.');
+                    return;
+                } catch (serialErr) {
+                    if (serialErr && serialErr.name === 'NotFoundError') {
+                        showToast('Pemilihan printer dibatalkan.', 'warning');
+                        return;
+                    }
+                    console.warn('Bluetooth SPP / Web Serial gagal:', serialErr);
+                    // Jika browser tidak dapat membuka port SPP, lanjutkan ke BLE.
+                }
+            }
+
             if (!navigator.bluetooth) {
-                showToast('Web Bluetooth tidak didukung di browser ini. Gunakan Chrome Android/Desktop atau mode Printer Sistem.', 'warning');
+                showToast('Bluetooth langsung tidak tersedia. Gunakan Chrome Android 138+ dan pastikan printer mendukung SPP/RFCOMM.', 'warning');
                 return;
             }
             try {
@@ -4342,6 +4383,11 @@
                         break;
                     }
                 }
+                if (!btPrinterCharacteristic) {
+                    try { device.gatt.disconnect(); } catch (e) {}
+                    showToast('Printer BLE terhubung tetapi layanan tulis ESC/POS tidak ditemukan.', 'warning');
+                    return;
+                }
                 btPrinterDevice = device;
                 device.addEventListener('gattserverdisconnected', () => {
                     btPrinterCharacteristic = null;
@@ -4350,7 +4396,7 @@
                 });
                 renderPrinterSettingsUI();
                 updateHardwareBadgesUI();
-                showToast(`Printer Bluetooth "${device.name || 'Thermal'}" terhubung!`);
+                showToast(`Printer Bluetooth BLE "${device.name || 'Thermal'}" terhubung!`);
             } catch (err) {
                 showToast('Pemasangan printer Bluetooth dibatalkan atau gagal', 'warning');
             }
@@ -4381,6 +4427,11 @@
         }
 
         async function disconnectHardwarePrinter() {
+            if (btSerialPort) {
+                try { await btSerialPort.close(); } catch (e) {}
+                btSerialPort = null;
+                btSerialPortLabel = '';
+            }
             if (btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) {
                 try { btPrinterDevice.gatt.disconnect(); } catch (e) {}
             }
@@ -4510,6 +4561,19 @@
             const copies = Math.max(1, Number(settings.printerCopies) || 1);
             const payload = buildEscPosReceiptBytes(trx);
 
+            if (settings.printerConnectionType === 'bluetooth' && btSerialPort && btSerialPort.writable) {
+                const writer = btSerialPort.writable.getWriter();
+                try {
+                    for (let c = 0; c < copies; c++) {
+                        await writer.write(payload);
+                    }
+                } finally {
+                    writer.releaseLock();
+                }
+                showToast(`Struk (${copies}x) terkirim langsung via Bluetooth SPP!`);
+                return true;
+            }
+
             if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
                 for (let c = 0; c < copies; c++) {
                     const chunkSize = 20;
@@ -4522,7 +4586,7 @@
                         }
                     }
                 }
-                showToast(`Struk (${copies}x) terkirim ke Printer Bluetooth!`);
+                showToast(`Struk (${copies}x) terkirim ke Printer Bluetooth BLE!`);
                 return true;
             }
 
@@ -4734,7 +4798,7 @@ window.addEventListener('afterprint', function () {
             const prText = document.getElementById('header-printer-text');
             if (prDot && prText) {
                 const pType = settings.printerConnectionType || 'browser';
-                const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+                const isBtConnected = isBluetoothPrinterConnected();
                 const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
 
                 if (pType === 'bluetooth') {
