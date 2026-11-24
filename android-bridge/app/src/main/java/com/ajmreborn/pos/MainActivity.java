@@ -130,19 +130,42 @@ public class MainActivity extends Activity {
             if (!hasConnectPermission()) { main.post(() -> requestBluetoothPermissionIfNeeded()); return "ERROR:Izin Bluetooth belum diberikan"; }
             if (address == null || !address.matches("(?i)[0-9A-F]{2}(:[0-9A-F]{2}){5}")) return "ERROR:Alamat printer tidak valid";
             io.execute(() -> {
+                disconnectInternal();
+                BluetoothDevice device;
                 try {
-                    disconnectInternal();
-                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-                    BluetoothSocket candidate = device.createRfcommSocketToServiceRecord(SPP_UUID);
-                    candidate.connect();
+                    bluetoothAdapter.cancelDiscovery();
+                    device = bluetoothAdapter.getRemoteDevice(address);
+                    Exception lastError = null;
+                    BluetoothSocket connected = null;
+                    // Try standard secure SPP first, then insecure SPP for printer modules
+                    // that expose the serial profile without secure RFCOMM pairing.
+                    for (int mode = 0; mode < 2 && connected == null; mode++) {
+                        BluetoothSocket candidate = null;
+                        try {
+                            candidate = mode == 0
+                                    ? device.createRfcommSocketToServiceRecord(SPP_UUID)
+                                    : device.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
+                            final BluetoothSocket timeoutSocket = candidate;
+                            Runnable timeout = () -> { try { timeoutSocket.close(); } catch (Exception ignored) { } };
+                            main.postDelayed(timeout, 12000);
+                            try { candidate.connect(); }
+                            finally { main.removeCallbacks(timeout); }
+                            connected = candidate;
+                        } catch (Exception e) {
+                            lastError = e;
+                            try { if (candidate != null) candidate.close(); } catch (Exception ignored) { }
+                        }
+                    }
+                    if (connected == null) throw lastError == null ? new Exception("Printer tidak merespons") : lastError;
                     synchronized (writeLock) {
-                        socket = candidate;
-                        outputStream = candidate.getOutputStream();
+                        socket = connected;
+                        outputStream = connected.getOutputStream();
                     }
                     jsStatus("connected", device.getName() == null ? address : device.getName());
                 } catch (Exception e) {
                     disconnectInternal();
-                    jsStatus("error", "Koneksi SPP gagal: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+                    String detail = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                    jsStatus("error", "Koneksi SPP gagal. Pastikan printer menyala, sudah dipasangkan, dan tidak sedang terhubung ke HP lain. Detail: " + detail);
                 }
             });
             return "CONNECTING";
