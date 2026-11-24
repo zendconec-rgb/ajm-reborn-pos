@@ -1503,6 +1503,9 @@
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
                             <span>Export Laporan Excel</span>
                         </button>
+                        <button type="button" id="rep-toggle-extra-charts" onclick="toggleExtraReportCharts()" aria-expanded="false" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 transition">
+                            <i data-lucide="chart-no-axes-combined" class="w-3.5 h-3.5"></i><span>Tampilkan Grafik</span>
+                        </button>
                         <button onclick="switchReportSubTab('laporan-utama')" id="rep-btn-utama" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-royal-600 text-white">
                             Laporan Laba
                         </button>
@@ -1660,7 +1663,7 @@
                                 <span>Catat Kas Baru</span>
                             </button>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                             <h3 class="font-extrabold text-slate-800 text-sm">Tren Arus Kas Operasional</h3>
                             <p class="text-[11px] text-slate-500 mb-3">Perbandingan kas masuk dan kas keluar berdasarkan catatan kas</p>
                             <div class="relative h-64"><canvas id="rep-cashflow-chart"></canvas></div>
@@ -1674,7 +1677,7 @@
                             <h3 class="font-bold text-slate-800 text-sm">Laporan Aktivitas Pelanggan</h3>
                             <p class="text-xs text-slate-500 mt-1">Ringkasan jumlah transaksi, total belanja, dan kunjungan setiap pelanggan berdasarkan data nota.</p>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                             <h3 class="font-extrabold text-slate-800 text-sm">Pelanggan dengan Nilai Transaksi Tertinggi</h3>
                             <p class="text-[11px] text-slate-500 mb-3">Peringkat berdasarkan akumulasi belanja dari transaksi tercatat</p>
                             <div class="relative h-64"><canvas id="rep-customer-chart"></canvas></div>
@@ -1726,7 +1729,7 @@
                             </button>
                         </div>
 
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                             <h3 class="font-extrabold text-slate-800 text-sm">Analisis Piutang Pelanggan</h3>
                             <p class="text-[11px] text-slate-500 mb-3">Grafik mengikuti pilihan status dan pencarian pelanggan di atas</p>
                             <div class="relative h-64"><canvas id="rep-debt-chart"></canvas></div>
@@ -8583,6 +8586,26 @@ window.addEventListener('afterprint', function () {
             showToast('Laporan piutang pelanggan (Excel) berhasil diunduh!');
         }
 
+        let extraReportChartsVisible = false;
+        function toggleExtraReportCharts() {
+            extraReportChartsVisible = !extraReportChartsVisible;
+            document.querySelectorAll('.report-extra-chart').forEach(el => el.classList.toggle('hidden', !extraReportChartsVisible));
+            const btn = document.getElementById('rep-toggle-extra-charts');
+            if (btn) {
+                btn.setAttribute('aria-expanded', String(extraReportChartsVisible));
+                btn.innerHTML = extraReportChartsVisible
+                    ? '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i><span>Sembunyikan Grafik</span>'
+                    : '<i data-lucide="chart-no-axes-combined" class="w-3.5 h-3.5"></i><span>Tampilkan Grafik</span>';
+            }
+            if (extraReportChartsVisible) {
+                renderFinancialReportCharts();
+                renderCashflowChart();
+                renderCustomerActivityReport();
+                renderCustomerReceivablesReport();
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         // Grafik laporan interaktif — seluruh dataset dibentuk dari filter laporan aktif.
         const reportChartInstances = {};
         function destroyReportChart(key) {
@@ -8660,7 +8683,7 @@ window.addEventListener('afterprint', function () {
             const mechanic = {};
             list.forEach(t => { const name = t.mechanic || 'Tanpa Mekanik'; mechanic[name] = (mechanic[name] || 0) + getTransactionPaymentBreakdown(t).total; });
             const topMechanics = Object.entries(mechanic).sort((a,b) => b[1]-a[1]).slice(0,8);
-            createReportChart('mechanic', 'rep-mechanic-chart', { type: 'bar', data: { labels: topMechanics.map(x => x[0]), datasets: [{ label: 'Omzet', data: topMechanics.map(x => x[1]), backgroundColor: ['#2563eb','#0d9488','#8b5cf6','#f59e0b','#64748b','#06b6d4','#84cc16','#ec4899'], borderRadius: 8, borderSkipped: false }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { callback: v => reportChartMoney(v), font: { size: 9 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } } });
+            createReportChart('mechanic', 'rep-mechanic-chart', { type: 'bar', data: { labels: topMechanics.map(x => x[0]), datasets: [{ label: 'Omzet', data: topMechanics.map(x => x[1]), backgroundColor: ['#2563eb','#0d9488','#8b5cf6','#f59e0b','#64748b','#06b6d4','#84cc16','#ec4899'], borderRadius: 8, borderSkipped: false, barThickness: 22, maxBarThickness: 26, categoryPercentage: .55, barPercentage: .7 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { callback: v => reportChartMoney(v), font: { size: 9 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } } });
         }
 
         function renderReceivablesChart(groups) {
