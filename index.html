@@ -1833,7 +1833,7 @@
                                 <span class="text-[10px] font-bold text-slate-400">ESC/POS</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">Bluetooth Thermal</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Koneksi BLE ESC/POS yang didukung browser (bukan Bluetooth SPP)</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Hanya printer BLE dengan layanan ESC/POS; Bluetooth Classic SPP gunakan Printer Sistem + RawBT</p>
                         </button>
 
                         <button type="button" onclick="selectPrinterConnectionType('usb')" data-printer-type="usb" class="printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300">
@@ -1854,7 +1854,7 @@
                         </div>
                         <div class="flex flex-wrap gap-1.5 shrink-0">
                             <button type="button" id="btn-pair-bluetooth-printer" onclick="connectBluetoothPrinter()" class="hidden px-3 py-2 bg-royal-600 hover:bg-royal-700 text-white rounded-xl text-xs font-bold flex items-center gap-1">
-                                <i data-lucide="bluetooth-searching" class="w-3.5 h-3.5"></i> Hubungkan Bluetooth
+                                <i data-lucide="bluetooth-searching" class="w-3.5 h-3.5"></i> Cari Printer BLE
                             </button>
                             <button type="button" id="btn-pair-usb-printer" onclick="connectUsbPrinter()" class="hidden px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1">
                                 <i data-lucide="usb" class="w-3.5 h-3.5"></i> Hubungkan USB
@@ -4234,9 +4234,17 @@
                 return;
             }
             try {
+                // Jangan tampilkan semua perangkat Bluetooth di sekitar HP.
+                // Pemilih dibatasi ke profil BLE printer yang memang dapat diuji
+                // oleh driver ESC/POS aplikasi. Bluetooth Classic SPP tidak muncul
+                // melalui Web Bluetooth dan harus memakai bridge/native Android.
+                const blePrinterServices = [
+                    '000018f0-0000-1000-8000-00805f9b34fb',
+                    'e7810a71-73ae-499d-8c15-faa9aef0c3f2'
+                ];
                 const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+                    filters: blePrinterServices.map(service => ({ services: [service] })),
+                    optionalServices: blePrinterServices
                 });
                 const server = await device.gatt.connect();
                 const services = await server.getPrimaryServices();
@@ -4268,7 +4276,16 @@
                 updateHardwareBadgesUI();
                 showToast(`Printer Bluetooth "${device.name || 'Thermal'}" terhubung!`);
             } catch (err) {
-                showToast('Pemasangan printer Bluetooth dibatalkan atau gagal', 'warning');
+                console.warn('Koneksi printer BLE gagal:', err);
+                if (err && err.name === 'NotFoundError') {
+                    showToast('Tidak ada printer BLE dengan profil ESC/POS yang didukung. Jika printer 58mm Anda Bluetooth Classic SPP, gunakan Printer Sistem + RawBT; jangan pilih perangkat acak.', 'warning');
+                } else if (err && err.name === 'SecurityError') {
+                    showToast('Akses Bluetooth ditolak. Pastikan izin Bluetooth/Nearby devices aktif dan buka aplikasi melalui HTTPS.', 'warning');
+                } else if (err && err.name === 'NotAllowedError') {
+                    showToast('Pemilihan Bluetooth dibatalkan. Coba lagi jika printer benar-benar mendukung BLE.', 'warning');
+                } else {
+                    showToast(`Koneksi printer BLE gagal: ${err?.message || 'perangkat tidak kompatibel'}. Printer Classic SPP perlu jembatan Bluetooth.`, 'warning');
+                }
             }
         }
 
@@ -4976,8 +4993,7 @@ window.addEventListener('afterprint', function () {
                 active: true
             });
 
-            document.getElementById('new-cashier-name').value = '';
-            document.getElementById('new-cashier-username').value = '';
+            document.getElementById('new-cashier-name').value = '';            document.getElementById('new-cashier-username').value = '';
             document.getElementById('new-cashier-password').value = '';
 
             saveAllData();
@@ -4993,6 +5009,7 @@ window.addEventListener('afterprint', function () {
             renderAccountManagementPanel();
             showToast(`Status akun ${u.username}: ${u.active ? 'Aktif' : 'Nonaktif'}`);
         }
+
         function deleteUserAccount(userId) {
             const u = users.find(x => x.id === userId);
             if (!u || u.role === 'Admin') return;
@@ -5975,7 +5992,6 @@ window.addEventListener('afterprint', function () {
                 showToast('Silakan pilih produk untuk memulai transaksi.');
             }
         }
-
         function renderCart() {
             const container = document.getElementById('cart-items-container');
             if (!container) return;
@@ -5992,7 +6008,8 @@ window.addEventListener('afterprint', function () {
                 quickBadge.classList.toggle('flex', totalQty > 0);
             }
 
-            const mobileBar = document.getElementById('mobile-cart-bar');            if (mobileBar) {
+            const mobileBar = document.getElementById('mobile-cart-bar');
+            if (mobileBar) {
                 if (totalQty > 0) mobileBar.classList.remove('hidden');
                 else mobileBar.classList.add('hidden');
             }
@@ -6974,8 +6991,7 @@ window.addEventListener('afterprint', function () {
 
             if (subRoute === 'master-produk') renderInventoryList();
             if (subRoute === 'master-kategori') renderCategoryMasterList();
-            if (subRoute === 'master-pelanggan') renderCustomerList();
-            if (subRoute === 'master-mekanik') renderMechanicMasterList();
+            if (subRoute === 'master-pelanggan') renderCustomerList();            if (subRoute === 'master-mekanik') renderMechanicMasterList();
         }
 
         function handleMasterAddAction() {
@@ -6991,7 +7007,8 @@ window.addEventListener('afterprint', function () {
                 document.getElementById('cust-motor').value = '';
                 openModal('customer-modal');
             }
-            else if (activeMasterSub === 'master-mekanik') {                document.getElementById('mech-edit-id').value = '';
+            else if (activeMasterSub === 'master-mekanik') {
+                document.getElementById('mech-edit-id').value = '';
                 document.getElementById('mech-name').value = '';
                 document.getElementById('mech-spec').value = '';
                 document.getElementById('mechanic-modal-title').textContent = 'Tambah Mekanik Bengkel';
@@ -7973,8 +7990,7 @@ window.addEventListener('afterprint', function () {
         // ==========================================
         // 8. STOK OPNAME & STOK MENIPIS
         // ==========================================
-        function switchStockSubTab(tab) {
-            const isOpname = tab === 'stok-opname';
+        function switchStockSubTab(tab) {            const isOpname = tab === 'stok-opname';
             document.getElementById('stock-opname-panel').classList.toggle('hidden', !isOpname);
             document.getElementById('stock-low-panel').classList.toggle('hidden', isOpname);
 
@@ -7990,7 +8006,8 @@ window.addEventListener('afterprint', function () {
         }
 
         function openStockOpnameModal() {
-            const physicalItems = products.filter(p => p.category !== 'Jasa Servis');            document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
+            const physicalItems = products.filter(p => p.category !== 'Jasa Servis');
+            document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
             document.getElementById('op-qty').value = 1;
             document.getElementById('op-note').value = '';
             openModal('opname-modal');
@@ -8972,8 +8989,7 @@ window.addEventListener('afterprint', function () {
             saveAllData();
             loadGriyoReceiptSettingsUI();
             renderGriyoLivePreviewPaper();
-            showToast('Pengaturan struk dikembalikan ke standar');
-        }
+            showToast('Pengaturan struk dikembalikan ke standar');        }
 
         function getSampleReceiptTransaction() {
             if (activeReceiptTrx) return activeReceiptTrx;
@@ -8989,7 +9005,8 @@ window.addEventListener('afterprint', function () {
                     { id: 'p12', code: '899100500123', name: 'Jasa Servis Injeksi & CVT Lengkap', price: 65000, qty: 1 }
                 ],
                 subtotal: 120000,
-                discount: 0,                tax: 0,
+                discount: 0,
+                tax: 0,
                 total: 120000,
                 paymentMethod: 'Tunai',
                 cashReceived: 120000,
