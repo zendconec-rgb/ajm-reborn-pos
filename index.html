@@ -3553,6 +3553,30 @@
             lucide.createIcons();
         }
 
+        function readPersistedSession() {
+            try {
+                const stored = localStorage.getItem(DB_KEYS.SESSION);
+                if (stored) return JSON.parse(stored);
+            } catch (e) { console.warn('Gagal membaca sesi dari Local Storage:', e); }
+            try {
+                const match = document.cookie.match(/(?:^|;\\s*)ajm_reborn_login_session=([^;]+)/);
+                if (match) return JSON.parse(decodeURIComponent(match[1]));
+            } catch (e) { console.warn('Gagal membaca sesi cadangan:', e); }
+            return null;
+        }
+
+        function persistCurrentSession() {
+            if (!currentSession || !currentSession.userId) return;
+            const value = JSON.stringify(currentSession);
+            try { localStorage.setItem(DB_KEYS.SESSION, value); } catch (e) { console.warn('Local Storage sesi tidak tersedia:', e); }
+            try { document.cookie = 'ajm_reborn_login_session=' + encodeURIComponent(value) + '; Path=/; Max-Age=31536000; SameSite=Lax; Secure'; } catch (e) {}
+        }
+
+        function clearPersistedSession() {
+            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
+            try { document.cookie = 'ajm_reborn_login_session=; Path=/; Max-Age=0; SameSite=Lax; Secure'; } catch (e) {}
+        }
+
         function loadAllData() {
             const now = new Date();
             const todayIso = now.toISOString();
@@ -3563,7 +3587,7 @@
             mechanics = JSON.parse(localStorage.getItem(DB_KEYS.MECHANICS)) || JSON.parse(JSON.stringify(DEFAULT_MECHANICS));
             settings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS)) || {});
             users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)) || JSON.parse(JSON.stringify(DEFAULT_USERS));
-            try { currentSession = JSON.parse(localStorage.getItem(DB_KEYS.SESSION) || 'null'); } catch (e) { currentSession = null; }
+            currentSession = readPersistedSession();
             syncQueue = JSON.parse(localStorage.getItem(DB_KEYS.SYNC_QUEUE)) || [];
             driveMeta = Object.assign({ folderId: null, lastSyncAt: null, lastError: null, accessToken: null, tokenExpiry: 0 }, JSON.parse(localStorage.getItem(DB_KEYS.DRIVE_META)) || {});
 
@@ -4956,7 +4980,7 @@ window.addEventListener('afterprint', function () {
                 loginEl.classList.add('flex');
                 setTimeout(() => document.getElementById('login-username')?.focus(), 80);
             } else {
-                const validUser = users.find(u => u.id === currentSession.userId && u.active !== false);
+                const validUser = users.find(u => String(u.id) === String(currentSession.userId) && u.active !== false) || users.find(u => String(u.username || '').toLowerCase() === String(currentSession.username || '').toLowerCase() && u.active !== false);
                 if (!validUser) {
                     currentSession = null;
                     document.body.classList.remove('ajm-authenticated');
@@ -5007,7 +5031,7 @@ window.addEventListener('afterprint', function () {
                 loginAt: new Date().toISOString()
             };
             // Simpan sesi agar tetap aktif setelah refresh atau aplikasi dibuka kembali.
-            try { localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(currentSession)); } catch (e) { showToast('Sesi login tidak dapat disimpan di perangkat ini', 'warning'); }
+            persistCurrentSession();
             document.getElementById('login-password').value = '';
             syncLoginScreenVisibility();
             renderAccountManagementPanel();
@@ -5025,7 +5049,7 @@ window.addEventListener('afterprint', function () {
                 `Apakah Anda yakin ingin keluar dari akun ${getActiveCashierDisplay()}? Sesi login akan diakhiri.`,
                 () => {
                     currentSession = null;
-                    try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
+                    clearPersistedSession();
                     syncLoginScreenVisibility();
                     showToast('Anda telah keluar dari sesi login');
                 }
