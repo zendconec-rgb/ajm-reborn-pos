@@ -896,10 +896,9 @@
                     <span id="header-wo-badge" class="hidden absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <!-- Tombol Koneksi Printer USB -->
-                <button id="header-usb-connect-btn" type="button" onclick="connectUsbPrinter()" title="Hubungkan printer USB" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap">
+                <!-- Tombol Koneksi Printer USB: ukuran disamakan dengan tombol Logout -->
+                <button id="header-usb-connect-btn" type="button" onclick="connectUsbPrinter()" title="Hubungkan printer USB" aria-label="Hubungkan printer USB" class="p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 active:scale-95 transition border border-amber-200/30 flex items-center justify-center shrink-0" style="width:36px;height:36px" >
                     <i data-lucide="usb" class="w-4 h-4"></i>
-                    <span>Hubungkan USB</span>
                 </button>
 
                 <!-- Tombol Logout -->
