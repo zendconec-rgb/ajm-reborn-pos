@@ -4413,14 +4413,14 @@
             try {
                 // QZ Tray signing: sertifikat publik dan tanda tangan diambil dari helper lokal laptop.
                 qz.security.setCertificatePromise(function(resolve, reject) {
-                    fetch('http://127.0.0.1:8181/certificate', { cache: 'no-store' })
+                    fetch('http://127.0.0.1:18777/certificate', { cache: 'no-store' })
                         .then(response => response.ok ? response.text() : Promise.reject(new Error('Sertifikat lokal tidak dapat dibaca')))
                         .then(resolve).catch(reject);
                 });
                 qz.security.setSignatureAlgorithm('SHA512');
                 qz.security.setSignaturePromise(function(toSign) {
                     return function(resolve, reject) {
-                        fetch('http://127.0.0.1:8181/sign', {
+                        fetch('http://127.0.0.1:18777/sign', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ toSign: toSign })
