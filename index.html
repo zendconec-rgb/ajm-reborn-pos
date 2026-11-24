@@ -4205,7 +4205,7 @@
             const isNativeBtConnected = Boolean(isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true');
             const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
 
-            btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected);
+            btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected || isNativeBtConnected);
             btnUsb.classList.toggle('hidden', pType !== 'usb' || isUsbConnected);
             btnDisc.classList.toggle('hidden', !(isBtConnected || isNativeBtConnected || isUsbConnected));
 
@@ -4326,6 +4326,12 @@
             } catch (e) { console.warn('Status native printer tidak valid', e); }
         };
 
+        if (isAjmNativePrinterAvailable()) {
+            const nativeCard = document.getElementById('ajm-native-printer-card');
+            if (nativeCard) nativeCard.classList.remove('hidden');
+            setTimeout(refreshNativeBluetoothDevices, 500);
+        }
+
         function ajmBytesToBase64(bytes) {
             let binary = '';
             const chunk = 0x8000;
@@ -4336,6 +4342,10 @@
         }
 
         async function connectBluetoothPrinter() {
+            if (isAjmNativePrinterAvailable()) {
+                refreshNativeBluetoothDevices();
+                return;
+            }
             // Coba BLE/GATT terlebih dahulu, termasuk pada Chrome Android.
             // Printer Bluetooth Classic SPP tidak diekspos oleh Web Bluetooth browser.
             if (!navigator.bluetooth) {
@@ -4446,6 +4456,10 @@
         }
 
         async function disconnectHardwarePrinter() {
+            if (isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true') {
+                try { window.AJMNativePrinter.disconnect(); } catch (e) {}
+            }
+            ajmNativePrinterConnected = false;
             if (btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) {
                 try { btPrinterDevice.gatt.disconnect(); } catch (e) {}
             }
@@ -4599,9 +4613,6 @@
                 return true;
             }
 
-
-            const copies = Math.max(1, Number(settings.printerCopies) || 1);
-            const payload = buildEscPosReceiptBytes(trx);
 
             if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
                 for (let c = 0; c < copies; c++) {
