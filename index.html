@@ -4422,8 +4422,8 @@
                 } else if (rawBtReady) {
                     nameLbl.textContent = `Jalur Bluetooth Android: RawBT (${settings.paperSize})`;
                     hintLbl.textContent = 'Perintah ESC/POS dikirim langsung ke RawBT. Pastikan printer Bluetooth sudah dipilih dan aktif di aplikasi RawBT.';
-                    pillEl.textContent = 'RawBT Bluetooth';
-                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
+                    pillEl.textContent = 'RawBT Dipilih';
+                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat Bluetooth: Belum Terhubung';
                     hintLbl.textContent = isAndroid ? 'Tekan Hubungkan Bluetooth Android. Untuk printer Bluetooth Classic SPP, gunakan RawBT.' : 'Nyalakan printer thermal Bluetooth lalu klik Hubungkan Bluetooth.';
@@ -4439,8 +4439,8 @@
                 } else if (rawBtReady) {
                     nameLbl.textContent = `Jalur USB Android: RawBT (${settings.paperSize})`;
                     hintLbl.textContent = 'Hubungkan printer USB OTG dan pilih USB di pengaturan aplikasi RawBT. AJM akan mengirim ESC/POS langsung ke RawBT.';
-                    pillEl.textContent = 'RawBT USB';
-                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
+                    pillEl.textContent = 'RawBT Dipilih';
+                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat USB Thermal: Belum Terhubung';
                     hintLbl.textContent = isAndroid ? 'Tekan Hubungkan USB untuk memakai RawBT melalui kabel OTG.' : 'Colokkan kabel USB printer kasir lalu klik Hubungkan USB. QZ Tray harus aktif.';
@@ -4746,7 +4746,7 @@
                     binary += String.fromCharCode(...combined.subarray(i, Math.min(i + 0x8000, combined.length)));
                 }
                 const base64 = btoa(binary);
-                window.location.href = 'intent:base64,' + base64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+                window.location.href = 'intent:base64,' + base64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dru.a402d.rawbtprinter;end;';
                 showToast('Data ESC/POS dikirim ke RawBT. Pastikan printer aktif di RawBT dan tunggu hasil cetak.');
                 return true;
             }
@@ -4760,7 +4760,7 @@
             }
             if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
                 for (let c = 0; c < copies; c++) {
-                    const chunkSize = 180;
+                    const chunkSize = 20;
                     for (let i = 0; i < payload.length; i += chunkSize) {
                         const slice = payload.slice(i, i + chunkSize);
                         if (btPrinterCharacteristic.writeValueWithoutResponse) await btPrinterCharacteristic.writeValueWithoutResponse(slice);
@@ -4894,14 +4894,18 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             const rawBtSelected = Boolean(isAndroid && settings.rawBtBridgeSelected);
             const usbHeaderBtn = document.getElementById('header-usb-connect-btn');
             if (usbHeaderBtn) {
-                const usbReady = Boolean((qzTrayConnected && qzPrinterName) || (rawBtSelected && settings.printerConnectionType === 'usb'));
-                const usbLabel = usbReady && rawBtSelected ? 'USB via RawBT' : usbReady ? 'USB Terhubung' : 'Hubungkan USB';
+                const qzUsbReady = Boolean(qzTrayConnected && qzPrinterName);
+                const rawBtUsbSelected = Boolean(rawBtSelected && settings.printerConnectionType === 'usb');
+                const usbReady = qzUsbReady || rawBtUsbSelected;
+                const usbLabel = rawBtUsbSelected ? 'USB via RawBT' : qzUsbReady ? 'USB Terhubung' : 'Hubungkan USB';
                 usbHeaderBtn.innerHTML = '<i data-lucide="usb" class="w-4 h-4"></i><span>' + usbLabel + '</span>';
                 usbHeaderBtn.title = usbReady ? (rawBtSelected ? 'Jalur USB Android melalui RawBT dipilih; pastikan printer aktif di RawBT.' : 'Printer USB aktif: ' + qzPrinterName) : 'Klik untuk menghubungkan printer USB';
                 usbHeaderBtn.setAttribute('aria-label', usbLabel);
-                usbHeaderBtn.className = usbReady
+                usbHeaderBtn.className = qzUsbReady
                     ? 'px-2.5 py-1.5 rounded-xl bg-emerald-400 text-emerald-950 hover:bg-emerald-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap'
-                    : 'px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap';
+                    : rawBtUsbSelected
+                        ? 'px-2.5 py-1.5 rounded-xl bg-sky-300 text-sky-950 hover:bg-sky-200 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap'
+                        : 'px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap';
                 if (window.lucide) lucide.createIcons({ nodes: [usbHeaderBtn] });
             }
             const scanDot = document.getElementById('header-scanner-dot');
@@ -4920,10 +4924,10 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 const isBtConnected = isBluetoothPrinterConnected() || (rawBtSelected && pType === 'bluetooth');
                 const isUsbConnected = Boolean((qzTrayConnected && qzPrinterName) || (rawBtSelected && pType === 'usb'));
                 if (pType === 'bluetooth') {
-                    prDot.className = isBtConnected ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
+                    prDot.className = (isBtConnected && !rawBtSelected) ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : rawBtSelected ? 'w-2 h-2 rounded-full bg-sky-300' : 'w-2 h-2 rounded-full bg-amber-300';
                     prText.textContent = isBtConnected ? (rawBtSelected ? 'BT RawBT' : `BT ${settings.paperSize}`) : 'BT Off';
                 } else if (pType === 'usb') {
-                    prDot.className = isUsbConnected ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
+                    prDot.className = (isUsbConnected && !rawBtSelected) ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : rawBtSelected ? 'w-2 h-2 rounded-full bg-sky-300' : 'w-2 h-2 rounded-full bg-amber-300';
                     prText.textContent = isUsbConnected ? (rawBtSelected ? 'USB RawBT' : `USB ${settings.paperSize}`) : 'USB Off';
                 } else {
                     prDot.className = 'w-2 h-2 rounded-full bg-sky-300';
