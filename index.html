@@ -4422,7 +4422,9 @@
                 updateHardwareBadgesUI();
                 showToast(`Printer USB "${device.productName || 'POS Printer'}" terhubung!`);
             } catch (err) {
-                showToast('Koneksi USB printer dibatalkan atau gagal', 'warning');
+                console.error('Detail koneksi USB printer:', err);
+                const detail = [err?.name, err?.message].filter(Boolean).join(': ');
+                showToast(detail ? ('USB gagal — ' + detail) : 'Koneksi USB printer dibatalkan atau gagal. Periksa izin dan driver printer.', 'warning');
             }
         }
 
