@@ -578,6 +578,8 @@
         #app-topbar-brand > div:last-child > div > span:first-child { white-space:nowrap; }
         #app-topbar-brand #header-subtitle { max-width:100%; }
         #app-topbar-actions > * { flex-shrink:0; }
+        #header-usb-connect-btn { width:36px !important; height:36px !important; min-width:36px !important; min-height:36px !important; padding:8px !important; flex:0 0 36px !important; }
+        #header-usb-connect-btn svg { width:20px !important; height:20px !important; }
 
         @media (max-width: 700px) {
             #app-topbar-inner {
@@ -858,10 +860,9 @@
                     <span id="header-wo-badge" class="hidden absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <!-- Tombol Scan Barcode -->
-                <button onclick="openBarcodeModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs">
-                    <i data-lucide="scan-line" class="w-4 h-4"></i>
-                    <span class="hidden lg:inline">Scan</span>
+                <!-- Tombol Aktifkan Printer via USB (menggantikan tombol Scan di header) -->
+                <button id="header-usb-connect-btn" type="button" onclick="connectUsbPrinter()" title="Aktifkan printer USB" aria-label="Aktifkan printer USB" class="p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 active:scale-95 transition border border-amber-200/30 flex items-center justify-center shrink-0" style="width:36px;height:36px;min-width:36px">
+                    <i data-lucide="usb" class="w-4 h-4"></i>
                 </button>
 
                 <!-- Tombol Logout -->
@@ -4892,6 +4893,18 @@ window.addEventListener('afterprint', function () {
         }
 
         function updateHardwareBadgesUI() {
+            // Status tombol USB di header: kuning saat siap diaktifkan, hijau saat sudah terhubung.
+            const usbHeaderBtn = document.getElementById('header-usb-connect-btn');
+            if (usbHeaderBtn) {
+                const usbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+                const usbLabel = usbConnected ? 'USB Terhubung' : 'Aktifkan printer USB';
+                usbHeaderBtn.title = usbConnected ? 'Printer USB sudah terhubung. Klik untuk memilih ulang perangkat.' : 'Klik untuk mengaktifkan printer USB';
+                usbHeaderBtn.setAttribute('aria-label', usbLabel);
+                usbHeaderBtn.className = usbConnected
+                    ? 'p-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-emerald-950 active:scale-95 transition border border-emerald-200/40 flex items-center justify-center shrink-0'
+                    : 'p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 active:scale-95 transition border border-amber-200/30 flex items-center justify-center shrink-0';
+                if (window.lucide) lucide.createIcons({ nodes: [usbHeaderBtn] });
+            }
             const scanDot = document.getElementById('header-scanner-dot');
             const scanText = document.getElementById('header-scanner-text');
             if (scanDot && scanText) {
