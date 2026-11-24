@@ -10,6 +10,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.graphics.Color;
+import android.view.View;
+import android.view.WindowManager;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -39,6 +42,15 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Pastikan status bar dan navigation bar Android selalu terlihat.
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        getWindow().setStatusBarColor(Color.rgb(23, 37, 84));
+        getWindow().setNavigationBarColor(Color.rgb(17, 24, 39));
+        getWindow().getDecorView().setSystemUiVisibility(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(true);
+        }
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         webView = new WebView(this);
         setContentView(webView);
