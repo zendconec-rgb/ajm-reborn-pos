@@ -4199,6 +4199,12 @@
         }
 
         async function connectBluetoothPrinter() {
+            // On Android, route Classic SPP setup through RawBT. Web Bluetooth
+            // in Chrome exposes BLE/GATT only and will not list Classic SPP printers.
+            if (/Android/i.test(navigator.userAgent || '')) {
+                showToast('Untuk printer Bluetooth 58mm (SPP), buka RawBT, pilih metode Bluetooth, lalu pilih/pasangkan printer. Kembali ke AJM setelah itu untuk cetak langsung.', 'warning');
+                return;
+            }
             if (!navigator.bluetooth) {
                 showToast('Bluetooth Classic SPP tidak dipasangkan dari browser. Pasangkan printer melalui aplikasi RawBT, lalu kembali ke AJM untuk cetak langsung.', 'warning');
                 return;
@@ -4987,13 +4993,13 @@ window.addEventListener('afterprint', function () {
                 flushDriveSyncQueue(false);
             }
         }
-
         function loadGoogleIdentityScript(callback) {
             if (window.google && window.google.accounts && window.google.accounts.oauth2) {
                 callback();
                 return;
             }
-            if (gisScriptLoading) {                setTimeout(() => loadGoogleIdentityScript(callback), 300);
+            if (gisScriptLoading) {
+                setTimeout(() => loadGoogleIdentityScript(callback), 300);
                 return;
             }
             gisScriptLoading = true;
@@ -5986,13 +5992,13 @@ window.addEventListener('afterprint', function () {
             const transfer = Array.isArray(settings.paymentTransferMethods) ? settings.paymentTransferMethods : ['BCA', 'BRI', 'BNI', 'Mandiri'];
             const ewallet = Array.isArray(settings.paymentEwalletMethods) ? settings.paymentEwalletMethods : ['QRIS', 'DANA', 'OVO', 'GoPay', 'ShopeePay'];
             // Preserve legacy custom methods by migrating them to the E-Wallet list once.
-            (settings.customPaymentMethods || []).forEach(name => {
-                const clean = String(name || '').trim();
+            (settings.customPaymentMethods || []).forEach(name => {                const clean = String(name || '').trim();
                 if (clean && !ewallet.some(x => String(x).toLowerCase() === clean.toLowerCase())) ewallet.push(clean);
             });
             settings.paymentTransferMethods = [...new Set(transfer.map(x => String(x).trim()).filter(Boolean))];
             settings.paymentEwalletMethods = [...new Set(ewallet.map(x => String(x).trim()).filter(Boolean))];
-            return { transfer: settings.paymentTransferMethods, ewallet: settings.paymentEwalletMethods };        }
+            return { transfer: settings.paymentTransferMethods, ewallet: settings.paymentEwalletMethods };
+        }
 
         function renderPaymentMethodControls() {
             const lists = getPaymentMethodLists();
@@ -6986,12 +6992,12 @@ window.addEventListener('afterprint', function () {
             }
             openModal('product-modal');
         }
-
         function saveProductForm(e) {
             e.preventDefault();
             const id = document.getElementById('pm-id').value;
             const rawCode = document.getElementById('pm-code').value.trim().toUpperCase();
-            const payload = {                code: rawCode || createAutoItemCode(),
+            const payload = {
+                code: rawCode || createAutoItemCode(),
                 category: document.getElementById('pm-category').value,
                 name: document.getElementById('pm-name').value.trim(),
                 cost: parseFloat(document.getElementById('pm-cost').value) || 0,
@@ -7984,13 +7990,13 @@ window.addEventListener('afterprint', function () {
                 const btn = document.getElementById(btnId);
                 if (btn) btn.className = key === tab ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-royal-600 text-white' : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600';
             });
-            if (tab === 'laporan-utama') renderFinancialReport();
-            else if (tab === 'laporan-piutang') renderCustomerReceivablesReport();
+            if (tab === 'laporan-utama') renderFinancialReport();            else if (tab === 'laporan-piutang') renderCustomerReceivablesReport();
             else if (tab === 'kas-keuangan') renderCashflowList();
             else renderCustomerActivityReport();
         }
 
-        function renderCustomerActivityReport() {            const container = document.getElementById('customer-report-list');
+        function renderCustomerActivityReport() {
+            const container = document.getElementById('customer-report-list');
             if (!container) return;
             const grouped = new Map();
             transactions.filter(t => t.status !== 'Batal').forEach(t => {
@@ -8983,13 +8989,13 @@ window.addEventListener('afterprint', function () {
             document.getElementById('set-store-name').value = settings.storeName || '';
             document.getElementById('set-cashier-name').value = settings.cashierName || '';
             document.getElementById('set-store-address').value = settings.storeAddress || '';
-            document.getElementById('set-store-phone').value = settings.storePhone || '';
-            document.getElementById('set-mechanic-commission').value = settings.mechanicCommissionRate ?? 20;
+            document.getElementById('set-store-phone').value = settings.storePhone || '';            document.getElementById('set-mechanic-commission').value = settings.mechanicCommissionRate ?? 20;
             document.getElementById('set-receipt-header').value = settings.receiptHeader || '';
             document.getElementById('set-receipt-footer').value = settings.receiptFooter || '';
             document.getElementById('set-show-logo').checked = settings.showLogoOnReceipt !== false;
             document.getElementById('set-show-mechanic').checked = settings.showMechanic !== false;
-            document.getElementById('set-show-plate').checked = settings.showPlate !== false;            const customerReceiptToggle = document.getElementById('set-show-customer-name');
+            document.getElementById('set-show-plate').checked = settings.showPlate !== false;
+            const customerReceiptToggle = document.getElementById('set-show-customer-name');
             if (customerReceiptToggle) customerReceiptToggle.checked = settings.showCustomerNameOnReceipt === true;
             document.getElementById('set-connection-mode').value = settings.connectionMode || 'auto';
             document.getElementById('set-google-client-id').value = settings.googleClientId || '';
