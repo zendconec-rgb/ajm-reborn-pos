@@ -4448,8 +4448,19 @@
         }
 
         async function connectBluetoothPrinter() {
-            // Prioritaskan Bluetooth Classic SPP. Chrome Android 138+ mendukung
-            // Web Serial RFCOMM sehingga printer ESC/POS dapat menerima byte mentah.
+            // Android Chrome tidak menyediakan akses RFCOMM/SPP generik melalui Web Serial.
+            // Karena itu jangan tampilkan chooser "port serial" yang tidak akan menemukan printer thermal Bluetooth Classic.
+            // Gunakan dialog cetak Android agar printer yang dipasangkan melalui layanan cetak OS dapat dipilih.
+            const isAndroidDevice = /Android/i.test(navigator.userAgent || '');
+            if (isAndroidDevice) {
+                settings.printerConnectionType = 'browser';
+                saveAllData();
+                renderPrinterSettingsUI();
+                showToast('Mode Android diaktifkan: koneksi langsung SPP tidak tersedia dari browser. Pasangkan printer di Android dan gunakan dialog cetak sistem.', 'warning');
+                return;
+            }
+
+            // Pada desktop yang mendukung Web Serial, coba Bluetooth Classic SPP.
             if (navigator.serial && typeof navigator.serial.requestPort === 'function') {
                 try {
                     const port = await navigator.serial.requestPort();
