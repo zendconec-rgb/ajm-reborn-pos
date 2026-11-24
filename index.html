@@ -1806,7 +1806,7 @@
                                 <span class="text-[10px] font-bold text-slate-400">ESC/POS</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">Bluetooth Thermal</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Koneksi langsung printer Bluetooth 58/80mm</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Koneksi BLE ESC/POS yang didukung browser (bukan Bluetooth SPP)</p>
                         </button>
 
                         <button type="button" onclick="selectPrinterConnectionType('usb')" data-printer-type="usb" class="printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300">
@@ -4166,12 +4166,12 @@
             } else if (pType === 'bluetooth') {
                 if (isBtConnected) {
                     nameLbl.textContent = `Terhubung Bluetooth: ${btPrinterDevice.name || 'Thermal Printer BT'} (${settings.paperSize})`;
-                    hintLbl.textContent = 'Siap mencetak struk ESC/POS langsung ke printer Bluetooth.';
+                    hintLbl.textContent = 'Terhubung via BLE/GATT. Cetak ESC/POS langsung jika printer mendukung karakteristik tulis.';
                     pillEl.textContent = `BT: ${btPrinterDevice.name || 'Terhubung'}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat Bluetooth: Belum Dipasangkan';
-                    hintLbl.textContent = 'Nyalakan printer thermal Bluetooth Anda lalu klik "Hubungkan Bluetooth".';
+                    hintLbl.textContent = 'Hanya printer BLE/GATT ESC/POS yang didukung. Printer Bluetooth Classic SPP gunakan Printer Sistem + RawBT.';
                     pillEl.textContent = 'BT Belum Terhubung';
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 self-start sm:self-auto';
                 }
@@ -4200,7 +4200,7 @@
 
         async function connectBluetoothPrinter() {
             if (!navigator.bluetooth) {
-                showToast('Web Bluetooth tidak didukung di browser ini. Gunakan Chrome Android/Desktop atau mode Printer Sistem.', 'warning');
+                showToast('Bluetooth Classic SPP tidak dipasangkan dari browser. Pasangkan printer melalui aplikasi RawBT, lalu kembali ke AJM untuk cetak langsung.', 'warning');
                 return;
             }
             try {
@@ -4210,13 +4210,23 @@
                 });
                 const server = await device.gatt.connect();
                 const services = await server.getPrimaryServices();
+                btPrinterCharacteristic = null;
                 for (const svc of services) {
-                    const chars = await svc.getCharacteristics();
-                    const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
-                    if (writable) {
-                        btPrinterCharacteristic = writable;
-                        break;
+                    try {
+                        const chars = await svc.getCharacteristics();
+                        const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                        if (writable) {
+                            btPrinterCharacteristic = writable;
+                            break;
+                        }
+                    } catch (serviceError) {
+                        console.warn('Layanan BLE tidak dapat dibaca:', serviceError);
                     }
+                }
+                if (!btPrinterCharacteristic) {
+                    try { device.gatt.disconnect(); } catch (e) {}
+                    showToast('Perangkat terdeteksi, tetapi tidak menyediakan kanal tulis BLE ESC/POS. Jika printer memakai Bluetooth SPP, gunakan Printer Sistem + RawBT.', 'warning');
+                    return;
                 }
                 btPrinterDevice = device;
                 device.addEventListener('gattserverdisconnected', () => {
@@ -4336,6 +4346,32 @@
             return merged;
         }
 
+        // Android Bluetooth Classic SPP bridge: send ESC/POS bytes to RawBT.
+        // Browser Web Bluetooth can only access BLE/GATT, not Classic SPP.
+        function sendRawEscPosViaRawBT(trx) {
+            if (!/Android/i.test(navigator.userAgent || '')) return false;
+            try {
+                const copies = Math.max(1, Number(settings.printerCopies) || 1);
+                const payload = buildEscPosReceiptBytes(trx);
+                const all = new Uint8Array(payload.length * copies);
+                for (let c = 0; c < copies; c++) all.set(payload, c * payload.length);
+                let binary = '';
+                const step = 0x8000;
+                for (let i = 0; i < all.length; i += step) {
+                    binary += String.fromCharCode.apply(null, all.subarray(i, Math.min(i + step, all.length)));
+                }
+                const base64 = btoa(binary);
+                const intentUrl = 'intent:base64,' + base64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+                window.location.href = intentUrl;
+                showToast('Mengirim struk langsung ke RawBT. Pastikan printer sudah dipilih di aplikasi RawBT.');
+                return true;
+            } catch (error) {
+                console.error('Gagal mengirim ke RawBT:', error);
+                showToast('Tidak dapat membuka RawBT. Pastikan aplikasi RawBT sudah terpasang.', 'error');
+                return false;
+            }
+        }
+
         async function sendRawEscPosToConnectedPrinter(trx) {
             const copies = Math.max(1, Number(settings.printerCopies) || 1);
             const payload = buildEscPosReceiptBytes(trx);
@@ -4367,7 +4403,7 @@
             return false;
         }
 
-        function executeReceiptPrintAction() {
+        async function executeReceiptPrintAction() {
             const btn = document.getElementById('receipt-print-action');
             const label = document.getElementById('receipt-print-btn-label');
             const source = document.getElementById('printable-receipt-area');
@@ -4379,6 +4415,37 @@
 
             if (btn) btn.disabled = true;
             if (label) label.textContent = 'MENYIAPKAN CETAK...';
+
+            // Prioritaskan cetak ESC/POS langsung hanya jika perangkat benar-benar
+            // tersambung melalui BLE/GATT atau USB. Bluetooth Classic SPP Android
+            // tidak dapat diakses langsung oleh browser; gunakan dialog sistem/RawBT.
+            const directReady =
+                (settings.printerConnectionType === 'bluetooth' && btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) ||
+                (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened);
+            if (directReady) {
+                try {
+                    const sent = await sendRawEscPosToConnectedPrinter(activeReceiptTrx);
+                    if (sent) {
+                        if (btn) btn.disabled = false;
+                        if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Cetak langsung gagal:', error);
+                    showToast('Cetak langsung gagal. Beralih ke dialog cetak sistem.', 'warning');
+                }
+            } else if (settings.printerConnectionType === 'bluetooth') {
+                // For Android Classic SPP, route straight to RawBT and never open A4 print preview.
+                if (sendRawEscPosViaRawBT(activeReceiptTrx)) {
+                    if (btn) btn.disabled = false;
+                    if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                    return;
+                }
+                showToast('Cetak langsung Bluetooth SPP memerlukan aplikasi RawBT di Android. Dialog cetak sistem tidak dibuka.', 'warning');
+                if (btn) btn.disabled = false;
+                if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                return;
+            }
 
             const preset = settings.printPreset || settings.paperSize || '58mm';
             const paperWidthMm = preset === '58mm' ? 58 : preset === '80mm' ? 80 : Number(settings.customPaperWidth) || (preset === 'A4' ? 210 : preset === 'A5' ? 148 : preset === 'Letter' ? 215.9 : 58);
@@ -4926,8 +4993,7 @@ window.addEventListener('afterprint', function () {
                 callback();
                 return;
             }
-            if (gisScriptLoading) {
-                setTimeout(() => loadGoogleIdentityScript(callback), 300);
+            if (gisScriptLoading) {                setTimeout(() => loadGoogleIdentityScript(callback), 300);
                 return;
             }
             gisScriptLoading = true;
@@ -4993,7 +5059,8 @@ window.addEventListener('afterprint', function () {
             const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
-            if (!searchRes.ok) throw new Error(`Gagal mencari folder Drive (${searchRes.status})`);            const searchJson = await searchRes.json();
+            if (!searchRes.ok) throw new Error(`Gagal mencari folder Drive (${searchRes.status})`);
+            const searchJson = await searchRes.json();
             if (searchJson.files && searchJson.files.length > 0) {
                 driveMeta.folderId = searchJson.files[0].id;
                 saveAllData();
@@ -5925,8 +5992,7 @@ window.addEventListener('afterprint', function () {
             });
             settings.paymentTransferMethods = [...new Set(transfer.map(x => String(x).trim()).filter(Boolean))];
             settings.paymentEwalletMethods = [...new Set(ewallet.map(x => String(x).trim()).filter(Boolean))];
-            return { transfer: settings.paymentTransferMethods, ewallet: settings.paymentEwalletMethods };
-        }
+            return { transfer: settings.paymentTransferMethods, ewallet: settings.paymentEwalletMethods };        }
 
         function renderPaymentMethodControls() {
             const lists = getPaymentMethodLists();
@@ -5992,7 +6058,8 @@ window.addEventListener('afterprint', function () {
         function savePaymentMasterMethods() {
             saveAllData();
             renderPaymentMethodControls();
-            const active = selectedPaymentCategory;            if (active === 'Transfer' && !settings.paymentTransferMethods.length) selectPaymentMethod('Tunai');
+            const active = selectedPaymentCategory;
+            if (active === 'Transfer' && !settings.paymentTransferMethods.length) selectPaymentMethod('Tunai');
             if (active === 'E-Wallet' && !settings.paymentEwalletMethods.length) selectPaymentMethod('Tunai');
             showToast('Master metode pembayaran berhasil disimpan.');
         }
@@ -6924,8 +6991,7 @@ window.addEventListener('afterprint', function () {
             e.preventDefault();
             const id = document.getElementById('pm-id').value;
             const rawCode = document.getElementById('pm-code').value.trim().toUpperCase();
-            const payload = {
-                code: rawCode || createAutoItemCode(),
+            const payload = {                code: rawCode || createAutoItemCode(),
                 category: document.getElementById('pm-category').value,
                 name: document.getElementById('pm-name').value.trim(),
                 cost: parseFloat(document.getElementById('pm-cost').value) || 0,
@@ -6992,6 +7058,7 @@ window.addEventListener('afterprint', function () {
             saveAllData();
             renderCategoryMasterList();
         }
+
         function renderCustomerList() {
             const q = document.getElementById('customer-search').value.trim().toLowerCase();
             const filtered = customers.filter(c =>
@@ -7923,8 +7990,7 @@ window.addEventListener('afterprint', function () {
             else renderCustomerActivityReport();
         }
 
-        function renderCustomerActivityReport() {
-            const container = document.getElementById('customer-report-list');
+        function renderCustomerActivityReport() {            const container = document.getElementById('customer-report-list');
             if (!container) return;
             const grouped = new Map();
             transactions.filter(t => t.status !== 'Batal').forEach(t => {
@@ -7990,6 +8056,7 @@ window.addEventListener('afterprint', function () {
                 const hadDebtHistory = Array.isArray(t.debtPayments) && t.debtPayments.length > 0;
                 return t.status === 'Piutang' || info.remainingDebt > 0 || hadDebtHistory;
             });
+
             const groupMap = {};
             debtTransactions.forEach(trx => {
                 const key = getCustomerDebtGroupKey(trx);
@@ -8922,8 +8989,7 @@ window.addEventListener('afterprint', function () {
             document.getElementById('set-receipt-footer').value = settings.receiptFooter || '';
             document.getElementById('set-show-logo').checked = settings.showLogoOnReceipt !== false;
             document.getElementById('set-show-mechanic').checked = settings.showMechanic !== false;
-            document.getElementById('set-show-plate').checked = settings.showPlate !== false;
-            const customerReceiptToggle = document.getElementById('set-show-customer-name');
+            document.getElementById('set-show-plate').checked = settings.showPlate !== false;            const customerReceiptToggle = document.getElementById('set-show-customer-name');
             if (customerReceiptToggle) customerReceiptToggle.checked = settings.showCustomerNameOnReceipt === true;
             document.getElementById('set-connection-mode').value = settings.connectionMode || 'auto';
             document.getElementById('set-google-client-id').value = settings.googleClientId || '';
@@ -8989,7 +9055,8 @@ window.addEventListener('afterprint', function () {
                     }
                     products = data.products;
                     categories = Array.isArray(data.categories) ? data.categories : [...DEFAULT_CATEGORIES];
-                    customers = Array.isArray(data.customers) ? data.customers : [];                    mechanics = Array.isArray(data.mechanics) ? data.mechanics : [...DEFAULT_MECHANICS];
+                    customers = Array.isArray(data.customers) ? data.customers : [];
+                    mechanics = Array.isArray(data.mechanics) ? data.mechanics : [...DEFAULT_MECHANICS];
                     workOrders = Array.isArray(data.workOrders) ? data.workOrders : [];
                     transactions = data.transactions;
                     stockLogs = Array.isArray(data.stockLogs) ? data.stockLogs : [];
