@@ -4472,12 +4472,36 @@
 
         async function connectUsbPrinter() {
             if (!navigator.usb) {
-                showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome Android/Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
+                showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
                 return;
             }
             let device = null;
             try {
-                device = await navigator.usb.requestDevice({ filters: [] });
+                // Gunakan koneksi yang masih hidup bila tombol ditekan berulang.
+                if (usbPrinterDevice && usbPrinterDevice.opened) {
+                    showToast('Printer USB sudah terhubung. Siap cetak langsung.');
+                    updateHardwareBadgesUI();
+                    return;
+                }
+
+                // Prioritaskan perangkat yang sebelumnya sudah diberi izin oleh Chrome.
+                // getDevices() tidak membuka dialog izin; izin tetap tersimpan untuk origin ini.
+                const permitted = await navigator.usb.getDevices();
+                const printerMatches = permitted.filter(d => /pos.?58|thermal|receipt|printer/i.test(
+                    [d.productName, d.manufacturerName].filter(Boolean).join(' ')
+                ));
+                if (printerMatches.length === 1) {
+                    device = printerMatches[0];
+                } else if (printerMatches.length > 1) {
+                    // Jika lebih dari satu printer thermal diizinkan, pilih POS58 bila namanya tersedia.
+                    device = printerMatches.find(d => /pos.?58/i.test(d.productName || '')) || null;
+                }
+
+                // Hanya minta pemilihan perangkat bila belum ada printer berizin yang cocok.
+                if (!device) {
+                    device = await navigator.usb.requestDevice({ filters: [] });
+                }
+
                 await device.open();
                 if (device.configuration === null) {
                     const config = device.configurations && device.configurations[0];
@@ -4485,8 +4509,7 @@
                     await device.selectConfiguration(config.configurationValue);
                 }
 
-                // Cari interface printer yang benar-benar memiliki endpoint OUT.
-                // Beberapa printer thermal tidak menggunakan interface index 0.
+                // Cari interface yang memiliki endpoint OUT untuk mengirim data ESC/POS.
                 let chosen = null;
                 for (const iface of (device.configuration?.interfaces || [])) {
                     for (const alt of (iface.alternates || [])) {
@@ -4495,7 +4518,7 @@
                     }
                     if (chosen) break;
                 }
-                if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT untuk mengirim data ESC/POS');
+                if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT. Pastikan POS58 terhubung melalui kabel USB data.');
 
                 await device.claimInterface(chosen.iface.interfaceNumber);
                 if (chosen.alt.alternateSetting !== 0) {
