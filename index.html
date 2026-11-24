@@ -18,6 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.3.0/qz-tray.js"></script>
     <script>
         // Fallback agar fungsi aplikasi tetap berjalan saat CDN ikon tidak tersedia.
         window.lucide = window.lucide || { createIcons: function() {} };
@@ -3303,6 +3304,8 @@
         let usbPrinterDevice = null;
         let usbPrinterEndpoint = null;
         let usbPrinterInterface = null;
+        let qzPrinterName = settings.qzPrinterName || '';
+        let qzTrayConnected = false;
 
         // ==========================================
         // 2. INISIALISASI & LOCALSTORAGE
@@ -4471,72 +4474,59 @@
         }
 
         async function connectUsbPrinter() {
-            if (!navigator.usb) {
-                showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid) {
+                settings.printerConnectionType = 'usb';
+                settings.rawBtBridgeSelected = true;
+                savePrinterSettingsLive(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                showToast('Jalur USB Android siap. Sambungkan printer melalui kabel OTG dan pilih USB di RawBT. Cetak dari AJM dikirim langsung tanpa dialog cetak.');
                 return;
             }
-            let device = null;
+            if (!window.qz || !qz.websocket) {
+                showToast('QZ Tray belum termuat. Pastikan QZ Tray dan AJM Auto Print Service aktif di Windows, lalu muat ulang aplikasi.', 'warning');
+                return;
+            }
             try {
-                // Gunakan koneksi yang masih hidup bila tombol ditekan berulang.
-                if (usbPrinterDevice && usbPrinterDevice.opened) {
-                    showToast('Printer USB sudah terhubung. Siap cetak langsung.');
-                    updateHardwareBadgesUI();
-                    return;
+                qz.security.setCertificatePromise(function(resolve, reject) {
+                    fetch('http://127.0.0.1:18777/certificate', { cache: 'no-store' })
+                        .then(response => response.ok ? response.text() : Promise.reject(new Error('Sertifikat lokal tidak dapat dibaca')))
+                        .then(resolve).catch(reject);
+                });
+                qz.security.setSignatureAlgorithm('SHA512');
+                qz.security.setSignaturePromise(function(toSign) {
+                    return function(resolve, reject) {
+                        fetch('http://127.0.0.1:18777/sign', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ toSign: toSign })
+                        }).then(response => response.ok ? response.text() : Promise.reject(new Error('Penandatanganan lokal gagal')))
+                          .then(resolve).catch(reject);
+                    };
+                });
+                if (!qz.websocket.isActive()) await qz.websocket.connect({ retries: 2, delay: 1 });
+                qzTrayConnected = true;
+                const printers = await qz.printers.find();
+                if (!printers || !printers.length) throw new Error('QZ Tray aktif, tetapi tidak ada printer Windows yang terdeteksi.');
+                const preferred = printers.find(name => /RPP210A|POS58|58mm/i.test(name));
+                let selected = preferred || (printers.length === 1 ? printers[0] : null);
+                if (!selected) {
+                    const choice = window.prompt('Pilih printer Windows dengan mengetik nomor:\n' + printers.map((name, i) => (i + 1) + '. ' + name).join('\n'));
+                    const index = Number(choice) - 1;
+                    if (choice === null || !Number.isInteger(index) || index < 0 || index >= printers.length) throw new Error('Pemilihan printer dibatalkan atau nomor tidak valid.');
+                    selected = printers[index];
                 }
-
-                // Prioritaskan perangkat yang sebelumnya sudah diberi izin oleh Chrome.
-                // getDevices() tidak membuka dialog izin; izin tetap tersimpan untuk origin ini.
-                const permitted = await navigator.usb.getDevices();
-                const printerMatches = permitted.filter(d => /pos.?58|thermal|receipt|printer/i.test(
-                    [d.productName, d.manufacturerName].filter(Boolean).join(' ')
-                ));
-                if (printerMatches.length === 1) {
-                    device = printerMatches[0];
-                } else if (printerMatches.length > 1) {
-                    // Jika lebih dari satu printer thermal diizinkan, pilih POS58 bila namanya tersedia.
-                    device = printerMatches.find(d => /pos.?58/i.test(d.productName || '')) || null;
-                }
-
-                // Hanya minta pemilihan perangkat bila belum ada printer berizin yang cocok.
-                if (!device) {
-                    device = await navigator.usb.requestDevice({ filters: [] });
-                }
-
-                await device.open();
-                if (device.configuration === null) {
-                    const config = device.configurations && device.configurations[0];
-                    if (!config) throw new Error('Konfigurasi USB printer tidak ditemukan');
-                    await device.selectConfiguration(config.configurationValue);
-                }
-
-                // Cari interface yang memiliki endpoint OUT untuk mengirim data ESC/POS.
-                let chosen = null;
-                for (const iface of (device.configuration?.interfaces || [])) {
-                    for (const alt of (iface.alternates || [])) {
-                        const out = (alt.endpoints || []).find(ep => ep.direction === 'out' && (ep.type === 'bulk' || ep.type === 'interrupt'));
-                        if (out) { chosen = { iface, alt, out }; break; }
-                    }
-                    if (chosen) break;
-                }
-                if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT. Pastikan POS58 terhubung melalui kabel USB data.');
-
-                await device.claimInterface(chosen.iface.interfaceNumber);
-                if (chosen.alt.alternateSetting !== 0) {
-                    await device.selectAlternateInterface(chosen.iface.interfaceNumber, chosen.alt.alternateSetting);
-                }
-                usbPrinterDevice = device;
-                usbPrinterEndpoint = chosen.out.endpointNumber;
-                usbPrinterInterface = chosen.iface.interfaceNumber;
+                qzPrinterName = selected;
                 settings.printerConnectionType = 'usb';
-                savePrinterSettingsLive();
-                renderPrinterSettingsUI();
-                updateHardwareBadgesUI();
-                showToast(`Printer USB "${device.productName || 'Thermal Printer'}" aktif. Siap cetak langsung.`);
+                settings.rawBtBridgeSelected = false;
+                settings.qzPrinterName = selected;
+                savePrinterSettingsLive(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                showToast('QZ Tray terhubung. Printer USB siap: ' + selected);
             } catch (err) {
-                console.error('Aktivasi printer USB gagal:', err);
-                try { if (device && device.opened) await device.close(); } catch (e) {}
-                const msg = err?.message || 'Koneksi USB gagal';
-                showToast(`Printer USB gagal diaktifkan: ${msg}`, 'error');
+                console.error('Koneksi QZ Tray / printer USB gagal:', err);
+                qzTrayConnected = Boolean(window.qz && qz.websocket && qz.websocket.isActive());
+                qzPrinterName = '';
+                renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                const detail = [err?.name, err?.message].filter(Boolean).join(': ');
+                showToast(detail ? ('QZ Tray gagal — ' + detail) : 'QZ Tray tidak dapat dihubungi. Pastikan aplikasinya aktif.', 'warning');
             }
         }
 
@@ -4557,6 +4547,8 @@
                 usbPrinterEndpoint = null;
                 usbPrinterInterface = null;
             }
+            if (qzTrayConnected && window.qz && qz.websocket.isActive()) { try { await qz.websocket.disconnect(); } catch (e) {} }
+            qzTrayConnected = false; qzPrinterName = '';
             renderPrinterSettingsUI();
             updateHardwareBadgesUI();
             showToast('Koneksi perangkat printer diputus');
@@ -4715,6 +4707,14 @@
                 return true;
             }
 
+            if (settings.printerConnectionType === 'usb' && qzTrayConnected && qzPrinterName && window.qz) {
+                const hex = Array.from(payload, byte => byte.toString(16).padStart(2, '0')).join('');
+                const config = qz.configs.create(qzPrinterName, { encoding: 'ISO-8859-1', copies });
+                await qz.print(config, [{ type: 'raw', format: 'command', flavor: 'hex', data: hex }]);
+                showToast(`Struk (${copies}x) terkirim langsung ke ${qzPrinterName} melalui QZ Tray.`);
+                return true;
+            }
+
             if (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened) {
                 for (let c = 0; c < copies; c++) {
                     await usbPrinterDevice.transferOut(usbPrinterEndpoint, payload);
@@ -4744,8 +4744,8 @@
             // tidak dapat diakses langsung oleh browser; gunakan dialog sistem/RawBT.
             const directReady =
                 (settings.printerConnectionType === 'bluetooth' && ((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) || (isAjmNativePrinterAvailable() && window.AJMNativePrinter.isConnected() === 'true'))) ||
-                (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened);
-            if (settings.printerConnectionType === 'usb' && !(usbPrinterDevice && usbPrinterDevice.opened)) {
+                (settings.printerConnectionType === 'usb' && ((usbPrinterDevice && usbPrinterDevice.opened) || (qzTrayConnected && !!qzPrinterName)));
+            if (settings.printerConnectionType === 'usb' && !((usbPrinterDevice && usbPrinterDevice.opened) || (qzTrayConnected && !!qzPrinterName))) {
                 showToast('Printer USB belum aktif. Buka Pengaturan Printer lalu tekan Aktifkan Printer via USB.', 'warning');
                 if (btn) btn.disabled = false;
                 if (label) label.textContent = 'CETAK STRUK SEKARANG';
@@ -4919,7 +4919,7 @@ window.addEventListener('afterprint', function () {
             // Status tombol USB di header: kuning saat siap diaktifkan, hijau saat sudah terhubung.
             const usbHeaderBtn = document.getElementById('header-usb-connect-btn');
             if (usbHeaderBtn) {
-                const usbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+                const usbConnected = Boolean((usbPrinterDevice && usbPrinterDevice.opened) || (qzTrayConnected && qzPrinterName));
                 const usbLabel = usbConnected ? 'USB Terhubung' : 'Aktifkan printer USB';
                 usbHeaderBtn.title = usbConnected ? 'Printer USB sudah terhubung. Klik untuk memilih ulang perangkat.' : 'Klik untuk mengaktifkan printer USB';
                 usbHeaderBtn.setAttribute('aria-label', usbLabel);
