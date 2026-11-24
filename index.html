@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<!-- AJM Reborn POS: integrated USB/BLE direct print + responsive omzet charts | build 2026-11-24 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AJM Reborn - Sistem Kasir & Manajemen Bengkel Motor</title>
@@ -16,9 +17,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.3.0/qz-tray.js"></script>
     <script>
         // Fallback agar fungsi aplikasi tetap berjalan saat CDN ikon tidak tersedia.
         window.lucide = window.lucide || { createIcons: function() {} };
@@ -83,16 +82,13 @@
         /* Gaya Kertas Struk Thermal 58mm & 80mm */
         .thermal-paper {
             background: #ffffff;
-            color: #000000;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 1.45;
-            box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.18);
+            color: #111827;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.38;
+            box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.25);
             position: relative;
             transition: width 0.2s ease;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: geometricPrecision;
         }
         .paper-58mm {
             width: 58mm;
@@ -705,140 +701,6 @@
         .settings-category-arrow {width:16px;height:16px;color:#94a3b8;flex:0 0 auto}
         .settings-panel {scroll-margin-top:12px}
         @media(max-width:640px){.settings-category-tile{padding:12px;gap:10px}.settings-category-icon{width:38px;height:38px;flex-basis:38px}}
-
-        /* Thermal receipt print quality: plain text, no dotted/dashed frames or rules. */
-        @media print {
-            body.printing-receipt #printable-receipt-area,
-            body.printing-receipt #printable-receipt-area * {
-                border: 0 !important;
-                outline: 0 !important;
-                box-shadow: none !important;
-                text-shadow: none !important;
-                background-image: none !important;
-                color: #000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            body.printing-receipt #printable-receipt-area {
-                font-family: Arial, Helvetica, sans-serif !important;
-                font-size: 12px !important;
-                font-weight: 500 !important;
-                line-height: 1.45 !important;
-                letter-spacing: 0 !important;
-            }
-            body.printing-receipt #printable-receipt-area .font-mono {
-                font-family: Arial, Helvetica, sans-serif !important;
-                letter-spacing: 0 !important;
-            }
-            body.printing-receipt #printable-receipt-area .text-sm { font-size: 14px !important; }
-            body.printing-receipt #printable-receipt-area .text-xs { font-size: 12px !important; }
-        }
-
-        /* Mobile topbar: keep status, clock and action icons grouped with balanced spacing. */
-        @media (max-width: 700px) {
-            #app-topbar-actions {
-                width:100% !important;
-                min-width:0 !important;
-                display:flex !important;
-                flex-direction:row !important;
-                flex-wrap:wrap !important;
-                align-items:center !important;
-                justify-content:flex-start !important;
-                gap:8px !important;
-                padding:0 !important;
-                margin:0 !important;
-            }
-            #header-network-status {
-                flex:0 0 auto !important;
-                padding:7px 10px !important;
-                min-height:38px !important;
-                font-size:12px !important;
-                gap:7px !important;
-            }
-            #app-topbar-actions > div[title="Waktu Indonesia Barat"] {
-                flex:0 0 auto !important;
-                padding:7px 10px !important;
-                min-height:38px !important;
-                font-size:13px !important;
-                gap:6px !important;
-            }
-            #app-topbar-actions > button {
-                flex:0 0 42px !important;
-                width:42px !important;
-                min-width:42px !important;
-                height:42px !important;
-                padding:9px !important;
-                border-radius:13px !important;
-                margin:0 !important;
-            }
-            #app-topbar-actions > button svg {
-                width:21px !important;
-                height:21px !important;
-            }
-        }
-        @media (max-width: 390px) {
-            #app-topbar-actions { gap:6px !important; }
-            #header-network-status {
-                min-height:35px !important;
-                padding:6px 8px !important;
-                font-size:11px !important;
-            }
-            #app-topbar-actions > div[title="Waktu Indonesia Barat"] {
-                min-height:35px !important;
-                padding:6px 8px !important;
-                font-size:12px !important;
-            }
-            #app-topbar-actions > button {
-                flex-basis:38px !important;
-                width:38px !important;
-                min-width:38px !important;
-                height:38px !important;
-                padding:8px !important;
-                border-radius:11px !important;
-            }
-            #app-topbar-actions > button svg {
-                width:19px !important;
-                height:19px !important;
-            }
-        }
-
-        /* FINAL TOPBAR REPAIR: consistent geometry on desktop and mobile. */
-        #app-topbar, #app-topbar-inner, #app-topbar-brand, #app-topbar-actions { box-sizing:border-box !important; }
-        #app-topbar-inner { width:100% !important; min-width:0 !important; gap:16px !important; }
-        #app-topbar-brand { flex:1 1 auto !important; min-width:0 !important; }
-        #app-topbar-actions { flex:0 0 auto !important; display:flex !important; align-items:center !important; gap:10px !important; min-width:0 !important; }
-        #app-topbar-actions > button {
-            position:relative !important; display:inline-flex !important; align-items:center !important; justify-content:center !important;
-            flex:0 0 40px !important; width:40px !important; min-width:40px !important; height:40px !important;
-            min-height:40px !important; padding:0 !important; margin:0 !important; line-height:0 !important; font-size:0 !important;
-            border-radius:12px !important; overflow:hidden !important; box-sizing:border-box !important;
-        }
-        #app-topbar-actions > button svg { display:block !important; width:20px !important; height:20px !important; flex:0 0 20px !important; }
-        #header-usb-connect-btn { color:#111827 !important; }
-        #app-topbar-actions > #header-usb-connect-btn { flex:0 0 auto !important; width:auto !important; min-width:40px !important; height:36px !important; min-height:36px !important; padding:0 10px !important; line-height:1.2 !important; font-size:11px !important; gap:6px !important; overflow:visible !important; white-space:nowrap !important; }
-        #app-topbar-actions > #header-usb-connect-btn span { display:inline !important; font-size:11px !important; line-height:1.2 !important; }
-        @media (min-width:701px) {
-            #app-topbar-inner { min-height:76px !important; height:auto !important; padding:12px 22px !important; }
-            #app-topbar-actions { flex-wrap:nowrap !important; }
-            #app-topbar-actions > div { white-space:nowrap !important; }
-        }
-        @media (max-width:700px) {
-            #app-topbar-inner { display:flex !important; flex-direction:column !important; align-items:stretch !important; justify-content:center !important; gap:12px !important; height:auto !important; min-height:0 !important; padding:12px 14px !important; }
-            #app-topbar-brand { width:100% !important; flex:0 0 auto !important; }
-            #app-topbar-actions { width:100% !important; display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px 40px 40px !important; align-items:center !important; gap:8px !important; }
-            #header-network-status, #app-topbar-actions > div[title="Waktu Indonesia Barat"] { width:100% !important; min-width:0 !important; min-height:40px !important; justify-content:center !important; padding:7px 8px !important; box-sizing:border-box !important; font-size:12px !important; }
-            #app-topbar-actions > button { width:40px !important; min-width:40px !important; height:40px !important; min-height:40px !important; }
-            #app-topbar-actions > button svg { width:20px !important; height:20px !important; }
-            #app-topbar-brand #header-subtitle { display:none !important; }
-        }
-        @media (max-width:390px) {
-            #app-topbar-inner { padding-left:10px !important; padding-right:10px !important; }
-            #app-topbar-actions { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px 36px 36px !important; gap:6px !important; }
-            #app-topbar-actions > button { width:36px !important; min-width:36px !important; height:36px !important; min-height:36px !important; }
-            #app-topbar-actions > button svg { width:18px !important; height:18px !important; }
-            #header-network-status, #app-topbar-actions > div[title="Waktu Indonesia Barat"] { min-height:36px !important; font-size:11px !important; }
-        }
-
 </style>
     <link id="ajm-app-favicon" rel="icon" type="image/webp" href="data:image/webp;base64,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">
     </head>
@@ -935,9 +797,10 @@
                     <span id="header-wo-badge" class="hidden absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <!-- Tombol Koneksi Printer USB: ukuran disamakan dengan tombol Logout -->
-                <button id="header-usb-connect-btn" type="button" onclick="connectUsbPrinter()" title="Hubungkan printer USB" aria-label="Hubungkan printer USB" class="p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 active:scale-95 transition border border-amber-200/30 flex items-center justify-center shrink-0" style="min-height:36px" >
-                    <i data-lucide="usb" class="w-4 h-4"></i>
+                <!-- Tombol Scan Barcode -->
+                <button onclick="openBarcodeModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs">
+                    <i data-lucide="scan-line" class="w-4 h-4"></i>
+                    <span class="hidden lg:inline">Scan</span>
                 </button>
 
                 <!-- Tombol Logout -->
@@ -1134,8 +997,7 @@
                         </button>
                         <button onclick="openBarcodeModal()" class="px-3.5 py-2.5 bg-royal-50 text-royal-600 border border-royal-200 hover:bg-royal-100 rounded-xl font-bold text-xs flex items-center gap-1.5 shrink-0 active:scale-95 transition">
                             <i data-lucide="scan-barcode" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Scanner</span>
-                        </button>
+                            <span class="hidden sm:inline">Scanner</span>                        </button>
                     </div>
 
                     <!-- Filter Kategori Horizontal Scroll -->
@@ -1504,9 +1366,6 @@
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
                             <span>Export Laporan Excel</span>
                         </button>
-                        <button type="button" id="rep-toggle-extra-charts" onclick="toggleExtraReportCharts()" aria-expanded="false" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 transition">
-                            <i data-lucide="chart-no-axes-combined" class="w-3.5 h-3.5"></i><span>Tampilkan Grafik</span>
-                        </button>
                         <button onclick="switchReportSubTab('laporan-utama')" id="rep-btn-utama" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-royal-600 text-white">
                             Laporan Laba
                         </button>
@@ -1538,33 +1397,6 @@
                                 <button onclick="exportFinancialReportCSV()" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1">
                                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Excel
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm xl:col-span-2">
-                                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                    <div>
-                                        <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Grafik Omzet</h3>
-                                        <p class="text-[11px] text-slate-500">Total omzet berdasarkan periode laporan yang dipilih</p>
-                                    </div>
-                                    <select id="rep-chart-style" onchange="renderFinancialReportCharts()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
-                                        <option value="line">Garis modern</option>
-                                        <option value="area">Area</option>
-                                        <option value="bar">Batang</option>
-                                    </select>
-                                </div>
-                                <div class="relative h-64 sm:h-72"><canvas id="rep-trend-chart"></canvas></div>
-                            </div>
-                            <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="font-extrabold text-slate-800 text-xs mb-1">Komposisi Pembayaran</h3>
-                                <p class="text-[11px] text-slate-500 mb-3">Pembayaran tunai, QRIS, transfer, dan sisa piutang</p>
-                                <div class="relative h-60"><canvas id="rep-payment-chart"></canvas></div>
-                            </div>
-                            <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="font-extrabold text-slate-800 text-xs mb-1">Peringkat Mekanik</h3>
-                                <p class="text-[11px] text-slate-500 mb-3">Omzet berdasarkan mekanik pada periode terpilih</p>
-                                <div class="relative h-48 sm:h-52"><canvas id="rep-mechanic-chart"></canvas></div>
                             </div>
                         </div>
 
@@ -1637,6 +1469,32 @@
                             </div>
                         </div>
 
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Grafik Omzet</h3>
+                                    <p id="rep-omzet-chart-caption" class="text-[11px] text-slate-500 mt-0.5">Tren omzet mengikuti periode laporan yang dipilih</p>
+                                </div>
+                                <span id="rep-omzet-chart-total" class="text-xs font-extrabold text-royal-700 bg-royal-50 px-3 py-1.5 rounded-xl">Rp 0</span>
+                            </div>
+                            <div class="relative w-full h-[210px] sm:h-[250px]">
+                                <canvas id="rep-omzet-chart" class="block w-full h-full" role="img" aria-label="Grafik omzet bengkel"></canvas>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" id="btn-toggle-detail-charts" onclick="toggleDetailReportCharts()" class="px-3 py-2 rounded-xl text-[11px] font-bold text-royal-700 bg-royal-50 hover:bg-royal-100 border border-royal-100 flex items-center gap-1.5"><i data-lucide="chart-column" class="w-3.5 h-3.5"></i> Tampilkan Grafik Detail</button>
+                            </div>
+                            <div id="detail-report-charts" class="hidden border-t border-slate-100 pt-3 space-y-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <p class="text-xs font-bold text-slate-700">Analisis Laporan</p>
+                                    <select id="detail-report-chart-type" onchange="renderDetailReportChart()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700">
+                                        <option value="profit">Laba Kotor</option>
+                                        <option value="transactions">Jumlah Transaksi</option>
+                                    </select>
+                                </div>
+                                <div class="relative w-full h-[190px] sm:h-[220px]"><canvas id="rep-detail-chart" class="block w-full h-full" role="img" aria-label="Grafik analisis laporan"></canvas></div>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="bg-white p-4 rounded-2xl border border-slate-200">
                                 <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-3">Rincian Penerimaan Kas & Piutang</h3>
@@ -1664,11 +1522,6 @@
                                 <span>Catat Kas Baru</span>
                             </button>
                         </div>
-                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="font-extrabold text-slate-800 text-sm">Tren Arus Kas Operasional</h3>
-                            <p class="text-[11px] text-slate-500 mb-3">Perbandingan kas masuk dan kas keluar berdasarkan catatan kas</p>
-                            <div class="relative h-64"><canvas id="rep-cashflow-chart"></canvas></div>
-                        </div>
                         <div id="cashflow-list" class="space-y-2"></div>
                     </div>
 
@@ -1677,11 +1530,6 @@
                         <div class="bg-white p-4 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 text-sm">Laporan Aktivitas Pelanggan</h3>
                             <p class="text-xs text-slate-500 mt-1">Ringkasan jumlah transaksi, total belanja, dan kunjungan setiap pelanggan berdasarkan data nota.</p>
-                        </div>
-                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="font-extrabold text-slate-800 text-sm">Pelanggan dengan Nilai Transaksi Tertinggi</h3>
-                            <p class="text-[11px] text-slate-500 mb-3">Peringkat berdasarkan akumulasi belanja dari transaksi tercatat</p>
-                            <div class="relative h-64"><canvas id="rep-customer-chart"></canvas></div>
                         </div>
                         <div id="customer-report-list" class="space-y-2"></div>
                     </div>
@@ -1730,11 +1578,6 @@
                             </button>
                         </div>
 
-                        <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="font-extrabold text-slate-800 text-sm">Analisis Piutang Pelanggan</h3>
-                            <p class="text-[11px] text-slate-500 mb-3">Grafik mengikuti pilihan status dan pencarian pelanggan di atas</p>
-                            <div class="relative h-64"><canvas id="rep-debt-chart"></canvas></div>
-                        </div>
                         <div id="customer-receivables-list" class="space-y-3">
                             <!-- Kartu piutang per pelanggan dirender via JS -->
                         </div>
@@ -1990,7 +1833,7 @@
                                 <span class="text-[10px] font-bold text-slate-400">ESC/POS</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">Bluetooth Thermal</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Koneksi langsung printer Bluetooth 58/80mm</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Koneksi BLE ESC/POS yang didukung browser (bukan Bluetooth SPP)</p>
                         </button>
 
                         <button type="button" onclick="selectPrinterConnectionType('usb')" data-printer-type="usb" class="printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300">
@@ -2059,18 +1902,7 @@
                             <label class="text-[11px] font-bold text-slate-700">Lebar (mm)<input id="set-custom-paper-width" type="number" min="20" max="500" onchange="setCustomPrintSize()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs"></label>
                             <label class="text-[11px] font-bold text-slate-700">Tinggi (mm)<input id="set-custom-paper-height" type="number" min="20" max="1000" onchange="setCustomPrintSize()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs"></label>
                             <label class="text-[11px] font-bold text-slate-700">Ukuran huruf<select id="set-print-font-size" onchange="savePrintLayoutSettings()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs"><option value="8">8 pt</option><option value="9">9 pt</option><option value="10">10 pt</option><option value="11">11 pt</option><option value="12">12 pt</option><option value="14">14 pt</option><option value="16">16 pt</option></select></label>
-                            <label class="text-[11px] font-bold text-slate-700">Jenis huruf<select id="set-print-font-family" onchange="savePrintLayoutSettings()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-                                <option value="Arial">Arial (Rekomendasi Thermal)</option>
-                                <option value="Helvetica">Helvetica</option>
-                                <option value="Courier New">Courier New (Monospace)</option>
-                                <option value="Consolas">Consolas (Monospace)</option>
-                                <option value="Lucida Console">Lucida Console</option>
-                                <option value="Tahoma">Tahoma</option>
-                                <option value="Verdana">Verdana</option>
-                                <option value="Inter">Inter</option>
-                                <option value="JetBrains Mono">JetBrains Mono</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                            </select></label>
+                            <label class="text-[11px] font-bold text-slate-700">Jenis huruf<select id="set-print-font-family" onchange="savePrintLayoutSettings()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs"><option>JetBrains Mono</option><option>Arial</option><option>Inter</option><option>Verdana</option><option>Times New Roman</option></select></label>
                             <label class="text-[11px] font-bold text-slate-700">Margin (mm)<input id="set-print-margin" type="number" min="0" max="30" step="0.5" onchange="savePrintLayoutSettings()" class="mt-1 w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs"></label>
                         </div>
                     </div>
@@ -2164,8 +1996,7 @@
 
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Promo / Info Tambahan di Bawah Nota</label>
-                            <input type="text" id="set-receipt-promo-note" oninput="saveGriyoReceiptSettings()" placeholder="Contoh: Promo ganti oli & servis rutin minggu ini!" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500">
-                        </div>
+                            <input type="text" id="set-receipt-promo-note" oninput="saveGriyoReceiptSettings()" placeholder="Contoh: Promo ganti oli & servis rutin minggu ini!" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500">                        </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-1 text-xs">
                             <label class="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
@@ -2214,44 +2045,6 @@
                             </label>
                         </div>
                     </div>
-                    <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3 space-y-3">
-                        <div>
-                            <h4 class="text-xs font-extrabold text-slate-800">Header & Konten Struk</h4>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Atur informasi bengkel dan elemen yang ditampilkan pada hasil cetak.</p>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Header Tambahan Struk</label>
-                            <input type="text" id="set-receipt-header" placeholder="Contoh: Spesialis Servis, Tune Up & Sparepart Motor" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:border-sky-500">
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                <input type="checkbox" id="set-show-logo" class="rounded text-sky-600">
-                                <span>Tampilkan Logo di Struk</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                <input type="checkbox" id="set-show-mechanic" class="rounded text-sky-600">
-                                <span>Tampilkan Nama Mekanik di Struk</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                <input type="checkbox" id="set-show-plate" class="rounded text-sky-600">
-                                <span>Tampilkan Plat & Tipe Motor di Struk</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                <input type="checkbox" id="set-show-customer-name" class="rounded text-sky-600">
-                                <span>Sertakan Nama Pelanggan di Struk Lengkap</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Footer / Catatan Garansi Struk</label>
-                            <textarea id="set-receipt-footer" rows="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-sky-500"></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="button" onclick="saveReceiptHeaderSettings()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-2">
-                                <i data-lucide="save" class="w-4 h-4"></i> Simpan Pengaturan Struk
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
 
                 <!-- ==================================================== -->
@@ -2263,8 +2056,8 @@
                             <i data-lucide="store" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm">Identitas Bengkel & Logo</h3>
-                            <p class="text-xs text-slate-500">Atur identitas bengkel dan logo yang digunakan pada aplikasi maupun struk</p>
+                            <h3 class="font-bold text-slate-800 text-sm">Identitas Bengkel, Logo, Komisi & Konten Struk</h3>
+                            <p class="text-xs text-slate-500">Sesuaikan logo bengkel di struk, nama toko, komisi jasa mekanik, dan catatan garansi</p>
                         </div>
                     </div>
 
@@ -2314,7 +2107,40 @@
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Komisi Mekanik dari Jasa Servis (%)</label>
+                                <input type="number" id="set-mechanic-commission" min="0" max="100" step="1" value="20" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold outline-none focus:border-royal-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Header Tambahan Struk</label>
+                                <input type="text" id="set-receipt-header" placeholder="Contoh: Spesialis Servis, Bore Up & Remap ECU" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:border-royal-500">
+                            </div>
+                        </div>
 
+                        <div class="flex flex-wrap gap-4 pt-1">
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-logo" class="rounded text-royal-600">
+                                <span>Tampilkan Logo di Struk</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-mechanic" class="rounded text-royal-600">
+                                <span>Tampilkan Nama Mekanik di Struk</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-plate" class="rounded text-royal-600">
+                                <span>Tampilkan Plat & Tipe Motor di Struk</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-customer-name" class="rounded text-royal-600">
+                                <span>Sertakan Nama Pelanggan di Struk Lengkap</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Footer / Catatan Garansi Struk</label>
+                            <textarea id="set-receipt-footer" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500"></textarea>
+                        </div>
 
                         <div class="pt-1 flex justify-end">
                             <button type="submit" class="px-5 py-2.5 bg-royal-600 hover:bg-royal-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition">
@@ -2700,11 +2526,6 @@
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Spesialisasi</label>
                     <input type="text" id="mech-spec" placeholder="Contoh: Tune Up & Injeksi" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Komisi Jasa Servis Mekanik (%)</label>
-                    <input type="number" id="mech-commission-rate" min="0" max="100" step="0.5" value="20" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-royal-500">
-                    <p class="text-[10px] text-slate-400 mt-1">Komisi dihitung dari total item kategori Jasa Servis yang ditangani mekanik ini.</p>
                 </div>
                 <button id="mechanic-save-btn" type="submit" class="w-full py-2.5 bg-royal-600 text-white font-bold rounded-xl text-xs">Simpan Mekanik</button>
             </form>
@@ -3174,8 +2995,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">                    <div>
                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Metode Pembayaran</label>
                         <select id="dpm-method" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-royal-500">
                             <option value="Tunai">Tunai</option>
@@ -3308,7 +3128,7 @@
             printerAutoCut: true,
             printerOpenDrawer: false,
             printPreset: '58mm', customPaperWidth: 58, customPaperHeight: 100,
-            printFontSize: 11, printFontFamily: 'Arial', printMargin: 2,
+            printFontSize: 10, printFontFamily: 'JetBrains Mono', printMargin: 3,
             appTheme: 'blue', appFontFamily: 'Inter', appCompact: false, itemCodeType: 'EAN13', historyDeletePassword: '', paymentTransferMethods: ['BCA', 'BRI', 'BNI', 'Mandiri'], paymentEwalletMethods: ['QRIS', 'DANA', 'OVO', 'GoPay', 'ShopeePay']
         };
 
@@ -3396,13 +3216,9 @@
 
         let btPrinterDevice = null;
         let btPrinterCharacteristic = null;
-        // Bluetooth Classic SPP via Web Serial (Chrome Android 138+ / desktop).
-        let btSerialPort = null;
-        let btSerialPortLabel = '';
         let usbPrinterDevice = null;
         let usbPrinterEndpoint = null;
-        let qzPrinterName = '';
-        let qzTrayConnected = false;
+        let usbPrinterInterface = null;
 
         // ==========================================
         // 2. INISIALISASI & LOCALSTORAGE
@@ -3433,15 +3249,15 @@
             root.style.setProperty('--app-print-height',`${h}mm`);
             root.style.setProperty('--app-print-margin',`${Math.max(0,Number(settings.printMargin??3))}mm`);
             root.style.setProperty('--app-print-font-size',`${Math.max(6,Number(settings.printFontSize)||10)}pt`);
-            root.style.setProperty('--app-print-font-family',`'${settings.printFontFamily||'Arial'}',sans-serif`);
+            root.style.setProperty('--app-print-font-family',`'${settings.printFontFamily||'JetBrains Mono'}',sans-serif`);
             let dynamicPrintStyle=document.getElementById('dynamic-print-page-style');
             if(!dynamicPrintStyle){dynamicPrintStyle=document.createElement('style');dynamicPrintStyle.id='dynamic-print-page-style';document.head.appendChild(dynamicPrintStyle);}
             const pageHeight=(preset==='58mm'||preset==='80mm')?'auto':`${h}mm`;
-            dynamicPrintStyle.textContent=`@media print{@page{size:${w}mm ${pageHeight};margin:${Math.max(0,Number(settings.printMargin??3))}mm;}.thermal-paper{font-family:'${settings.printFontFamily||'Arial'}',sans-serif!important;font-size:${Math.max(6,Number(settings.printFontSize)||10)}pt!important;width:${w}mm!important;max-width:none!important;}}`;
+            dynamicPrintStyle.textContent=`@media print{@page{size:${w}mm ${pageHeight};margin:${Math.max(0,Number(settings.printMargin??3))}mm;}.thermal-paper{font-family:'${settings.printFontFamily||'JetBrains Mono'}',sans-serif!important;font-size:${Math.max(6,Number(settings.printFontSize)||10)}pt!important;width:${w}mm!important;max-width:none!important;}}`;
             const put=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
             put('set-print-preset',preset);put('set-custom-paper-width',settings.customPaperWidth||w);
             put('set-custom-paper-height',settings.customPaperHeight||h);put('set-print-font-size',settings.printFontSize||10);
-            put('set-print-font-family',settings.printFontFamily||'Arial');put('set-print-margin',settings.printMargin??3);
+            put('set-print-font-family',settings.printFontFamily||'JetBrains Mono');put('set-print-margin',settings.printMargin??3);
             if(preset==='58mm'||preset==='80mm'){settings.paperSize=preset;put('set-paper-size',preset);}
         }
         function setCustomPrintSize(){
@@ -3568,11 +3384,15 @@
         });
 
         function initApp() {
-            // Pulihkan sesi login tersimpan; sesi hanya berakhir melalui tombol Logout.
+            // Sesi login tidak boleh dipulihkan dari penyimpanan lokal saat aplikasi dibuka ulang.
+            currentSession = null;
+            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
             loadAllData();
             ensureEveryProductHasBarcode();
             normalizeLegacyTransactions();
 
+            // Login wajib setiap aplikasi/tab dibuka. Sesi hanya hidup di memori aplikasi.
+            currentSession = null;
 
             renderBrandLogos();
             applySettingsUI();
@@ -3600,30 +3420,6 @@
             lucide.createIcons();
         }
 
-        function readPersistedSession() {
-            try {
-                const stored = localStorage.getItem(DB_KEYS.SESSION);
-                if (stored) return JSON.parse(stored);
-            } catch (e) { console.warn('Gagal membaca sesi dari Local Storage:', e); }
-            try {
-                const match = document.cookie.match(/(?:^|;\\s*)ajm_reborn_login_session=([^;]+)/);
-                if (match) return JSON.parse(decodeURIComponent(match[1]));
-            } catch (e) { console.warn('Gagal membaca sesi cadangan:', e); }
-            return null;
-        }
-
-        function persistCurrentSession() {
-            if (!currentSession || !currentSession.userId) return;
-            const value = JSON.stringify(currentSession);
-            try { localStorage.setItem(DB_KEYS.SESSION, value); } catch (e) { console.warn('Local Storage sesi tidak tersedia:', e); }
-            try { document.cookie = 'ajm_reborn_login_session=' + encodeURIComponent(value) + '; Path=/; Max-Age=31536000; SameSite=Lax; Secure'; } catch (e) {}
-        }
-
-        function clearPersistedSession() {
-            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
-            try { document.cookie = 'ajm_reborn_login_session=; Path=/; Max-Age=0; SameSite=Lax; Secure'; } catch (e) {}
-        }
-
         function loadAllData() {
             const now = new Date();
             const todayIso = now.toISOString();
@@ -3633,15 +3429,8 @@
             customers = JSON.parse(localStorage.getItem(DB_KEYS.CUSTOMERS)) || JSON.parse(JSON.stringify(DEFAULT_CUSTOMERS));
             mechanics = JSON.parse(localStorage.getItem(DB_KEYS.MECHANICS)) || JSON.parse(JSON.stringify(DEFAULT_MECHANICS));
             settings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS)) || {});
-            // Migrasi hanya konfigurasi cetak bawaan versi lama; pilihan khusus pengguna tetap dipertahankan.
-            if (settings.printFontSize === 10 && settings.printFontFamily === 'JetBrains Mono' && settings.printMargin === 3) {
-                settings.printFontSize = 11;
-                settings.printFontFamily = 'Arial';
-                settings.printMargin = 2;
-                localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
-            }
             users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)) || JSON.parse(JSON.stringify(DEFAULT_USERS));
-            currentSession = readPersistedSession();
+            currentSession = null; // sesi tidak dipulihkan antar pembukaan aplikasi
             syncQueue = JSON.parse(localStorage.getItem(DB_KEYS.SYNC_QUEUE)) || [];
             driveMeta = Object.assign({ folderId: null, lastSyncAt: null, lastError: null, accessToken: null, tokenExpiry: 0 }, JSON.parse(localStorage.getItem(DB_KEYS.DRIVE_META)) || {});
 
@@ -4205,8 +3994,7 @@
                 showToast('Scanner Web Serial berhasil terhubung!');
                 readSerialScannerLoop();
             } catch (err) {
-                serialScannerPort = null;
-                showToast('Koneksi Serial dibatalkan atau gagal', 'warning');
+                serialScannerPort = null;                showToast('Koneksi Serial dibatalkan atau gagal', 'warning');
             }
         }
 
@@ -4346,7 +4134,6 @@
         // 2C. MODUL PERANGKAT PRINTER THERMAL
         // ==========================================
         function selectPrinterConnectionType(type) {
-            if (settings.printerConnectionType !== type) settings.rawBtBridgeSelected = false;
             settings.printerConnectionType = type;
             saveAllData();
             renderPrinterSettingsUI();
@@ -4374,129 +4161,76 @@
             renderPrinterSettingsUI();
         }
 
-        function isBluetoothPrinterConnected() {
-            const serialConnected = Boolean(btSerialPort && btSerialPort.readable && btSerialPort.writable);
-            const bleConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic);
-            return serialConnected || bleConnected;
-        }
-
-        function getBluetoothPrinterLabel() {
-            return btSerialPort ? (btSerialPortLabel || 'Bluetooth SPP') : (btPrinterDevice && btPrinterDevice.name) || 'Thermal Printer BT';
-        }
-
         function renderPrinterSettingsUI() {
             const pType = settings.printerConnectionType || 'browser';
-            const isAndroid = /Android/i.test(navigator.userAgent || '');
-            const rawBtReady = Boolean(isAndroid && settings.rawBtBridgeSelected && (pType === 'bluetooth' || pType === 'usb'));
             document.querySelectorAll('.printer-type-card').forEach(card => {
                 const active = card.dataset.printerType === pType;
                 card.className = active
                     ? 'printer-type-card p-3 rounded-2xl border-2 text-left transition bg-sky-50/70 border-sky-500'
                     : 'printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300';
             });
+
             const btnBt = document.getElementById('btn-pair-bluetooth-printer');
             const btnUsb = document.getElementById('btn-pair-usb-printer');
             const btnDisc = document.getElementById('btn-disconnect-printer');
             const nameLbl = document.getElementById('printer-device-name-label');
             const hintLbl = document.getElementById('printer-device-hint-label');
             const pillEl = document.getElementById('printer-conn-pill');
-            if (!nameLbl || !pillEl) return;
 
-            const isBtConnected = isBluetoothPrinterConnected();
-            const isUsbConnected = Boolean(qzTrayConnected && qzPrinterName);
-            if (btnBt) btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected || rawBtReady);
-            if (btnUsb) btnUsb.classList.toggle('hidden', pType !== 'usb' || isUsbConnected || rawBtReady);
-            if (btnDisc) btnDisc.classList.toggle('hidden', !(isBtConnected || isUsbConnected || rawBtReady));
+            if (!nameLbl) return;
+
+            const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+            const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+
+            btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected);
+            btnUsb.classList.toggle('hidden', pType !== 'usb' || isUsbConnected);
+            btnDisc.classList.toggle('hidden', !(isBtConnected || isUsbConnected));
 
             if (pType === 'browser') {
                 nameLbl.textContent = `Perangkat Aktif: Printer Sistem / OS (${settings.paperSize})`;
-                hintLbl.textContent = 'Mode ini menggunakan dialog cetak sistem. Pilih Bluetooth/USB untuk cetak langsung.';
+                hintLbl.textContent = 'Mode cadangan: memakai dialog cetak sistem. Untuk cetak tanpa dialog, pilih USB atau Bluetooth BLE lalu aktifkan koneksi perangkat.';
                 pillEl.textContent = `Printer Sistem (${settings.paperSize})`;
                 pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
             } else if (pType === 'bluetooth') {
                 if (isBtConnected) {
-                    nameLbl.textContent = `Terhubung Bluetooth: ${getBluetoothPrinterLabel()} (${settings.paperSize})`;
-                    hintLbl.textContent = 'Siap mengirim perintah ESC/POS langsung melalui Bluetooth SPP/BLE.';
-                    pillEl.textContent = `BT: ${getBluetoothPrinterLabel()}`;
+                    nameLbl.textContent = `Terhubung Bluetooth: ${btPrinterDevice.name || 'Thermal Printer BT'} (${settings.paperSize})`;
+                    hintLbl.textContent = 'Terhubung via BLE/GATT. Cetak ESC/POS langsung jika printer mendukung karakteristik tulis.';
+                    pillEl.textContent = `BT: ${btPrinterDevice.name || 'Terhubung'}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
-                } else if (rawBtReady) {
-                    nameLbl.textContent = `Jalur Bluetooth Android: RawBT (${settings.paperSize})`;
-                    hintLbl.textContent = 'Perintah ESC/POS dikirim langsung ke RawBT. Pastikan printer Bluetooth sudah dipilih dan aktif di aplikasi RawBT.';
-                    pillEl.textContent = 'RawBT Dipilih';
-                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
                 } else {
-                    nameLbl.textContent = 'Perangkat Bluetooth: Belum Terhubung';
-                    hintLbl.textContent = isAndroid ? 'Tekan Hubungkan Bluetooth Android. Untuk printer Bluetooth Classic SPP, gunakan RawBT.' : 'Nyalakan printer thermal Bluetooth lalu klik Hubungkan Bluetooth.';
+                    nameLbl.textContent = 'Perangkat Bluetooth: Belum Dipasangkan';
+                    hintLbl.textContent = 'AJM mencoba koneksi BLE/GATT untuk cetak ESC/POS langsung. Printer Classic SPP 58mm tidak dapat diakses langsung oleh browser; diperlukan jembatan Bluetooth.';
                     pillEl.textContent = 'BT Belum Terhubung';
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 self-start sm:self-auto';
                 }
             } else if (pType === 'usb') {
                 if (isUsbConnected) {
-                    nameLbl.textContent = `Terhubung USB: ${qzPrinterName || 'USB Thermal Printer'} (${settings.paperSize})`;
-                    hintLbl.textContent = 'Siap mencetak ESC/POS langsung via USB melalui QZ Tray.';
-                    pillEl.textContent = `USB: ${qzPrinterName || 'Terhubung'}`;
+                    nameLbl.textContent = `Terhubung USB: ${usbPrinterDevice.productName || 'USB Thermal Printer'} (${settings.paperSize})`;
+                    hintLbl.textContent = 'Siap mencetak struk ESC/POS langsung via kabel USB.';
+                    pillEl.textContent = `USB: ${usbPrinterDevice.productName || 'Terhubung'}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
-                } else if (rawBtReady) {
-                    nameLbl.textContent = `Jalur USB Android: RawBT (${settings.paperSize})`;
-                    hintLbl.textContent = 'Hubungkan printer USB OTG dan pilih USB di pengaturan aplikasi RawBT. AJM akan mengirim ESC/POS langsung ke RawBT.';
-                    pillEl.textContent = 'RawBT Dipilih';
-                    pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat USB Thermal: Belum Terhubung';
-                    hintLbl.textContent = isAndroid ? 'Tekan Hubungkan USB untuk memakai RawBT melalui kabel OTG.' : 'Colokkan kabel USB printer kasir lalu klik Hubungkan USB. QZ Tray harus aktif.';
+                    hintLbl.textContent = 'Sambungkan printer melalui kabel USB/OTG, lalu tekan Aktifkan Printer via USB. Setelah aktif, struk dikirim langsung tanpa dialog cetak.';
                     pillEl.textContent = 'USB Belum Terhubung';
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 self-start sm:self-auto';
                 }
             }
 
-            const paper = document.getElementById('set-paper-size');
-            const copies = document.getElementById('set-printer-copies');
-            const density = document.getElementById('set-printer-density');
-            const autoPrint = document.getElementById('set-printer-autoprint');
-            const autoCut = document.getElementById('set-printer-autocut');
-            const drawer = document.getElementById('set-printer-drawer');
-            if (paper) paper.value = settings.paperSize || '58mm';
+            document.getElementById('set-paper-size').value = settings.paperSize || '58mm';
             applyPrintLayoutSettings();
-            if (copies) copies.value = String(settings.printerCopies || 1);
-            if (density) density.value = settings.printerDensity || 'normal';
-            if (autoPrint) autoPrint.checked = Boolean(settings.printerAutoPrint);
-            if (autoCut) autoCut.checked = settings.printerAutoCut !== false;
-            if (drawer) drawer.checked = Boolean(settings.printerOpenDrawer);
+            document.getElementById('set-printer-copies').value = String(settings.printerCopies || 1);
+            document.getElementById('set-printer-density').value = settings.printerDensity || 'normal';
+            document.getElementById('set-printer-autoprint').checked = Boolean(settings.printerAutoPrint);
+            document.getElementById('set-printer-autocut').checked = settings.printerAutoCut !== false;
+            document.getElementById('set-printer-drawer').checked = Boolean(settings.printerOpenDrawer);
         }
 
         async function connectBluetoothPrinter() {
-            const isAndroid = /Android/i.test(navigator.userAgent || '');
-            if (isAndroid) {
-                settings.printerConnectionType = 'bluetooth';
-                settings.rawBtBridgeSelected = true;
-                saveAllData();
-                renderPrinterSettingsUI();
-                updateHardwareBadgesUI();
-                showToast('Jalur Bluetooth Android siap. Pastikan RawBT terpasang, pilih printer Bluetooth di RawBT, lalu cetak dari AJM tanpa dialog cetak Android.');
-                return;
-            }
-            if (navigator.serial && typeof navigator.serial.requestPort === 'function') {
-                try {
-                    const port = await navigator.serial.requestPort();
-                    await port.open({ baudRate: 9600 });
-                    btSerialPort = port;
-                    btSerialPortLabel = 'Bluetooth Classic SPP';
-                    port.addEventListener('disconnect', () => {
-                        btSerialPort = null; btSerialPortLabel = '';
-                        renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                    });
-                    settings.printerConnectionType = 'bluetooth';
-                    settings.rawBtBridgeSelected = false;
-                    saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                    showToast('Printer Bluetooth Classic SPP terhubung. Siap menerima ESC/POS.');
-                    return;
-                } catch (serialErr) {
-                    if (serialErr && serialErr.name === 'NotFoundError') { showToast('Pemilihan printer dibatalkan.', 'warning'); return; }
-                    console.warn('Bluetooth SPP / Web Serial gagal:', serialErr);
-                }
-            }
+            // Coba BLE/GATT terlebih dahulu, termasuk pada Chrome Android.
+            // Printer Bluetooth Classic SPP tidak diekspos oleh Web Bluetooth browser.
             if (!navigator.bluetooth) {
-                showToast('Bluetooth langsung tidak tersedia di browser ini. Untuk printer Android Bluetooth Classic gunakan RawBT.', 'warning');
+                showToast('Browser ini tidak menyediakan Web Bluetooth. Printer Classic SPP memerlukan layanan penghubung Bluetooth khusus; pilih Printer Sistem bila memakai RawBT.', 'warning');
                 return;
             }
             try {
@@ -4508,275 +4242,251 @@
                 const services = await server.getPrimaryServices();
                 btPrinterCharacteristic = null;
                 for (const svc of services) {
-                    const chars = await svc.getCharacteristics();
-                    const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
-                    if (writable) { btPrinterCharacteristic = writable; break; }
+                    try {
+                        const chars = await svc.getCharacteristics();
+                        const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                        if (writable) {
+                            btPrinterCharacteristic = writable;
+                            break;
+                        }
+                    } catch (serviceError) {
+                        console.warn('Layanan BLE tidak dapat dibaca:', serviceError);
+                    }
                 }
                 if (!btPrinterCharacteristic) {
                     try { device.gatt.disconnect(); } catch (e) {}
-                    showToast('Printer BLE terhubung tetapi layanan tulis ESC/POS tidak ditemukan.', 'warning');
+                    showToast('Perangkat terdeteksi, tetapi tidak menyediakan kanal tulis BLE ESC/POS. Jika printer memakai Bluetooth SPP, gunakan Printer Sistem + RawBT.', 'warning');
                     return;
                 }
                 btPrinterDevice = device;
-                settings.printerConnectionType = 'bluetooth';
-                settings.rawBtBridgeSelected = false;
                 device.addEventListener('gattserverdisconnected', () => {
-                    btPrinterCharacteristic = null; renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                    btPrinterCharacteristic = null;
+                    renderPrinterSettingsUI();
+                    updateHardwareBadgesUI();
                 });
-                saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                showToast(`Printer Bluetooth BLE "${device.name || 'Thermal'}" terhubung.`);
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+                showToast(`Printer Bluetooth "${device.name || 'Thermal'}" terhubung!`);
             } catch (err) {
-                showToast('Pemasangan printer Bluetooth dibatalkan atau gagal: ' + (err?.message || ''), 'warning');
+                showToast('Pemasangan printer Bluetooth dibatalkan atau gagal', 'warning');
             }
         }
 
         async function connectUsbPrinter() {
-            const isAndroid = /Android/i.test(navigator.userAgent || '');
-            if (isAndroid) {
-                settings.printerConnectionType = 'usb';
-                settings.rawBtBridgeSelected = true;
-                saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                showToast('Jalur USB Android siap. Sambungkan printer melalui kabel OTG dan pilih USB di RawBT. Cetak dari AJM akan dikirim langsung tanpa dialog cetak.');
+            if (!navigator.usb) {
+                showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome Android/Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
                 return;
             }
-            if (!window.qz || !qz.websocket) {
-                showToast('QZ Tray belum termuat. Pastikan QZ Tray dan AJM Auto Print Service aktif di Windows, lalu muat ulang aplikasi.', 'warning');
-                return;
-            }
+            let device = null;
             try {
-                qz.security.setCertificatePromise(function(resolve, reject) {
-                    fetch('http://127.0.0.1:18777/certificate', { cache: 'no-store' })
-                        .then(response => response.ok ? response.text() : Promise.reject(new Error('Sertifikat lokal tidak dapat dibaca')))
-                        .then(resolve).catch(reject);
-                });
-                qz.security.setSignatureAlgorithm('SHA512');
-                qz.security.setSignaturePromise(function(toSign) {
-                    return function(resolve, reject) {
-                        fetch('http://127.0.0.1:18777/sign', {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ toSign: toSign })
-                        }).then(response => response.ok ? response.text() : Promise.reject(new Error('Penandatanganan lokal gagal')))
-                          .then(resolve).catch(reject);
-                    };
-                });
-                if (!qz.websocket.isActive()) await qz.websocket.connect({ retries: 2, delay: 1 });
-                qzTrayConnected = true;
-                const printers = await qz.printers.find();
-                if (!printers || !printers.length) throw new Error('QZ Tray aktif, tetapi tidak ada printer Windows yang terdeteksi.');
-                const preferred = printers.find(name => /RPP210A|POS58|58mm/i.test(name));
-                let selected = preferred || (printers.length === 1 ? printers[0] : null);
-                if (!selected) {
-                    const choice = window.prompt('Pilih printer Windows dengan mengetik nomor:\n' + printers.map((name, i) => (i + 1) + '. ' + name).join('\n'));
-                    const index = Number(choice) - 1;
-                    if (choice === null || !Number.isInteger(index) || index < 0 || index >= printers.length) throw new Error('Pemilihan printer dibatalkan atau nomor tidak valid.');
-                    selected = printers[index];
+                device = await navigator.usb.requestDevice({ filters: [] });
+                await device.open();
+                if (device.configuration === null) {
+                    const config = device.configurations && device.configurations[0];
+                    if (!config) throw new Error('Konfigurasi USB printer tidak ditemukan');
+                    await device.selectConfiguration(config.configurationValue);
                 }
-                qzPrinterName = selected;
+
+                // Cari interface printer yang benar-benar memiliki endpoint OUT.
+                // Beberapa printer thermal tidak menggunakan interface index 0.
+                let chosen = null;
+                for (const iface of (device.configuration?.interfaces || [])) {
+                    for (const alt of (iface.alternates || [])) {
+                        const out = (alt.endpoints || []).find(ep => ep.direction === 'out' && (ep.type === 'bulk' || ep.type === 'interrupt'));
+                        if (out) { chosen = { iface, alt, out }; break; }
+                    }
+                    if (chosen) break;
+                }
+                if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT untuk mengirim data ESC/POS');
+
+                await device.claimInterface(chosen.iface.interfaceNumber);
+                if (chosen.alt.alternateSetting !== 0) {
+                    await device.selectAlternateInterface(chosen.iface.interfaceNumber, chosen.alt.alternateSetting);
+                }
+                usbPrinterDevice = device;
+                usbPrinterEndpoint = chosen.out.endpointNumber;
+                usbPrinterInterface = chosen.iface.interfaceNumber;
                 settings.printerConnectionType = 'usb';
-                settings.rawBtBridgeSelected = false;
-                settings.qzPrinterName = selected;
-                saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                showToast('QZ Tray terhubung. Printer USB siap: ' + selected);
+                savePrinterSettingsLive();
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+                showToast(`Printer USB "${device.productName || 'Thermal Printer'}" aktif. Siap cetak langsung.`);
             } catch (err) {
-                console.error('Koneksi QZ Tray / printer USB gagal:', err);
-                qzTrayConnected = Boolean(window.qz && qz.websocket && qz.websocket.isActive());
-                qzPrinterName = '';
-                renderPrinterSettingsUI(); updateHardwareBadgesUI();
-                const detail = [err?.name, err?.message].filter(Boolean).join(': ');
-                showToast(detail ? ('QZ Tray gagal — ' + detail) : 'QZ Tray tidak dapat dihubungi. Pastikan aplikasinya aktif.', 'warning');
+                console.error('Aktivasi printer USB gagal:', err);
+                try { if (device && device.opened) await device.close(); } catch (e) {}
+                const msg = err?.message || 'Koneksi USB gagal';
+                showToast(`Printer USB gagal diaktifkan: ${msg}`, 'error');
             }
         }
 
         async function disconnectHardwarePrinter() {
-            if (btSerialPort) { try { await btSerialPort.close(); } catch (e) {} btSerialPort = null; btSerialPortLabel = ''; }
-            if (btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) { try { btPrinterDevice.gatt.disconnect(); } catch (e) {} }
-            btPrinterDevice = null; btPrinterCharacteristic = null;
-            if (usbPrinterDevice) { try { await usbPrinterDevice.close(); } catch (e) {} usbPrinterDevice = null; usbPrinterEndpoint = null; }
-            if (qzTrayConnected && window.qz && qz.websocket.isActive()) { try { await qz.websocket.disconnect(); } catch (e) {} }
-            qzTrayConnected = false; qzPrinterName = '';
-            settings.rawBtBridgeSelected = false;
-            settings.printerConnectionType = 'browser';
-            saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
-            showToast('Mode koneksi printer diputus.');
+            if (btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) {
+                try { btPrinterDevice.gatt.disconnect(); } catch (e) {}
+            }
+            btPrinterDevice = null;
+            btPrinterCharacteristic = null;
+
+            if (usbPrinterDevice) {
+                try { await usbPrinterDevice.close(); } catch (e) {}
+                usbPrinterDevice = null;
+                usbPrinterEndpoint = null;
+                usbPrinterInterface = null;
+            }
+            renderPrinterSettingsUI();
+            updateHardwareBadgesUI();
+            showToast('Koneksi perangkat printer diputus');
         }
 
         function buildEscPosReceiptBytes(trx) {
-            // Cetak native ESC/POS: printer membentuk huruf sendiri, bukan bitmap/PDF browser.
             const encoder = new TextEncoder();
-            const paperPreset = settings.printPreset || settings.paperSize || '58mm';
-            const width = paperPreset === '80mm' ? 48 : 32;
+            const width = settings.paperSize === '80mm' ? 48 : 32;
+            const lineSep = '-'.repeat(width) + '\n';
             const payInfo = getTransactionPaymentBreakdown(trx);
+
             const chunks = [];
-            const cmd = (...bytes) => chunks.push(new Uint8Array(bytes));
-            const safe = (value) => String(value ?? '')
-                .normalize('NFKD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[\u2010-\u2015\u2212]/g, '-')
-                .replace(/[\u2018\u2019]/g, "'")
-                .replace(/[\u201c\u201d]/g, '"')
-                .replace(/[^\x20-\x7E\n]/g, '?');
-            const text = (value) => chunks.push(encoder.encode(safe(value)));
-            const feed = (n = 1) => cmd(0x1B, 0x64, Math.max(0, Math.min(20, n)));
-            const wrap = (value, limit = width) => {
-                const words = safe(value).split(/\s+/).filter(Boolean);
-                const lines = [];
-                let line = '';
-                words.forEach(word => {
-                    while (word.length > limit) {
-                        if (line) { lines.push(line); line = ''; }
-                        lines.push(word.slice(0, limit));
-                        word = word.slice(limit);
-                    }
-                    if (!word) return;
-                    const next = line ? line + ' ' + word : word;
-                    if (next.length > limit) { if (line) lines.push(line); line = word; }
-                    else line = next;
-                });
-                if (line) lines.push(line);
-                return lines.length ? lines : [''];
-            };
-            const line = (value = '') => { text(value + '\n'); };
-            const wrapped = (value) => wrap(value).forEach(part => line(part));
-            const money = value => Number(value || 0).toLocaleString('id-ID');
-            const leftRight = (left, right) => {
-                const l = safe(left), r = safe(right);
-                const gap = Math.max(1, width - l.length - r.length);
-                if (l.length + r.length >= width) {
-                    wrapped(l);
-                    line(r.slice(0, width).padStart(width));
-                } else line(l + ' '.repeat(gap) + r);
-            };
-
-            // Reset dan pilih font thermal bawaan printer (Font A), tanpa smoothing/bitmap.
-            cmd(0x1B, 0x40);             // ESC @ initialize
-            cmd(0x1B, 0x74, 0x00);       // ESC t 0: CP437 / ASCII-safe
-            cmd(0x1B, 0x4D, 0x00);       // ESC M 0: Font A
-            cmd(0x1B, 0x21, 0x00);       // ESC ! 0: normal size
-            cmd(0x1B, 0x32);             // ESC 2: default line spacing
-            cmd(0x1B, 0x45, 0x00);       // bold off
-            cmd(0x1B, 0x61, 0x01);       // center
-            cmd(0x1B, 0x45, 0x01);
-            wrapped(String(settings.storeName || 'AJM REBORN').toUpperCase());
-            cmd(0x1B, 0x45, 0x00);
-            if (settings.storeAddress) wrapped(settings.storeAddress);
-            if (settings.storePhone) wrapped('Telp: ' + settings.storePhone);
-            if (settings.receiptHeader) wrapped(settings.receiptHeader);
-            line();
-
-            cmd(0x1B, 0x61, 0x00);       // left
-            leftRight('No Nota:', trx.invoice || '-');
-            leftRight('Tanggal:', formatDateTime(trx.date));
-            if (settings.showCashier !== false) leftRight('Kasir:', trx.cashier || settings.cashierName || 'Admin');
-            if (settings.showPlate) wrapped('Motor: ' + (trx.plateMotor || 'Umum'));
-            if (settings.showCustomerNameOnReceipt) {
-                const customerName = resolveCustomerDebtDisplayInfo(trx).customerName || 'Pelanggan Umum';
-                wrapped('Pelanggan: ' + customerName);
+            // Init printer ESC @
+            chunks.push(new Uint8Array([0x1B, 0x40]));
+            // Cash Drawer Kick ESC p 0 25 250 jika aktif
+            if (settings.printerOpenDrawer) {
+                chunks.push(new Uint8Array([0x1B, 0x70, 0x00, 0x19, 0xFA]));
             }
-            if (settings.showMechanic) wrapped('Mekanik: ' + (trx.mechanic || 'Umum'));
-            line();
+            // Center align ESC a 1
+            chunks.push(new Uint8Array([0x1B, 0x61, 0x01]));
+            chunks.push(encoder.encode(`${settings.storeName.toUpperCase()}\n`));
+            chunks.push(encoder.encode(`${settings.storeAddress}\n`));
+            chunks.push(encoder.encode(`Telp: ${settings.storePhone}\n`));
+            chunks.push(encoder.encode(lineSep));
 
-            (Array.isArray(trx.items) ? trx.items : []).forEach(item => {
-                wrapped(item.name || 'Item');
-                const qty = Number(item.qty) || 1;
-                const unit = Number(item.price) || 0;
-                leftRight(qty + ' x ' + money(unit), money(qty * unit));
+            // Left align ESC a 0
+            chunks.push(new Uint8Array([0x1B, 0x61, 0x00]));
+            chunks.push(encoder.encode(`No   : ${trx.invoice}\n`));
+            chunks.push(encoder.encode(`Tgl  : ${formatDateTime(trx.date)}\n`));
+            chunks.push(encoder.encode(`Kasir: ${trx.cashier || settings.cashierName}\n`));
+            if (settings.showPlate) chunks.push(encoder.encode(`Motor: ${trx.plateMotor || 'Umum'}\n`));
+            if (settings.showMechanic) chunks.push(encoder.encode(`Mek  : ${trx.mechanic || 'Umum'}\n`));
+            chunks.push(encoder.encode(lineSep));
+
+            trx.items.forEach(it => {
+                chunks.push(encoder.encode(`${it.name}\n`));
+                const left = `${it.qty} x ${Number(it.price).toLocaleString('id-ID')}`;
+                const right = Number(it.price * it.qty).toLocaleString('id-ID');
+                const spaces = Math.max(1, width - left.length - right.length);
+                chunks.push(encoder.encode(left + ' '.repeat(spaces) + right + '\n'));
             });
-            line();
 
-            if (trx.subtotal !== undefined) leftRight('Subtotal', 'Rp ' + money(trx.subtotal));
-            if (Number(trx.discount) > 0) leftRight('Diskon', '-Rp ' + money(trx.discount));
-            if (Number(trx.tax) > 0) leftRight('Biaya/Pajak', 'Rp ' + money(trx.tax));
-            // Total dibuat tebal dan dua kali tinggi (bukan lebar) agar mudah dibaca pada kertas 58 mm.
-            cmd(0x1B, 0x21, 0x10);       // ESC !: double-height, normal-width
-            cmd(0x1B, 0x45, 0x01);       // bold on
-            leftRight('TOTAL', 'Rp ' + money(trx.total));
-            cmd(0x1B, 0x45, 0x00);       // bold off
-            cmd(0x1B, 0x21, 0x00);       // normal size
-            if (settings.receiptShowPaymentMethod !== false) leftRight('Bayar (' + (trx.paymentMethod || 'Tunai') + '):', 'Rp ' + money(payInfo.paidAmount));
-            if (Number(trx.change) > 0) leftRight('Kembalian:', 'Rp ' + money(trx.change));
-            if (payInfo.remainingDebt > 0) leftRight('Sisa Piutang:', 'Rp ' + money(payInfo.remainingDebt));
-            if (settings.receiptShowStatusBadge !== false) leftRight('Status:', String(trx.status || 'LUNAS').toUpperCase());
+            chunks.push(encoder.encode(lineSep));
+            chunks.push(encoder.encode(`TOTAL  : Rp ${Number(trx.total).toLocaleString('id-ID')}\n`));
+            chunks.push(encoder.encode(`BAYAR  : Rp ${Number(payInfo.paidAmount).toLocaleString('id-ID')} (${trx.paymentMethod})\n`));
+            if (trx.change > 0) chunks.push(encoder.encode(`KEMBALI: Rp ${Number(trx.change).toLocaleString('id-ID')}\n`));
+            if (payInfo.remainingDebt > 0) chunks.push(encoder.encode(`PIUTANG: Rp ${Number(payInfo.remainingDebt).toLocaleString('id-ID')}\n`));
+            chunks.push(encoder.encode(lineSep));
 
-            if (settings.receiptPromoNote && settings.receiptShowPromoNote !== false) {
-                line(); cmd(0x1B, 0x61, 0x01); wrapped(settings.receiptPromoNote); cmd(0x1B, 0x61, 0x00);
+            // Center footer
+            chunks.push(new Uint8Array([0x1B, 0x61, 0x01]));
+            chunks.push(encoder.encode(`${settings.receiptFooter || 'Terima kasih'}\n`));
+
+            // Barcode / QR transaksi: cetak sebagai perintah ESC/POS asli,
+            // bukan hanya HTML/SVG (yang tidak ikut terbawa saat direct USB/BLE).
+            const receiptCodeType = getGriyoReceiptConfig().barcodeType || 'barcode';
+            const receiptCode = String(trx.invoice || '').trim();
+            if (receiptCode && receiptCodeType !== 'none') {
+                if (receiptCodeType === 'qr') {
+                    const qrData = encoder.encode(receiptCode);
+                    const storeLen = qrData.length + 3;
+                    chunks.push(new Uint8Array([0x1B,0x61,0x01]));
+                    chunks.push(encoder.encode('\n'));
+                    // QR model 2, module size 5, error correction M.
+                    chunks.push(new Uint8Array([0x1D,0x28,0x6B,0x04,0x00,0x31,0x41,0x32,0x00]));
+                    chunks.push(new Uint8Array([0x1D,0x28,0x6B,0x03,0x00,0x31,0x43,0x05]));
+                    chunks.push(new Uint8Array([0x1D,0x28,0x6B,0x03,0x00,0x31,0x45,0x31]));
+                    chunks.push(new Uint8Array([0x1D,0x28,0x6B,storeLen & 0xFF,(storeLen >> 8) & 0xFF,0x31,0x50,0x30]));
+                    chunks.push(qrData);
+                    chunks.push(new Uint8Array([0x1D,0x28,0x6B,0x03,0x00,0x31,0x51,0x30]));
+                } else {
+                    const barcodeData = encoder.encode('{B' + receiptCode);
+                    if (barcodeData.length <= 250) {
+                        chunks.push(new Uint8Array([0x1B,0x61,0x01]));
+                        chunks.push(new Uint8Array([0x1D,0x48,0x02])); // HRI below
+                        chunks.push(new Uint8Array([0x1D,0x68,0x48])); // height
+                        chunks.push(new Uint8Array([0x1D,0x77,0x02])); // module width
+                        chunks.push(new Uint8Array([0x1D,0x6B,0x49,barcodeData.length]));
+                        chunks.push(barcodeData);
+                        chunks.push(encoder.encode('\n'));
+                    }
+                }
+                chunks.push(encoder.encode(receiptCode + '\n'));
             }
-            if (settings.receiptFooter && settings.receiptShowFooter !== false) {
-                line(); cmd(0x1B, 0x61, 0x01); wrapped(settings.receiptFooter); cmd(0x1B, 0x61, 0x00);
+            chunks.push(encoder.encode('\n\n'));
+
+            // Auto-cut GS V 66 0
+            if (settings.printerAutoCut !== false) {
+                chunks.push(new Uint8Array([0x1D, 0x56, 0x42, 0x00]));
             }
 
-            // Cetak barcode invoice langsung via ESC/POS Code 128 (lebih sesuai untuk kode INV-...).
-            // Gunakan subset B dengan prefix {B dan format panjang data GS k m=73.
-            const barcodeType = settings.receiptBarcodeType || 'barcode';
-            const invoiceCode = String(trx.invoice || '').toUpperCase();
-            if (barcodeType === 'barcode' && invoiceCode && /^[\x20-\x7E]+$/.test(invoiceCode)) {
-                cmd(0x1B, 0x61, 0x01); // center
-                cmd(0x1D, 0x48, 0x02); // HRI text below barcode
-                cmd(0x1D, 0x68, 0x50); // barcode height: 80 dots
-                cmd(0x1D, 0x77, 0x02); // module width
-                const code128Data = '{B' + invoiceCode;
-                const code128Bytes = encoder.encode(code128Data);
-                cmd(0x1D, 0x6B, 0x49, code128Bytes.length); // GS k, Code 128, data length
-                chunks.push(code128Bytes);
-                feed(1);
-                cmd(0x1B, 0x61, 0x00); // left
-            }
-
-            cmd(0x1B, 0x61, 0x00);
-            cmd(0x1B, 0x45, 0x00);
-            feed(4);
-            if (settings.printerAutoCut !== false) cmd(0x1D, 0x56, 0x42, 0x00);
-            const total = chunks.reduce((sum, part) => sum + part.length, 0);
-            const output = new Uint8Array(total);
+            const totalLen = chunks.reduce((s, a) => s + a.length, 0);
+            const merged = new Uint8Array(totalLen);
             let offset = 0;
-            chunks.forEach(part => { output.set(part, offset); offset += part.length; });
-            return output;
+            chunks.forEach(arr => {
+                merged.set(arr, offset);
+                offset += arr.length;
+            });
+            return merged;
         }
-        async function sendRawEscPosToConnectedPrinter(trx) {
-            const copies = Math.max(1, Math.min(10, Number(settings.printerCopies) || 1));
-            const payload = buildEscPosReceiptBytes(trx);
 
-            // Android Bluetooth Classic SPP dan USB OTG menggunakan RawBT bridge.
-            // URI ini membawa byte ESC/POS asli tanpa membuka dialog cetak Android.
-            if (/Android/i.test(navigator.userAgent || '') && settings.rawBtBridgeSelected &&
-                (settings.printerConnectionType === 'bluetooth' || settings.printerConnectionType === 'usb')) {
-                const combined = new Uint8Array(payload.length * copies);
-                for (let i = 0; i < copies; i++) combined.set(payload, i * payload.length);
+        // Android Bluetooth Classic SPP bridge: send ESC/POS bytes to RawBT.
+        // Browser Web Bluetooth can only access BLE/GATT, not Classic SPP.
+        function sendRawEscPosViaRawBT(trx) {
+            if (!/Android/i.test(navigator.userAgent || '')) return false;
+            try {
+                const copies = Math.max(1, Number(settings.printerCopies) || 1);
+                const payload = buildEscPosReceiptBytes(trx);
+                const all = new Uint8Array(payload.length * copies);
+                for (let c = 0; c < copies; c++) all.set(payload, c * payload.length);
                 let binary = '';
-                for (let i = 0; i < combined.length; i += 0x8000) {
-                    binary += String.fromCharCode(...combined.subarray(i, Math.min(i + 0x8000, combined.length)));
+                const step = 0x8000;
+                for (let i = 0; i < all.length; i += step) {
+                    binary += String.fromCharCode.apply(null, all.subarray(i, Math.min(i + step, all.length)));
                 }
                 const base64 = btoa(binary);
-                window.location.href = 'intent:base64,' + base64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dru.a402d.rawbtprinter;end;';
-                showToast('Data ESC/POS dikirim ke RawBT. Pastikan printer aktif di RawBT dan tunggu hasil cetak.');
+                const intentUrl = 'intent:base64,' + base64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+                window.location.href = intentUrl;
+                showToast('Mengirim struk langsung ke RawBT. Pastikan printer sudah dipilih di aplikasi RawBT.');
+                return true;
+            } catch (error) {
+                console.error('Gagal mengirim ke RawBT:', error);
+                showToast('Tidak dapat membuka RawBT. Pastikan aplikasi RawBT sudah terpasang.', 'error');
+                return false;
+            }
+        }
+
+        async function sendRawEscPosToConnectedPrinter(trx) {
+            const copies = Math.max(1, Number(settings.printerCopies) || 1);
+            const payload = buildEscPosReceiptBytes(trx);
+
+            if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
+                for (let c = 0; c < copies; c++) {
+                    const chunkSize = 100;
+                    for (let i = 0; i < payload.length; i += chunkSize) {
+                        const slice = payload.slice(i, i + chunkSize);
+                        if (btPrinterCharacteristic.writeValueWithoutResponse) {
+                            await btPrinterCharacteristic.writeValueWithoutResponse(slice);
+                        } else {
+                            await btPrinterCharacteristic.writeValue(slice);
+                        }
+                    }
+                }
+                showToast(`Struk (${copies}x) terkirim ke Printer Bluetooth!`);
                 return true;
             }
 
-            if (settings.printerConnectionType === 'bluetooth' && btSerialPort && btSerialPort.writable) {
-                const writer = btSerialPort.writable.getWriter();
-                try { for (let c = 0; c < copies; c++) await writer.write(payload); }
-                finally { writer.releaseLock(); }
-                showToast(`Struk (${copies}x) terkirim langsung via Bluetooth SPP!`);
-                return true;
-            }
-            if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
+            if (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened) {
                 for (let c = 0; c < copies; c++) {
-                    const chunkSize = 20;
-                    for (let i = 0; i < payload.length; i += chunkSize) {
-                        const slice = payload.slice(i, i + chunkSize);
-                        if (btPrinterCharacteristic.writeValueWithoutResponse) await btPrinterCharacteristic.writeValueWithoutResponse(slice);
-                        else await btPrinterCharacteristic.writeValue(slice);
-                    }
+                    await usbPrinterDevice.transferOut(usbPrinterEndpoint, payload);
                 }
-                showToast(`Struk (${copies}x) terkirim ke Printer Bluetooth BLE!`);
+                showToast(`Struk (${copies}x) terkirim ke Printer USB!`);
                 return true;
             }
-            if (settings.printerConnectionType === 'usb' && qzTrayConnected && qzPrinterName && window.qz) {
-                const hex = Array.from(payload, byte => byte.toString(16).padStart(2, '0')).join('');
-                const config = qz.configs.create(qzPrinterName, { encoding: 'ISO-8859-1', copies });
-                await qz.print(config, [{ type: 'raw', format: 'command', flavor: 'hex', data: hex }]);
-                showToast(`Perintah ESC/POS (${copies}x) dikirim ke ${qzPrinterName} melalui QZ Tray.`);
-                return true;
-            }
+
             return false;
         }
 
@@ -4784,27 +4494,52 @@
             const btn = document.getElementById('receipt-print-action');
             const label = document.getElementById('receipt-print-btn-label');
             const source = document.getElementById('printable-receipt-area');
+
             if (!activeReceiptTrx || !source || !source.innerHTML.trim()) {
                 showToast('Nota belum tersedia. Proses transaksi terlebih dahulu.', 'error');
                 return;
             }
+
             if (btn) btn.disabled = true;
             if (label) label.textContent = 'MENYIAPKAN CETAK...';
-            const connectionType = settings.printerConnectionType || 'browser';
 
-            // Bluetooth/USB adalah jalur cetak langsung. Jika belum siap, berhenti
-            // dengan pesan jelas; jangan alihkan diam-diam ke preview A4/dialog Android.
-            if (connectionType === 'bluetooth' || connectionType === 'usb') {
+            // Prioritaskan cetak ESC/POS langsung hanya jika perangkat benar-benar
+            // tersambung melalui BLE/GATT atau USB. Bluetooth Classic SPP Android
+            // tidak dapat diakses langsung oleh browser; gunakan dialog sistem/RawBT.
+            const directReady =
+                (settings.printerConnectionType === 'bluetooth' && btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) ||
+                (settings.printerConnectionType === 'usb' && usbPrinterDevice && usbPrinterDevice.opened);
+            if (settings.printerConnectionType === 'usb' && !(usbPrinterDevice && usbPrinterDevice.opened)) {
+                showToast('Printer USB belum aktif. Buka Pengaturan Printer lalu tekan Aktifkan Printer via USB.', 'warning');
+                if (btn) btn.disabled = false;
+                if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                return;
+            }
+            if (directReady) {
                 try {
                     const sent = await sendRawEscPosToConnectedPrinter(activeReceiptTrx);
-                    if (!sent) showToast('Printer belum siap. Periksa koneksi Bluetooth/USB, RawBT Android, atau QZ Tray Windows.', 'warning');
-                } catch (rawError) {
-                    console.error('Cetak ESC/POS langsung gagal:', rawError);
-                    showToast('Cetak langsung gagal: ' + (rawError?.message || 'periksa koneksi printer dan aplikasi penghubung.'), 'error');
-                } finally {
+                    if (sent) {
+                        if (btn) btn.disabled = false;
+                        if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Cetak langsung gagal:', error);
+                    showToast('Cetak langsung gagal. Periksa koneksi printer dan coba lagi; dialog cetak tidak akan dibuka otomatis.', 'error');
                     if (btn) btn.disabled = false;
                     if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                    return;
                 }
+            } else if (settings.printerConnectionType === 'bluetooth') {
+                // For Android Classic SPP, route straight to RawBT and never open A4 print preview.
+                if (sendRawEscPosViaRawBT(activeReceiptTrx)) {
+                    if (btn) btn.disabled = false;
+                    if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                    return;
+                }
+                showToast('Cetak langsung Bluetooth SPP memerlukan aplikasi RawBT di Android. Dialog cetak sistem tidak dibuka.', 'warning');
+                if (btn) btn.disabled = false;
+                if (label) label.textContent = 'CETAK STRUK SEKARANG';
                 return;
             }
 
@@ -4813,8 +4548,13 @@
             const paperHeightMm = preset === '58mm' || preset === '80mm' ? 'auto' : `${Number(settings.customPaperHeight) || (preset === 'A4' ? 297 : preset === 'A5' ? 210 : 279.4)}mm`;
             const paperWidth = `${paperWidthMm}mm`;
             let printWindow = null;
-            try { printWindow = window.open('', 'AJMReceiptPrint', 'popup=yes,width=480,height=720'); }
-            catch (error) { console.warn('Browser menolak jendela cetak:', error); }
+
+            // WAJIB sinkron di dalam klik tombol agar tidak dianggap popup otomatis.
+            try {
+                printWindow = window.open('', 'AJMReceiptPrint', 'popup=yes,width=480,height=720');
+            } catch (error) {
+                console.warn('Browser menolak jendela cetak:', error);
+            }
 
             if (printWindow && !printWindow.closed) {
                 try {
@@ -4822,26 +4562,70 @@
                     const title = `Struk ${activeReceiptTrx.invoice || ''}`;
                     printWindow.document.open();
                     printWindow.document.write(`<!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
 <style>
 @page { size: ${paperWidth} ${paperHeightMm}; margin: 0; }
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#000}
-body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-height:1.35;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#paper{width:${paperWidth};max-width:100%;margin:0;padding:2mm 2.2mm;overflow-wrap:anywhere;word-break:normal;color:#000}
-.text-center{text-align:center}.text-right{text-align:right}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.uppercase{text-transform:uppercase}.tracking-tight{letter-spacing:-.02em}
-.text-sm{font-size:14px}.text-xs{font-size:12px}.text-\\[10px\\]{font-size:11px}.flex{display:flex}.justify-between{justify-content:space-between}.items-center{align-items:center}
-.border-b{border-bottom:1px dashed #555}.border-t{border-top:1px dashed #555}.border-dashed{border-style:dashed}.border-dotted{border-style:dotted}
-.pb-2{padding-bottom:6px}.pt-2{padding-top:6px}.pt-1{padding-top:3px}.pt-0\\.5{padding-top:2px}.mb-2{margin-bottom:6px}.mb-1\\.5{margin-bottom:5px}.mb-1{margin-bottom:3px}.mt-1{margin-top:3px}.pl-2{padding-left:6px}
-.space-y-0\\.5>*+*{margin-top:2px}.max-h-12{max-height:48px}.max-w-\\[110px\\]{max-width:110px}.object-contain{object-fit:contain}.mx-auto{margin-left:auto;margin-right:auto}img{max-width:100%;height:auto}
-#paper,#paper *{border:0!important;outline:0!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}#paper{border-radius:0!important}#paper *{color:#000!important}
-#paper .font-bold,#paper .font-extrabold{font-weight:700!important}#paper .font-mono{font-family:Arial,Helvetica,sans-serif!important;letter-spacing:0!important}
-@media print{html,body{width:${paperWidth}}#paper{width:${paperWidth}}}
-</style></head><body><div id="paper">${receiptHtml}</div>
-<script>window.addEventListener('load',function(){setTimeout(function(){window.focus();window.print();},500);});window.addEventListener('afterprint',function(){setTimeout(function(){window.close();},300);});<\\/script>
-</body></html>`);
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#fff; color:#000; }
+body { font-family: Arial, Helvetica, sans-serif; font-size:10px; line-height:1.35; }
+#paper { width:${paperWidth}; max-width:100%; margin:0 auto; padding:2mm; overflow-wrap:anywhere; }
+.text-center { text-align:center; }
+.text-right { text-align:right; }
+.font-bold { font-weight:700; }
+.font-extrabold { font-weight:800; }
+.uppercase { text-transform:uppercase; }
+.tracking-tight { letter-spacing:-.02em; }
+.text-sm { font-size:12px; }
+.text-xs { font-size:11px; }
+.text-\\[10px\\] { font-size:10px; }
+.flex { display:flex; }
+.justify-between { justify-content:space-between; }
+.items-center { align-items:center; }
+.border-b { border-bottom:1px dashed #555; }
+.border-t { border-top:1px dashed #555; }
+.border-dashed { border-style:dashed; }
+.border-dotted { border-style:dotted; }
+.pb-2 { padding-bottom:6px; }
+.pt-2 { padding-top:6px; }
+.pt-1 { padding-top:3px; }
+.pt-0\\.5 { padding-top:2px; }
+.mb-2 { margin-bottom:6px; }
+.mb-1\\.5 { margin-bottom:5px; }
+.mb-1 { margin-bottom:3px; }
+.mt-1 { margin-top:3px; }
+.pl-2 { padding-left:6px; }
+.space-y-0\\.5 > * + * { margin-top:2px; }
+.max-h-12 { max-height:48px; }
+.max-w-\\[110px\\] { max-width:110px; }
+.object-contain { object-fit:contain; }
+.mx-auto { margin-left:auto; margin-right:auto; }
+img { max-width:100%; height:auto; }
+@media print { html,body { width:${paperWidth}; } #paper { width:${paperWidth}; } }
+
+</style>
+</head>
+<body>
+<div id="paper">${receiptHtml}</div>
+<script>
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    window.focus();
+    window.print();
+  }, 500);
+});
+window.addEventListener('afterprint', function () {
+  setTimeout(function(){ window.close(); }, 300);
+});
+<\/script>
+</body>
+</html>`);
                     printWindow.document.close();
                     if (label) label.textContent = 'DIALOG CETAK DIBUKA';
-                    showToast('Dialog cetak sistem dibuka karena mode Printer Sistem dipilih.');
+                    showToast('Dialog cetak dibuka. Pilih printer lalu tekan Cetak.');
                     if (btn) btn.disabled = false;
                     return;
                 } catch (error) {
@@ -4849,10 +4633,16 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     try { printWindow.close(); } catch (e) {}
                 }
             }
+
+            // Fallback: cetak nota dari halaman aplikasi bila popup diblokir.
             if (label) label.textContent = 'CETAK DARI HALAMAN INI';
-            showToast('Popup cetak diblokir. Izinkan pop-up untuk mode Printer Sistem.', 'warning');
-            try { printWithMode('printing-receipt'); }
-            catch (error) { console.error('Dialog cetak gagal:', error); showToast('Browser tidak dapat membuka dialog cetak.', 'error'); }
+            showToast('Popup cetak diblokir. Membuka dialog cetak dari aplikasi.', 'warning');
+            try {
+                printWithMode('printing-receipt');
+            } catch (error) {
+                console.error('Dialog cetak gagal:', error);
+                showToast('Browser tidak dapat membuka dialog cetak. Izinkan pop-up dan coba lagi.', 'error');
+            }
             if (btn) btn.disabled = false;
             if (label) label.textContent = 'CETAK STRUK SEKARANG';
         }
@@ -4890,45 +4680,38 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
         }
 
         function updateHardwareBadgesUI() {
-            const isAndroid = /Android/i.test(navigator.userAgent || '');
-            const rawBtSelected = Boolean(isAndroid && settings.rawBtBridgeSelected);
-            const usbHeaderBtn = document.getElementById('header-usb-connect-btn');
-            if (usbHeaderBtn) {
-                const qzUsbReady = Boolean(qzTrayConnected && qzPrinterName);
-                const rawBtUsbSelected = Boolean(rawBtSelected && settings.printerConnectionType === 'usb');
-                const usbReady = qzUsbReady || rawBtUsbSelected;
-                const usbLabel = rawBtUsbSelected ? 'USB via RawBT' : qzUsbReady ? 'USB Terhubung' : 'Hubungkan USB';
-                usbHeaderBtn.innerHTML = '<i data-lucide="usb" class="w-4 h-4"></i><span>' + usbLabel + '</span>';
-                usbHeaderBtn.title = usbReady ? (rawBtSelected ? 'Jalur USB Android melalui RawBT dipilih; pastikan printer aktif di RawBT.' : 'Printer USB aktif: ' + qzPrinterName) : 'Klik untuk menghubungkan printer USB';
-                usbHeaderBtn.setAttribute('aria-label', usbLabel);
-                usbHeaderBtn.className = qzUsbReady
-                    ? 'px-2.5 py-1.5 rounded-xl bg-emerald-400 text-emerald-950 hover:bg-emerald-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap'
-                    : rawBtUsbSelected
-                        ? 'px-2.5 py-1.5 rounded-xl bg-sky-300 text-sky-950 hover:bg-sky-200 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap'
-                        : 'px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 active:scale-95 transition flex items-center gap-1.5 text-xs font-extrabold shadow-xs whitespace-nowrap';
-                if (window.lucide) lucide.createIcons({ nodes: [usbHeaderBtn] });
-            }
             const scanDot = document.getElementById('header-scanner-dot');
             const scanText = document.getElementById('header-scanner-text');
             if (scanDot && scanText) {
                 const mode = settings.scannerMode || 'hid';
-                if (!settings.scannerEnabled) { scanDot.className = 'w-2 h-2 rounded-full bg-slate-400'; scanText.textContent = 'Scan Off'; }
-                else if (mode === 'serial') { scanDot.className = serialScannerPort ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300'; scanText.textContent = serialScannerPort ? 'Serial OK' : 'Serial'; }
-                else if (mode === 'camera') { scanDot.className = 'w-2 h-2 rounded-full bg-sky-300'; scanText.textContent = 'Kamera'; }
-                else { scanDot.className = 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse'; scanText.textContent = 'HID Siap'; }
+                if (!settings.scannerEnabled) {
+                    scanDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+                    scanText.textContent = 'Scan Off';
+                } else if (mode === 'serial') {
+                    scanDot.className = serialScannerPort ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
+                    scanText.textContent = serialScannerPort ? 'Serial OK' : 'Serial';
+                } else if (mode === 'camera') {
+                    scanDot.className = 'w-2 h-2 rounded-full bg-sky-300';
+                    scanText.textContent = 'Kamera';
+                } else {
+                    scanDot.className = 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse';
+                    scanText.textContent = 'HID Siap';
+                }
             }
+
             const prDot = document.getElementById('header-printer-dot');
             const prText = document.getElementById('header-printer-text');
             if (prDot && prText) {
                 const pType = settings.printerConnectionType || 'browser';
-                const isBtConnected = isBluetoothPrinterConnected() || (rawBtSelected && pType === 'bluetooth');
-                const isUsbConnected = Boolean((qzTrayConnected && qzPrinterName) || (rawBtSelected && pType === 'usb'));
+                const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+                const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+
                 if (pType === 'bluetooth') {
-                    prDot.className = (isBtConnected && !rawBtSelected) ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : rawBtSelected ? 'w-2 h-2 rounded-full bg-sky-300' : 'w-2 h-2 rounded-full bg-amber-300';
-                    prText.textContent = isBtConnected ? (rawBtSelected ? 'BT RawBT' : `BT ${settings.paperSize}`) : 'BT Off';
+                    prDot.className = isBtConnected ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
+                    prText.textContent = isBtConnected ? `BT ${settings.paperSize}` : `BT Off`;
                 } else if (pType === 'usb') {
-                    prDot.className = (isUsbConnected && !rawBtSelected) ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : rawBtSelected ? 'w-2 h-2 rounded-full bg-sky-300' : 'w-2 h-2 rounded-full bg-amber-300';
-                    prText.textContent = isUsbConnected ? (rawBtSelected ? 'USB RawBT' : `USB ${settings.paperSize}`) : 'USB Off';
+                    prDot.className = isUsbConnected ? 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-300';
+                    prText.textContent = isUsbConnected ? `USB ${settings.paperSize}` : `USB Off`;
                 } else {
                     prDot.className = 'w-2 h-2 rounded-full bg-sky-300';
                     prText.textContent = `${settings.paperSize || '58mm'}`;
@@ -4996,19 +4779,17 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 loginEl.classList.add('flex');
                 setTimeout(() => document.getElementById('login-username')?.focus(), 80);
             } else {
-                const validUser = users.find(u => String(u.id) === String(currentSession.userId) && u.active !== false) || users.find(u => String(u.username || '').toLowerCase() === String(currentSession.username || '').toLowerCase() && u.active !== false);
+                const validUser = users.find(u => u.id === currentSession.userId && u.active !== false);
                 if (!validUser) {
                     currentSession = null;
                     document.body.classList.remove('ajm-authenticated');
-                    clearPersistedSession();
+                    localStorage.removeItem(DB_KEYS.SESSION);
                     loginEl.classList.remove('hidden');
                     loginEl.classList.add('flex');
                 } else {
-                    currentSession.userId = validUser.id;
                     currentSession.username = validUser.username;
                     currentSession.role = validUser.role;
                     currentSession.name = validUser.name;
-                    persistCurrentSession();
                     document.body.classList.add('ajm-authenticated');
                     loginEl.classList.add('hidden');
                     loginEl.classList.remove('flex');
@@ -5048,8 +4829,8 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 role: matched.role,
                 loginAt: new Date().toISOString()
             };
-            // Simpan sesi agar tetap aktif setelah refresh atau aplikasi dibuka kembali.
-            persistCurrentSession();
+            // Sesi hanya disimpan di memori. Reload / buka ulang aplikasi selalu meminta login.
+            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
             document.getElementById('login-password').value = '';
             syncLoginScreenVisibility();
             renderAccountManagementPanel();
@@ -5067,7 +4848,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 `Apakah Anda yakin ingin keluar dari akun ${getActiveCashierDisplay()}? Sesi login akan diakhiri.`,
                 () => {
                     currentSession = null;
-                    clearPersistedSession();
+                    try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
                     syncLoginScreenVisibility();
                     showToast('Anda telah keluar dari sesi login');
                 }
@@ -5161,9 +4942,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             target.username = newUname;
             target.password = newPass;
             currentSession.username = newUname;
-            currentSession.name = target.name;
-            currentSession.role = target.role;
-            persistCurrentSession();
+            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
             saveAllData();
             applySettingsUI();
             renderAccountManagementPanel();
@@ -5214,7 +4993,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             renderAccountManagementPanel();
             showToast(`Status akun ${u.username}: ${u.active ? 'Aktif' : 'Nonaktif'}`);
         }
-
         function deleteUserAccount(userId) {
             const u = users.find(x => x.id === userId);
             if (!u || u.role === 'Admin') return;
@@ -6214,8 +5992,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 quickBadge.classList.toggle('flex', totalQty > 0);
             }
 
-            const mobileBar = document.getElementById('mobile-cart-bar');
-            if (mobileBar) {
+            const mobileBar = document.getElementById('mobile-cart-bar');            if (mobileBar) {
                 if (totalQty > 0) mobileBar.classList.remove('hidden');
                 else mobileBar.classList.add('hidden');
             }
@@ -7214,11 +6991,9 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 document.getElementById('cust-motor').value = '';
                 openModal('customer-modal');
             }
-            else if (activeMasterSub === 'master-mekanik') {
-                document.getElementById('mech-edit-id').value = '';
+            else if (activeMasterSub === 'master-mekanik') {                document.getElementById('mech-edit-id').value = '';
                 document.getElementById('mech-name').value = '';
                 document.getElementById('mech-spec').value = '';
-                document.getElementById('mech-commission-rate').value = settings.mechanicCommissionRate ?? 20;
                 document.getElementById('mechanic-modal-title').textContent = 'Tambah Mekanik Bengkel';
                 document.getElementById('mechanic-save-btn').textContent = 'Simpan Mekanik';
                 openModal('mechanic-modal');
@@ -7525,7 +7300,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             document.getElementById('mech-edit-id').value = String(mechanic.id);
             document.getElementById('mech-name').value = mechanic.name || '';
             document.getElementById('mech-spec').value = mechanic.spec || '';
-            document.getElementById('mech-commission-rate').value = mechanic.commissionRate ?? settings.mechanicCommissionRate ?? 20;
             document.getElementById('mechanic-modal-title').textContent = 'Edit Data Mekanik';
             document.getElementById('mechanic-save-btn').textContent = 'Simpan Perubahan';
             openModal('mechanic-modal');
@@ -7536,18 +7310,16 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             const editId = String(document.getElementById('mech-edit-id')?.value || '');
             const name = document.getElementById('mech-name').value.trim();
             const spec = document.getElementById('mech-spec').value.trim();
-            const commissionRate = Number(document.getElementById('mech-commission-rate').value);
             if (!name) { showToast('Nama mekanik wajib diisi.', 'error'); return; }
-            if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) { showToast('Komisi mekanik harus antara 0 sampai 100 persen.', 'error'); return; }
             if (mechanics.some(m => String(m.id) !== editId && String(m.name || '').trim().toLowerCase() === name.toLowerCase())) {
                 showToast('Nama mekanik tersebut sudah terdaftar.', 'warning'); return;
             }
             if (editId) {
                 const index = mechanics.findIndex(m => String(m.id) === editId);
                 if (index < 0) { showToast('Data mekanik tidak ditemukan.', 'error'); return; }
-                mechanics[index] = { ...mechanics[index], name, spec, commissionRate };
+                mechanics[index] = { ...mechanics[index], name, spec };
             } else {
-                mechanics.push({ id: 'm_' + Date.now(), name, spec, commissionRate });
+                mechanics.push({ id: 'm_' + Date.now(), name, spec });
             }
             saveAllData();
             populateMechanicDropdowns();
@@ -8218,8 +7990,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
         }
 
         function openStockOpnameModal() {
-            const physicalItems = products.filter(p => p.category !== 'Jasa Servis');
-            document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
+            const physicalItems = products.filter(p => p.category !== 'Jasa Servis');            document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
             document.getElementById('op-qty').value = 1;
             document.getElementById('op-note').value = '';
             openModal('opname-modal');
@@ -8310,7 +8081,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             });
             if (tab === 'laporan-utama') renderFinancialReport();
             else if (tab === 'laporan-piutang') renderCustomerReceivablesReport();
-            else if (tab === 'kas-keuangan') { renderCashflowList(); renderCashflowChart(); }
+            else if (tab === 'kas-keuangan') renderCashflowList();
             else renderCustomerActivityReport();
         }
 
@@ -8327,7 +8098,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 if (new Date(t.date) > new Date(item.lastDate)) item.lastDate = t.date;
             });
             const rows = [...grouped.values()].sort((a,b) => b.total - a.total);
-            renderCustomerActivityChart(rows);
             if (!rows.length) { container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-5 text-center text-xs text-slate-500">Belum ada data transaksi pelanggan.</div>'; return; }
             container.innerHTML = rows.map((c,i) => `
                 <div class="bg-white rounded-xl border border-slate-200 p-3 flex items-center justify-between gap-3">
@@ -8443,7 +8213,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 return matchHeader || matchInv;
             });
 
-            renderReceivablesChart(filteredGroups);
             const listEl = document.getElementById('customer-receivables-list');
             if (filteredGroups.length === 0) {
                 listEl.innerHTML = `
@@ -8556,151 +8325,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             showToast('Laporan piutang pelanggan (Excel) berhasil diunduh!');
         }
 
-        let extraReportChartsVisible = false;
-        function toggleExtraReportCharts() {
-            extraReportChartsVisible = !extraReportChartsVisible;
-            document.querySelectorAll('.report-extra-chart').forEach(el => el.classList.toggle('hidden', !extraReportChartsVisible));
-            const btn = document.getElementById('rep-toggle-extra-charts');
-            if (btn) {
-                btn.setAttribute('aria-expanded', String(extraReportChartsVisible));
-                btn.innerHTML = extraReportChartsVisible
-                    ? '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i><span>Sembunyikan Grafik</span>'
-                    : '<i data-lucide="chart-no-axes-combined" class="w-3.5 h-3.5"></i><span>Tampilkan Grafik</span>';
-            }
-            if (extraReportChartsVisible) {
-                renderFinancialReportCharts();
-                renderCashflowChart();
-                renderCustomerActivityReport();
-                renderCustomerReceivablesReport();
-            }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        // Grafik laporan interaktif — seluruh dataset dibentuk dari filter laporan aktif.
-        const reportChartInstances = {};
-        function destroyReportChart(key) {
-            if (reportChartInstances[key]) { reportChartInstances[key].destroy(); delete reportChartInstances[key]; }
-        }
-        function reportChartMoney(value) {
-            const n = Number(value) || 0;
-            return n >= 1000000 ? 'Rp ' + (n / 1000000).toFixed(1).replace('.', ',') + ' jt' : n >= 1000 ? 'Rp ' + Math.round(n / 1000) + ' rb' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
-        }
-        function createReportChart(key, canvasId, config) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            destroyReportChart(key);
-            if (typeof Chart === 'undefined') {
-                const parent = canvas.parentElement;
-                if (parent) parent.innerHTML = '<p class="text-xs text-slate-400 text-center py-12">Pustaka grafik belum termuat. Periksa koneksi internet lalu muat ulang.</p>';
-                return;
-            }
-            const common = {
-                responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16, color: '#475569', font: { family: 'Inter', size: 10, weight: '600' } } },
-                    tooltip: { backgroundColor: '#0f172a', padding: 11, cornerRadius: 10, titleFont: { family: 'Inter', weight: '700' }, bodyFont: { family: 'Inter', size: 11 },
-                        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + reportChartMoney(ctx.parsed.y ?? ctx.parsed) } }
-                },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { family: 'Inter', size: 10 } }, border: { display: false } },
-                    y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v), font: { family: 'Inter', size: 9 } }, border: { display: false } }
-                }
-            };
-            reportChartInstances[key] = new Chart(canvas, { ...config, options: { ...common, ...(config.options || {}), plugins: { ...common.plugins, ...(config.options?.plugins || {}) }, scales: config.options?.scales || common.scales } });
-        }
-
-        function renderFinancialReportCharts() {
-            const period = activeReportPeriod || 'all';
-            const list = transactions.filter(t => t.status !== 'Batal' && filterByPeriod(t.date, period));
-            const bucketMap = new Map();
-            const dateKey = d => {
-                const x = new Date(d);
-                if (period === 'today') return String(x.getHours()).padStart(2, '0') + ':00';
-                if (period === 'month') return String(x.getDate()).padStart(2, '0') + ' ' + x.toLocaleDateString('id-ID', { month: 'short' });
-                return x.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
-            };
-            list.forEach(t => {
-                const key = dateKey(t.date);
-                if (!bucketMap.has(key)) bucketMap.set(key, { omzet: 0, paid: 0, profit: 0, sort: new Date(t.date).getTime() });
-                const row = bucketMap.get(key);
-                const pay = getTransactionPaymentBreakdown(t);
-                row.omzet += pay.total; row.paid += pay.paidAmount;
-                (t.items || []).forEach(item => { row.profit += (Number(item.price) - Number(item.cost || 0)) * Number(item.qty || 0); });
-            });
-            const buckets = [...bucketMap.entries()].sort((a,b) => a[1].sort - b[1].sort);
-            const style = document.getElementById('rep-chart-style')?.value || 'line';
-            const chartType = style === 'bar' ? 'bar' : 'line';
-            const area = style === 'area';
-            createReportChart('trend', 'rep-trend-chart', {
-                type: chartType,
-                data: { labels: buckets.map(x => x[0]), datasets: [
-                    { label: 'Omzet', data: buckets.map(x => x[1].omzet), borderColor: '#2563eb', backgroundColor: chartType === 'bar' ? 'rgba(37,99,235,.78)' : 'rgba(37,99,235,.12)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 }
-                ] },
-                options: { scales: { x: { stacked: false, grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { size: 10 } }, border: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v) }, border: { display: false } } } }
-            });
-
-            // Siapkan seluruh metode pembayaran dari pengaturan, termasuk yang belum pernah dipakai.
-            const payment = { Tunai: 0, QRIS: 0, Transfer: 0, Piutang: 0 };
-            const paymentLists = getPaymentMethodLists();
-            paymentLists.transfer.forEach(name => { payment[`Transfer - ${name}`] = 0; });
-            paymentLists.ewallet.forEach(name => { payment[`E-Wallet - ${name}`] = 0; });
-            list.forEach(t => {
-                const p = getTransactionPaymentBreakdown(t);
-                if (t.status === 'Piutang') {
-                    payment.Piutang += p.remainingDebt;
-                    if (p.paidAmount) {
-                        const method = t.paymentMethod === 'Piutang' ? 'Tunai' : (t.paymentMethod || 'Tunai');
-                        payment[method] = (payment[method] || 0) + p.paidAmount;
-                    }
-                } else {
-                    const method = t.paymentMethod || 'Tunai';
-                    payment[method] = (payment[method] || 0) + p.paidAmount;
-                }
-            });
-            // Warna dibuat dari indeks label dengan jarak hue merata agar setiap metode selalu berbeda.
-            const paymentLabels = Object.keys(payment);
-            const paymentColors = paymentLabels.map((_, index) => {
-                const hue = Math.round((index * 137.508) % 360);
-                const saturation = 72;
-                const lightness = index % 3 === 0 ? 48 : (index % 3 === 1 ? 42 : 55);
-                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            });
-            createReportChart('payment', 'rep-payment-chart', { type: 'doughnut', data: { labels: paymentLabels, datasets: [{ data: paymentLabels.map(label => payment[label]), backgroundColor: paymentColors, borderColor: '#fff', borderWidth: 4, hoverOffset: 9 }] }, options: { cutout: '68%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + reportChartMoney(ctx.raw) } } } } });
-
-            const mechanic = {};
-            list.forEach(t => { const name = t.mechanic || 'Tanpa Mekanik'; mechanic[name] = (mechanic[name] || 0) + getTransactionPaymentBreakdown(t).total; });
-            const topMechanics = Object.entries(mechanic).sort((a,b) => b[1]-a[1]).slice(0,8);
-            createReportChart('mechanic', 'rep-mechanic-chart', { type: 'bar', data: { labels: topMechanics.map(x => x[0]), datasets: [{ label: 'Omzet', data: topMechanics.map(x => x[1]), backgroundColor: ['#2563eb','#0d9488','#8b5cf6','#f59e0b','#64748b','#06b6d4','#84cc16','#ec4899'], borderRadius: 8, borderSkipped: false, barThickness: 22, maxBarThickness: 26, categoryPercentage: .55, barPercentage: .7 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { callback: v => reportChartMoney(v), font: { size: 9 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } } });
-        }
-
-        function renderReceivablesChart(groups) {
-            const rows = [...groups].sort((a,b) => b.totalRemaining - a.totalRemaining).slice(0,10);
-            createReportChart('debt', 'rep-debt-chart', { type: 'bar', data: { labels: rows.map(g => g.customerName.length > 18 ? g.customerName.slice(0,17)+'…' : g.customerName), datasets: [
-                { label: 'Sisa Piutang', data: rows.map(g => g.totalRemaining), backgroundColor: '#f59e0b', borderRadius: 7 },
-                { label: 'Sudah Dibayar', data: rows.map(g => g.totalPaid), backgroundColor: '#10b981', borderRadius: 7 }
-            ] }, options: { indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { callback: v => reportChartMoney(v) } }, y: { grid: { display: false } } } } });
-        }
-
-        function renderCustomerActivityChart(rows) {
-            const top = rows.slice(0,10);
-            createReportChart('customers', 'rep-customer-chart', { type: 'bar', data: { labels: top.map(c => c.name.length > 18 ? c.name.slice(0,17)+'…' : c.name), datasets: [{ label: 'Total Belanja', data: top.map(c => c.total), backgroundColor: '#2563eb', borderRadius: 7 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { callback: v => reportChartMoney(v) } }, y: { grid: { display: false } } } } });
-        }
-
-        function renderCashflowChart() {
-            const buckets = new Map();
-            cashflows.forEach(cf => {
-                const d = new Date(cf.date); const key = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
-                if (!buckets.has(key)) buckets.set(key, { masuk: 0, keluar: 0, sort: d.getTime() });
-                const row = buckets.get(key); if (cf.type === 'Masuk') row.masuk += Number(cf.amount)||0; else row.keluar += Number(cf.amount)||0;
-            });
-            const rows = [...buckets.entries()].sort((a,b) => a[1].sort-b[1].sort);
-            createReportChart('cashflow', 'rep-cashflow-chart', { type: 'bar', data: { labels: rows.map(x=>x[0]), datasets: [
-                { label: 'Kas Masuk', data: rows.map(x=>x[1].masuk), backgroundColor: '#10b981', borderRadius: 7 },
-                { label: 'Kas Keluar', data: rows.map(x=>x[1].keluar), backgroundColor: '#f43f5e', borderRadius: 7 }
-            ] } });
-        }
-
         function setReportPeriod(period) {
             activeReportPeriod = period;
             document.querySelectorAll('.rep-period-btn').forEach(btn => {
@@ -8783,22 +8407,12 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             summaryText.innerHTML = `Omzet: <strong class="text-slate-900">${formatRupiah(omzet)}</strong> • Piutang: <strong class="text-amber-700">${formatRupiah(piutang)}</strong> • Laba Kotor: <strong class="text-emerald-700">${formatRupiah(profit)}</strong>`;
         }
 
-        function getMechanicCommissionRateForName(mechanicName) {
-            const normalizedName = String(mechanicName || '').trim().toLowerCase();
-            const mechanic = (Array.isArray(mechanics) ? mechanics : []).find(m =>
-                String(m.name || '').trim().toLowerCase() === normalizedName
-            );
-            const rawRate = mechanic && mechanic.commissionRate !== undefined && mechanic.commissionRate !== null
-                ? mechanic.commissionRate
-                : (settings.mechanicCommissionRate ?? 20);
-            return Math.max(0, Math.min(100, Number(rawRate) || 0));
-        }
-
         function downloadFilteredReportCSV() {
             const list = getFilteredTransactionsForDownload();
             const period = document.getElementById('dl-report-period')?.value || 'all';
             const mechFilter = document.getElementById('dl-report-mechanic')?.value || 'all';
             const cashierFilter = document.getElementById('dl-report-cashier')?.value || 'all';
+            const commRate = (Number(settings.mechanicCommissionRate) || 0) / 100;
 
             const rows = [
                 ['LAPORAN TERFILTER AJM REBORN', settings.storeName, `Periode: ${period}`, `Mekanik: ${mechFilter}`, `Kasir: ${cashierFilter}`],
@@ -8822,8 +8436,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     if (i.category === 'Jasa Servis') trxJasa += i.price * i.qty;
                 });
                 const trxProfit = payInfo.total - trxHpp;
-                const trxCommRate = getMechanicCommissionRateForName(t.mechanic);
-                const trxComm = Math.round(trxJasa * trxCommRate / 100);
+                const trxComm = Math.round(trxJasa * commRate);
 
                 sumOmzet += payInfo.total;
                 sumPaid += payInfo.paidAmount;
@@ -8860,6 +8473,111 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             showToast(`Laporan Excel (${list.length} transaksi) berhasil diunduh!`);
         }
 
+        // Grafik laporan menggunakan transaksi yang sama dengan filter periode aktif.
+        let latestReportChartTransactions = [];
+        function toggleDetailReportCharts() {
+            const panel = document.getElementById('detail-report-charts');
+            const btn = document.getElementById('btn-toggle-detail-charts');
+            if (!panel || !btn) return;
+            const willShow = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !willShow);
+            btn.innerHTML = willShow
+                ? '<i data-lucide="chart-column" class="w-3.5 h-3.5"></i> Sembunyikan Grafik Detail'
+                : '<i data-lucide="chart-column" class="w-3.5 h-3.5"></i> Tampilkan Grafik Detail';
+            if (willShow) renderDetailReportChart();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function getReportChartBuckets(list) {
+            const map = new Map();
+            const useMonthly = activeReportPeriod === 'all';
+            list.forEach(t => {
+                const d = new Date(t.date);
+                if (Number.isNaN(d.getTime())) return;
+                const key = useMonthly
+                    ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+                    : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                if (!map.has(key)) map.set(key, { key, omzet: 0, profit: 0, transactions: 0 });
+                const b = map.get(key);
+                const total = getTransactionPaymentBreakdown(t).total || 0;
+                const hpp = (t.items || []).reduce((sum, it) => sum + (Number(it.cost) || 0) * (Number(it.qty) || 0), 0);
+                b.omzet += total;
+                b.profit += total - hpp;
+                b.transactions += 1;
+            });
+            return [...map.values()].sort((a,b) => a.key.localeCompare(b.key)).slice(-12).map(b => ({
+                ...b,
+                label: useMonthly ? new Date(b.key + '-01T00:00:00').toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) : new Date(b.key + 'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short'})
+            }));
+        }
+
+        function drawReportCanvas(canvasId, buckets, metric, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const width = Math.max(280, Math.floor(rect.width || 320));
+            const height = Math.max(160, Math.floor(rect.height || 210));
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr,0,0,dpr,0,0);
+            ctx.clearRect(0,0,width,height);
+            const pad = {l:metric==='transactions'?38:54,r:12,t:14,b:32};
+            const plotW = width-pad.l-pad.r, plotH = height-pad.t-pad.b;
+            const vals = buckets.map(b => Number(b[metric]) || 0);
+            const maxVal = Math.max(1,...vals);
+            const niceMax = maxVal * 1.18;
+            ctx.font = '10px Arial';
+            ctx.textBaseline = 'middle';
+            for (let i=0;i<=4;i++) {
+                const y = pad.t + plotH*(i/4);
+                ctx.strokeStyle = '#e8edf5'; ctx.lineWidth=1;
+                ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(width-pad.r,y); ctx.stroke();
+                const v = niceMax*(1-i/4);
+                const label = metric==='transactions' ? Math.round(v).toLocaleString('id-ID') : (v>=1000000 ? (v/1000000).toFixed(1)+'jt' : v>=1000 ? Math.round(v/1000)+'rb' : Math.round(v).toString());
+                ctx.fillStyle='#64748b'; ctx.textAlign='right'; ctx.fillText(label,pad.l-7,y);
+            }
+            if (!buckets.length) {
+                ctx.fillStyle='#94a3b8'; ctx.textAlign='center'; ctx.fillText('Belum ada transaksi pada periode ini',width/2,height/2);
+                return;
+            }
+            const step = plotW / Math.max(1,buckets.length);
+            const points = buckets.map((b,i)=>({x:pad.l+step*(i+0.5),y:pad.t+plotH-(Math.max(0,Number(b[metric])||0)/niceMax)*plotH}));
+            // Soft area under the trend line.
+            const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+plotH); grad.addColorStop(0,color+'33'); grad.addColorStop(1,color+'00');
+            ctx.beginPath(); ctx.moveTo(points[0].x,pad.t+plotH); points.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.lineTo(points[points.length-1].x,pad.t+plotH); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+            // Smooth-looking connected line with clear points.
+            ctx.beginPath(); points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.strokeStyle=color; ctx.lineWidth=2.8; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+            points.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=color;ctx.stroke();});
+            ctx.fillStyle='#64748b'; ctx.textAlign='center';
+            const every = buckets.length>8 ? 2 : 1;
+            buckets.forEach((b,i)=>{if(i%every===0 || i===buckets.length-1) ctx.fillText(b.label,points[i].x,height-13);});
+        }
+
+        function renderReportCharts(list) {
+            latestReportChartTransactions = Array.isArray(list) ? list.slice() : [];
+            const buckets = getReportChartBuckets(latestReportChartTransactions);
+            const total = latestReportChartTransactions.reduce((sum,t)=>sum+(getTransactionPaymentBreakdown(t).total||0),0);
+            const totalEl=document.getElementById('rep-omzet-chart-total');
+            const cap=document.getElementById('rep-omzet-chart-caption');
+            if(totalEl) totalEl.textContent=formatRupiah(total);
+            if(cap) cap.textContent=`${activeReportPeriod==='today'?'Hari ini':activeReportPeriod==='month'?'Bulan ini':'12 periode terakhir'} • ${buckets.length} titik data`;
+            drawReportCanvas('rep-omzet-chart',buckets,'omzet','#2563eb');
+            const detail=document.getElementById('detail-report-charts');
+            if(detail && !detail.classList.contains('hidden')) renderDetailReportChart();
+        }
+
+        function renderDetailReportChart() {
+            const type=document.getElementById('detail-report-chart-type')?.value || 'profit';
+            const buckets=getReportChartBuckets(latestReportChartTransactions);
+            drawReportCanvas('rep-detail-chart',buckets,type,type==='transactions'?'#0f9f77':'#8b5cf6');
+        }
+        window.addEventListener('resize',()=>{
+            if (document.getElementById('view-laporan')?.classList.contains('hidden')) return;
+            renderReportCharts(latestReportChartTransactions);
+        });
+
         function renderFinancialReport() {
             populateDownloadReportFilters();
             updateDownloadReportFilterPreview();
@@ -8891,7 +8609,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     byMethod[t.paymentMethod] = (byMethod[t.paymentMethod] || 0) + payInfo.paidAmount;
                 }
 
-                if (!byMechanic[t.mechanic]) byMechanic[t.mechanic] = { omzet: 0, jasa: 0, count: 0, commission: 0, commissionRate: getMechanicCommissionRateForName(t.mechanic) };
+                if (!byMechanic[t.mechanic]) byMechanic[t.mechanic] = { omzet: 0, jasa: 0, count: 0 };
                 byMechanic[t.mechanic].omzet += payInfo.total;
                 byMechanic[t.mechanic].count += 1;
 
@@ -8900,13 +8618,14 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     if (item.category === 'Jasa Servis') {
                         jasaTotal += item.price * item.qty;
                         byMechanic[t.mechanic].jasa += item.price * item.qty;
-                        byMechanic[t.mechanic].commission += Math.round(item.price * item.qty * getMechanicCommissionRateForName(t.mechanic) / 100);
                     }
                 });
             });
 
             const grossProfit = omzet - totalHpp;
-            const estCommission = Object.values(byMechanic).reduce((sum, mechanicData) => sum + (mechanicData.commission || 0), 0);
+            const commRatePercent = Number(settings.mechanicCommissionRate) || 0;
+            const commRate = commRatePercent / 100;
+            const estCommission = Math.round(jasaTotal * commRate);
             const expense = periodCashflows.filter(c => c.type === 'Keluar').reduce((s, c) => s + c.amount, 0);
             const otherIncome = periodCashflows.filter(c => c.type === 'Masuk').reduce((s, c) => s + c.amount, 0);
             const netProfit = grossProfit - estCommission - expense + otherIncome;
@@ -8918,8 +8637,8 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             document.getElementById('rep-receivable').textContent = formatRupiah(totalReceivable);
             document.getElementById('rep-received-real').textContent = `Uang Masuk Riil: ${formatRupiah(totalPaidReal)}`;
             document.getElementById('rep-net-profit').textContent = formatRupiah(netProfit);
-            document.getElementById('rep-commission-note').textContent = `Estimasi komisi mekanik: ${formatRupiah(estCommission)} • Biaya: ${formatRupiah(expense)}`;
-            document.getElementById('rep-comm-rate-badge').textContent = 'Komisi sesuai pengaturan masing-masing mekanik';
+            document.getElementById('rep-commission-note').textContent = `Komisi (${commRatePercent}%): ${formatRupiah(estCommission)} • Biaya: ${formatRupiah(expense)}`;
+            document.getElementById('rep-comm-rate-badge').textContent = `Komisi Jasa: ${commRatePercent}%`;
 
             document.getElementById('rep-payment-breakdown').innerHTML = Object.entries(byMethod).map(([m, val]) => `
                 <div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-b-0">
@@ -8935,12 +8654,18 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     <div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-b-0">
                         <div>
                             <p class="font-bold text-slate-800">${mech}</p>
-                            <p class="text-[10px] text-slate-400">${data.count} servis • Jasa: ${formatRupiah(data.jasa)} • Komisi (${data.commissionRate}%): <strong class="text-emerald-600">${formatRupiah(data.commission)}</strong></p>
+                            <p class="text-[10px] text-slate-400">${data.count} servis • Jasa: ${formatRupiah(data.jasa)} • Komisi (${commRatePercent}%): <strong class="text-emerald-600">${formatRupiah(Math.round(data.jasa * commRate))}</strong></p>
                         </div>
                         <span class="font-extrabold text-royal-600">${formatRupiah(data.omzet)}</span>
                     </div>
                 `).join('');
-            renderFinancialReportCharts();
+            renderReportCharts(validTrx);
+            // Repaint setelah panel laporan selesai ditampilkan agar ukuran canvas akurat di HP.
+            setTimeout(() => {
+                if (!document.getElementById('view-laporan')?.classList.contains('hidden')) {
+                    renderReportCharts(latestReportChartTransactions);
+                }
+            }, 180);
         }
 
         function openCashflowModal() {
@@ -8984,7 +8709,6 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                 </div>
             `).join('');
             lucide.createIcons();
-            renderCashflowChart();
         }
 
         function deleteCashflow(id) {
@@ -9074,8 +8798,8 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             const codeValue = String(trx.invoice || '');
             const safeCode = escapeHtml(codeValue);
             const bottomCodeHtml = codeType === 'none' ? '' : (codeType === 'qr'
-                ? `<div class="receipt-code-wrap text-center pt-2 mt-2"><div class="qr-code-target mx-auto" data-code="${safeCode}" style="width:100px;height:100px"></div><div class="text-[9px] font-mono mt-1">${safeCode}</div></div>`
-                : `<div class="receipt-code-wrap text-center pt-2 mt-2"><svg class="receipt-barcode-svg mx-auto" data-code="${safeCode}" style="width:100%;max-width:190px;height:48px"></svg><div class="text-[9px] font-mono mt-1">${safeCode}</div></div>`);
+                ? `<div class="receipt-code-wrap text-center pt-2 mt-2 border-t border-dashed border-slate-400"><div class="qr-code-target mx-auto" data-code="${safeCode}" style="width:100px;height:100px"></div><div class="text-[9px] font-mono mt-1">${safeCode}</div></div>`
+                : `<div class="receipt-code-wrap text-center pt-2 mt-2 border-t border-dashed border-slate-400"><svg class="receipt-barcode-svg mx-auto" data-code="${safeCode}" style="width:100%;max-width:190px;height:48px"></svg><div class="text-[9px] font-mono mt-1">${safeCode}</div></div>`);
 
             const blankLinesHtml = cfg.blankBottom > 0
                 ? `<div aria-hidden="true" style="height:${cfg.blankBottom * 8}px"></div>`
@@ -9083,7 +8807,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
 
             return `
                 <div class="${alignClass} ${weightClass}">
-                    <div class="text-center pb-2 mb-2">
+                    <div class="text-center border-b border-dashed border-slate-400 pb-2 mb-2">
                         ${logoHtml}
                         <div class="font-extrabold text-sm uppercase tracking-tight">${escapeHtml(settings.storeName)}</div>
                         <div>${escapeHtml(settings.storeAddress)}</div>
@@ -9091,7 +8815,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                         ${cfg.showSubtitle && settings.receiptHeader ? `<div class="mt-1 text-[10px]">${escapeHtml(settings.receiptHeader)}</div>` : ''}
                     </div>
 
-                    <div class="pb-2 mb-2 space-y-0.5 ${alignClass}">
+                    <div class="border-b border-dashed border-slate-400 pb-2 mb-2 space-y-0.5 ${alignClass}">
                         <div class="flex justify-between"><span>No Nota:</span><span class="font-bold">${escapeHtml(trx.invoice)}</span></div>
                         <div class="flex justify-between"><span>Tanggal:</span><span>${formatDateTime(trx.date)}</span></div>
                         ${cfg.showCashier ? `<div class="flex justify-between"><span>Kasir:</span><span>${escapeHtml(trx.cashier || settings.cashierName)}</span></div>` : ''}
@@ -9100,15 +8824,15 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                         ${settings.showMechanic ? `<div class="flex justify-between"><span>Mekanik:</span><span class="text-right">${escapeHtml(trx.mechanic || 'Umum')}</span></div>` : ''}
                     </div>
 
-                    <div class="pb-2 mb-2">
+                    <div class="border-b border-dashed border-slate-400 pb-2 mb-2">
                         ${itemsHtml}
                     </div>
 
-                    <div class="space-y-0.5 pb-2 mb-2">
+                    <div class="space-y-0.5 border-b border-dashed border-slate-400 pb-2 mb-2">
                         ${cfg.showSubtotal ? `<div class="flex justify-between"><span>Subtotal</span><span>${formatRupiah(trx.subtotal)}</span></div>` : ''}
                         ${cfg.showSubtotal && trx.discount > 0 ? `<div class="flex justify-between"><span>Diskon</span><span>-${formatRupiah(trx.discount)}</span></div>` : ''}
                         ${trx.tax > 0 ? `<div class="flex justify-between"><span>Biaya/Pajak</span><span>${formatRupiah(trx.tax)}</span></div>` : ''}
-                        <div class="flex justify-between font-extrabold text-xs pt-1">
+                        <div class="flex justify-between font-extrabold text-xs pt-1 border-t border-dotted border-slate-400">
                             <span>TOTAL</span>
                             <span>${formatRupiah(trx.total)}</span>
                         </div>
@@ -9118,7 +8842,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                         ${cfg.showStatusBadge ? `<div class="flex justify-between font-bold pt-0.5"><span>Status</span><span>${escapeHtml(String(trx.status || 'LUNAS').toUpperCase())}</span></div>` : ''}
                     </div>
 
-                    ${cfg.showPromoNote && cfg.promoNote ? `<div class="text-center text-[10px] font-semibold pb-1.5 mb-1.5">${escapeHtml(cfg.promoNote)}</div>` : ''}
+                    ${cfg.showPromoNote && cfg.promoNote ? `<div class="text-center text-[10px] font-semibold border-b border-dashed border-slate-400 pb-1.5 mb-1.5">${escapeHtml(cfg.promoNote)}</div>` : ''}
                     ${cfg.showFooter ? `<div class="text-center whitespace-pre-line text-[10px] pt-0.5">${escapeHtml(settings.receiptFooter || '')}</div>` : ''}
                     ${bottomCodeHtml}
                     ${blankLinesHtml}
@@ -9136,13 +8860,12 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             const isSheet = ['A4','A5','Letter','Legal'].includes(preset);
             const densityClass = settings.printerDensity === 'dark' ? 'density-dark' : settings.printerDensity === 'light' ? 'density-light' : '';
             paperEl.className = `thermal-paper ${is80 ? 'paper-80mm' : 'paper-58mm'} ${densityClass} p-3.5`;
-            const basePx = isSheet ? 13 : (is80 ? 13 : 12);
+            const basePx = isSheet ? 12 : (is80 ? 12 : 11);
             paperEl.style.width = `${paperWidth}mm`;
             paperEl.style.maxWidth = isSheet ? '100%' : `${paperWidth}mm`;
             paperEl.style.boxSizing = 'border-box';
             paperEl.style.fontSize = `${(basePx * cfg.fontScale / 100).toFixed(1)}px`;
             paperEl.style.lineHeight = String(cfg.lineSpacing);
-            paperEl.style.fontFamily = settings.printFontFamily || 'Arial';
             if (cfg.charWidth > 0) {
                 paperEl.style.maxWidth = `${Math.max(36, Math.round(cfg.charWidth * 2.1))}mm`;
             } else {
@@ -9266,8 +8989,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
                     { id: 'p12', code: '899100500123', name: 'Jasa Servis Injeksi & CVT Lengkap', price: 65000, qty: 1 }
                 ],
                 subtotal: 120000,
-                discount: 0,
-                tax: 0,
+                discount: 0,                tax: 0,
                 total: 120000,
                 paymentMethod: 'Tunai',
                 cashReceived: 120000,
@@ -9469,6 +9191,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             document.getElementById('set-cashier-name').value = settings.cashierName || '';
             document.getElementById('set-store-address').value = settings.storeAddress || '';
             document.getElementById('set-store-phone').value = settings.storePhone || '';
+            document.getElementById('set-mechanic-commission').value = settings.mechanicCommissionRate ?? 20;
             document.getElementById('set-receipt-header').value = settings.receiptHeader || '';
             document.getElementById('set-receipt-footer').value = settings.receiptFooter || '';
             document.getElementById('set-show-logo').checked = settings.showLogoOnReceipt !== false;
@@ -9486,26 +9209,18 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:500;line-
             renderPaymentMethodControls();
         }
 
-        function saveReceiptHeaderSettings() {
-            settings.receiptHeader = document.getElementById('set-receipt-header')?.value.trim() || '';
-            settings.receiptFooter = document.getElementById('set-receipt-footer')?.value.trim() || '';
-            settings.showLogoOnReceipt = document.getElementById('set-show-logo')?.checked === true;
-            settings.showMechanic = document.getElementById('set-show-mechanic')?.checked === true;
-            settings.showPlate = document.getElementById('set-show-plate')?.checked === true;
-            saveAllData();
-            if (typeof activeReceiptTrx !== 'undefined' && activeReceiptTrx) {
-                const paper = document.getElementById('printable-receipt-area');
-                if (paper) paper.innerHTML = buildReceiptHtml(activeReceiptTrx);
-            }
-            showToast('Pengaturan header dan konten struk berhasil disimpan.');
-        }
-
         function saveStoreSettings(e) {
             e.preventDefault();
             settings.storeName = document.getElementById('set-store-name').value.trim() || 'AJM Reborn';
             settings.cashierName = document.getElementById('set-cashier-name').value.trim() || 'Admin Bengkel';
             settings.storeAddress = document.getElementById('set-store-address').value.trim();
             settings.storePhone = document.getElementById('set-store-phone').value.trim();
+            settings.mechanicCommissionRate = Math.max(0, Math.min(100, parseFloat(document.getElementById('set-mechanic-commission').value) || 0));
+            settings.receiptHeader = document.getElementById('set-receipt-header').value.trim();
+            settings.receiptFooter = document.getElementById('set-receipt-footer').value.trim();
+            settings.showLogoOnReceipt = document.getElementById('set-show-logo').checked;
+            settings.showMechanic = document.getElementById('set-show-mechanic').checked;
+            settings.showPlate = document.getElementById('set-show-plate').checked;
             settings.showCustomerNameOnReceipt = document.getElementById('set-show-customer-name')?.checked === true;
 
             saveAllData();
