@@ -1545,7 +1545,7 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                     <div>
                                         <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Tren Performa Keuangan</h3>
-                                        <p class="text-[11px] text-slate-500">Omzet, uang diterima, dan laba kotor sesuai periode laporan di atas</p>
+                                        <p class="text-[11px] text-slate-500">Total omzet berdasarkan periode laporan yang dipilih</p>
                                     </div>
                                     <select id="rep-chart-style" onchange="renderFinancialReportCharts()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
                                         <option value="line">Garis modern</option>
@@ -1555,12 +1555,12 @@
                                 </div>
                                 <div class="relative h-64 sm:h-72"><canvas id="rep-trend-chart"></canvas></div>
                             </div>
-                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="font-extrabold text-slate-800 text-xs mb-1">Komposisi Pembayaran</h3>
                                 <p class="text-[11px] text-slate-500 mb-3">Pembayaran tunai, QRIS, transfer, dan sisa piutang</p>
                                 <div class="relative h-60"><canvas id="rep-payment-chart"></canvas></div>
                             </div>
-                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="font-extrabold text-slate-800 text-xs mb-1">Peringkat Mekanik</h3>
                                 <p class="text-[11px] text-slate-500 mb-3">Omzet berdasarkan mekanik pada periode terpilih</p>
                                 <div class="relative h-60"><canvas id="rep-mechanic-chart"></canvas></div>
@@ -8666,8 +8666,7 @@ window.addEventListener('afterprint', function () {
                 type: chartType,
                 data: { labels: buckets.map(x => x[0]), datasets: [
                     { label: 'Omzet', data: buckets.map(x => x[1].omzet), borderColor: '#2563eb', backgroundColor: chartType === 'bar' ? 'rgba(37,99,235,.78)' : 'rgba(37,99,235,.12)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 },
-                    { label: 'Diterima', data: buckets.map(x => x[1].paid), borderColor: '#10b981', backgroundColor: chartType === 'bar' ? 'rgba(16,185,129,.78)' : 'rgba(16,185,129,.10)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 },
-                    { label: 'Laba Kotor Item', data: buckets.map(x => x[1].profit), borderColor: '#f59e0b', backgroundColor: chartType === 'bar' ? 'rgba(245,158,11,.78)' : 'rgba(245,158,11,.08)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: false, pointRadius: 2.5 }
+                    { label: 'Omzet', data: buckets.map(x => x[1].omzet), borderColor: '#2563eb', backgroundColor: chartType === 'bar' ? 'rgba(37,99,235,.78)' : 'rgba(37,99,235,.12)', borderWidth: 2.5, borderRadius: chartType === 'bar' ? 7 : 0, tension: .38, fill: area, pointRadius: 2.5, pointHoverRadius: 5 }
                 ] },
                 options: { scales: { x: { stacked: false, grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { size: 10 } }, border: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.16)' }, ticks: { color: '#64748b', callback: v => reportChartMoney(v) }, border: { display: false } } } }
             });
