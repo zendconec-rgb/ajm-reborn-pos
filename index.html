@@ -712,14 +712,14 @@
             box-sizing: border-box !important;
             height: 100dvh !important;
             min-height: 100dvh !important;
-            padding-top: env(safe-area-inset-top, 0px) !important;
+            padding-top: 0 !important; /* status bar ditangani oleh sistem Android/browser */
             padding-bottom: env(safe-area-inset-bottom, 0px) !important;
             overflow: hidden !important;
         }
         body > header#app-topbar {
             position: relative !important;
             flex: 0 0 auto !important;
-            padding-top: max(0px, env(safe-area-inset-top, 0px)) !important;
+            padding-top: 0 !important;
             z-index: 30 !important;
         }
         body > main {
