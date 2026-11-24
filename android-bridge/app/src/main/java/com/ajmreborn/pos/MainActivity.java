@@ -12,6 +12,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Color;
 import android.view.View;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
 import android.view.WindowManager;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -52,8 +54,30 @@ public class MainActivity extends Activity {
             getWindow().setDecorFitsSystemWindows(true);
         }
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Android 15 / edge-to-edge: let the OS draw system bars, but keep
+        // the POS WebView strictly inside the safe content area.
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.rgb(243, 246, 251));
         webView = new WebView(this);
-        setContentView(webView);
+        root.addView(webView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            int left, top, right, bottom;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                left = bars.left; top = bars.top; right = bars.right; bottom = bars.bottom;
+            } else {
+                left = insets.getSystemWindowInsetLeft();
+                top = insets.getSystemWindowInsetTop();
+                right = insets.getSystemWindowInsetRight();
+                bottom = insets.getSystemWindowInsetBottom();
+            }
+            view.setPadding(left, top, right, bottom);
+            return insets;
+        });
+        root.requestApplyInsets();
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
