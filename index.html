@@ -4697,6 +4697,23 @@
             if (settings.receiptFooter && settings.receiptShowFooter !== false) {
                 line(); cmd(0x1B, 0x61, 0x01); wrapped(settings.receiptFooter); cmd(0x1B, 0x61, 0x00);
             }
+
+            // Cetak barcode invoice langsung melalui perintah ESC/POS (Code 39).
+            // Preview HTML/SVG tidak ikut dikirim saat jalur Bluetooth raw ESC/POS digunakan.
+            const barcodeType = settings.receiptBarcodeType || 'barcode';
+            const invoiceCode = String(trx.invoice || '').toUpperCase();
+            if (barcodeType === 'barcode' && invoiceCode && /^[0-9A-Z .$/+%-]+$/.test(invoiceCode)) {
+                cmd(0x1B, 0x61, 0x01); // center
+                cmd(0x1D, 0x48, 0x02); // HRI text below barcode
+                cmd(0x1D, 0x68, 0x50); // barcode height: 80 dots
+                cmd(0x1D, 0x77, 0x02); // barcode module width
+                cmd(0x1D, 0x6B, 0x04); // GS k, Code 39, NUL terminated
+                text(invoiceCode);
+                cmd(0x00);
+                feed(1);
+                cmd(0x1B, 0x61, 0x00); // left
+            }
+
             cmd(0x1B, 0x61, 0x00);
             cmd(0x1B, 0x45, 0x00);
             feed(4);
