@@ -1544,12 +1544,12 @@
                             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm xl:col-span-2">
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                     <div>
-                                        <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Tren Performa Keuangan</h3>
+                                        <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-royal-600"></i> Grafik Omzet</h3>
                                         <p class="text-[11px] text-slate-500">Total omzet berdasarkan periode laporan yang dipilih</p>
                                     </div>
                                     <select id="rep-chart-style" onchange="renderFinancialReportCharts()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
                                         <option value="line">Garis modern</option>
-                                        <option value="area">Area bertumpuk</option>
+                                        <option value="area">Area</option>
                                         <option value="bar">Batang</option>
                                     </select>
                                 </div>
@@ -1563,7 +1563,7 @@
                             <div class="report-extra-chart hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="font-extrabold text-slate-800 text-xs mb-1">Peringkat Mekanik</h3>
                                 <p class="text-[11px] text-slate-500 mb-3">Omzet berdasarkan mekanik pada periode terpilih</p>
-                                <div class="relative h-60"><canvas id="rep-mechanic-chart"></canvas></div>
+                                <div class="relative h-48 sm:h-52"><canvas id="rep-mechanic-chart"></canvas></div>
                             </div>
                         </div>
 
