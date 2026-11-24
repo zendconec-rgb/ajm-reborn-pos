@@ -4984,13 +4984,15 @@ window.addEventListener('afterprint', function () {
                 if (!validUser) {
                     currentSession = null;
                     document.body.classList.remove('ajm-authenticated');
-                    localStorage.removeItem(DB_KEYS.SESSION);
+                    clearPersistedSession();
                     loginEl.classList.remove('hidden');
                     loginEl.classList.add('flex');
                 } else {
+                    currentSession.userId = validUser.id;
                     currentSession.username = validUser.username;
                     currentSession.role = validUser.role;
                     currentSession.name = validUser.name;
+                    persistCurrentSession();
                     document.body.classList.add('ajm-authenticated');
                     loginEl.classList.add('hidden');
                     loginEl.classList.remove('flex');
@@ -5143,7 +5145,9 @@ window.addEventListener('afterprint', function () {
             target.username = newUname;
             target.password = newPass;
             currentSession.username = newUname;
-            try { localStorage.removeItem(DB_KEYS.SESSION); } catch (e) {}
+            currentSession.name = target.name;
+            currentSession.role = target.role;
+            persistCurrentSession();
             saveAllData();
             applySettingsUI();
             renderAccountManagementPanel();
