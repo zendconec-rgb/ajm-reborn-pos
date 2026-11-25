@@ -1729,6 +1729,77 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 @media(max-width:767px){#ajm-desktop-marquee{display:none!important}}
 @keyframes ajm-marquee-rtl{from{left:100%;transform:translate(0,-50%)}to{left:0;transform:translate(-100%,-50%)}}
 </style>
+<style id="ajm-receipt-premium-actions">
+/* AJM Reborn — premium receipt action panel, matched to approved concept */
+#receipt-modal #receipt-actions-panel{
+  width:100%; max-width:96vw; box-sizing:border-box;
+  padding:8px; margin:10px auto 0;
+  display:flex; flex-direction:column; gap:7px;
+  background:linear-gradient(145deg,#0b2b4d 0%,#071d36 100%);
+  border:1px solid #1265a7; border-radius:18px;
+  box-shadow:0 8px 24px rgba(0,10,30,.34),inset 0 1px 0 rgba(117,199,255,.12);
+}
+#receipt-modal #receipt-actions-panel > .grid.grid-cols-2{
+  display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px!important; width:100%!important; min-width:0!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-print-action,
+#receipt-modal #receipt-actions-panel #receipt-whatsapp-action{
+  display:flex!important; flex-direction:row!important; align-items:center!important; justify-content:center!important;
+  gap:5px!important; width:100%!important; min-width:0!important;
+  height:42px!important; min-height:42px!important; padding:5px 4px!important;
+  border-radius:12px!important; box-sizing:border-box!important;
+  font-family:Inter,Arial,sans-serif!important; font-size:8.5px!important; line-height:1!important;
+  font-weight:800!important; letter-spacing:-.15px!important; white-space:nowrap!important;
+  overflow:hidden!important; box-shadow:0 3px 10px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-print-action{
+  background:linear-gradient(145deg,#23466e,#102b4b)!important;
+  border:1px solid #4daaff!important; color:#fff!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-whatsapp-action{
+  background:linear-gradient(145deg,#16df69,#08b94f)!important;
+  border:1px solid #6fffb0!important; color:#fff!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-print-action span,
+#receipt-modal #receipt-actions-panel #receipt-whatsapp-action span{
+  display:block!important; flex:0 1 auto!important; min-width:0!important;
+  overflow:hidden!important; white-space:nowrap!important; line-height:1!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-print-action i,
+#receipt-modal #receipt-actions-panel #receipt-whatsapp-action svg{
+  display:block!important; flex:0 0 18px!important; width:18px!important; height:18px!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-finish-action{
+  display:flex!important; flex-direction:row!important; align-items:center!important; justify-content:center!important;
+  gap:7px!important; width:100%!important; min-width:0!important;
+  height:42px!important; min-height:42px!important; padding:5px 6px!important;
+  border:1px solid #c4e1ff!important; border-radius:12px!important; box-sizing:border-box!important;
+  background:linear-gradient(180deg,#fff 0%,#e7f2ff 100%)!important;
+  color:#173b64!important; font-family:Inter,Arial,sans-serif!important;
+  font-size:9px!important; line-height:1!important; font-weight:800!important;
+  letter-spacing:.05px!important; white-space:nowrap!important; overflow:hidden!important;
+  box-shadow:0 3px 12px rgba(0,9,30,.2),inset 0 1px 0 #fff!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-check{
+  width:19px!important;height:19px!important;flex:0 0 19px!important;color:#1673c8!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-arrow{
+  width:15px!important;height:15px!important;flex:0 0 15px!important;color:#1673c8!important;
+}
+@media(min-width:768px){
+ #receipt-modal #receipt-actions-panel{padding:12px;gap:9px;border-radius:22px}
+ #receipt-modal #receipt-actions-panel>.grid.grid-cols-2{gap:9px!important}
+ #receipt-modal #receipt-actions-panel #receipt-print-action,
+ #receipt-modal #receipt-actions-panel #receipt-whatsapp-action{height:54px!important;min-height:54px!important;font-size:12px!important;gap:8px!important;border-radius:14px!important}
+ #receipt-modal #receipt-actions-panel #receipt-print-action i,
+ #receipt-modal #receipt-actions-panel #receipt-whatsapp-action svg{width:24px!important;height:24px!important;flex-basis:24px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action{height:54px!important;min-height:54px!important;font-size:14px!important;gap:10px!important;border-radius:14px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-check{width:25px!important;height:25px!important;flex-basis:25px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-arrow{width:19px!important;height:19px!important;flex-basis:19px!important}
+}
+</style>
+
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -3690,17 +3761,19 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <button id="receipt-print-action" type="button" onclick="executeReceiptPrintAction()"
                         class="min-h-[48px] px-3 py-2.5 bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
                         <i data-lucide="printer" class="w-4 h-4"></i>
-                        <span id="receipt-print-btn-label">CETAK STRUK</span>
+                        <span id="receipt-print-btn-label">Cetak Struk</span>
                     </button>
                     <button id="receipt-whatsapp-action" type="button" onclick="shareReceiptViaWhatsApp()"
                         class="min-h-[48px] px-3 py-2.5 bg-[#25D366] hover:bg-[#1ebe5d] active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
                         <svg viewBox="0 0 32 32" class="w-5 h-5 shrink-0" aria-hidden="true"><path fill="currentColor" d="M16 .0C7.18 0 0 7.12 0 15.9c0 2.8.74 5.53 2.15 7.94L.08 32l8.4-2.2a16.1 16.1 0 0 0 7.52 1.86h.01C24.83 31.66 32 24.54 32 15.78 32 7.02 24.82 0 16 0Zm0 28.98h-.01a13.3 13.3 0 0 1-6.78-1.85l-.49-.29-4.99 1.31 1.33-4.84-.32-.5a13.02 13.02 0 0 1-2.02-6.93C2.72 8.66 8.68 2.76 16 2.76c7.32 0 13.28 5.9 13.28 13.15 0 7.25-5.96 13.07-13.28 13.07Zm7.29-9.83c-.4-.2-2.36-1.16-2.73-1.29-.37-.14-.63-.2-.9.2-.26.4-1.03 1.29-1.26 1.56-.23.26-.46.3-.86.1-.4-.2-1.68-.61-3.2-1.94-1.18-1.04-1.98-2.32-2.21-2.72-.23-.4-.02-.61.17-.81.18-.17.4-.46.6-.69.2-.23.27-.4.4-.66.14-.26.07-.5-.03-.7-.1-.2-.9-2.16-1.23-2.96-.32-.77-.65-.67-.9-.68h-.76c-.27 0-.7.1-1.06.5-.37.4-1.4 1.36-1.4 3.32 0 1.96 1.43 3.85 1.63 4.12.2.26 2.81 4.25 6.8 5.96.95.4 1.69.65 2.27.83.95.3 1.82.26 2.5.16.76-.11 2.36-.96 2.7-1.89.33-.93.33-1.73.23-1.9-.1-.17-.36-.27-.76-.47Z"/></svg>
-                        <span>KIRIM WHATSAPP</span>
+                        <span>Kirim WhatsApp</span>
                     </button>
                 </div>
-                <button type="button" onclick="closeModal('receipt-modal')"
-                    class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs transition">
-                    SELESAI / TRANSAKSI BARU
+                <button id="receipt-finish-action" type="button" onclick="closeModal('receipt-modal')"
+                    class="w-full transition">
+                    <svg class="receipt-finish-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m8 12 2.5 2.5L16.5 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>SELESAI / TRANSAKSI BARU</span>
+                    <svg class="receipt-finish-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 7 7-7 7M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
             </div>
         </div>
