@@ -3586,7 +3586,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div id="printable-receipt-area" class="thermal-paper paper-58mm p-3.5"></div>
             </div>
 
-            <div id="receipt-modal-actions" class="flex flex-col gap-2.5 mt-3 shrink-0" style="width:var(--receipt-paper-width,100%);max-width:100%;">
+            <div class="w-full flex flex-col gap-2.5 mt-3 shrink-0">
                 <div class="w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                     <div class="flex items-center justify-between gap-2 mb-2">
                         <label for="receipt-share-format" class="text-[11px] font-extrabold tracking-wide text-slate-600">FORMAT STRUK WHATSAPP</label>
@@ -3600,17 +3600,16 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <input id="receipt-share-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                     <p class="text-[10px] text-slate-400 mt-1">Nomor hanya digunakan untuk membuka tujuan chat WhatsApp.</p>
                 </div>
-                <div id="receipt-action-buttons" class="grid grid-cols-2 gap-2 w-full">
-                    <button id="receipt-print-action" type="button" aria-label="Cetak struk" title="Cetak struk" onclick="executeReceiptPrintAction()"
-                        class="w-full h-12 min-w-0 p-0 bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold rounded-xl shadow-sm flex items-center justify-center transition">
-                        <i data-lucide="printer" class="w-6 h-6"></i>
-                        <span id="receipt-print-btn-label" class="hidden">CETAK STRUK</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="receipt-print-action" type="button" onclick="executeReceiptPrintAction()"
+                        class="min-h-[48px] px-3 py-2.5 bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span id="receipt-print-btn-label">CETAK STRUK</span>
                     </button>
-                    <button id="receipt-whatsapp-action" type="button" aria-label="Kirim struk melalui WhatsApp" title="Kirim WhatsApp"
-                        onclick="shareReceiptViaWhatsApp()"
-                        class="w-full h-12 min-w-0 p-0 bg-[#25D366] hover:bg-[#1ebe5d] active:scale-[0.98] text-white font-extrabold rounded-xl shadow-sm flex items-center justify-center transition">
+                    <button id="receipt-whatsapp-action" type="button" onclick="shareReceiptViaWhatsApp()"
+                        class="min-h-[48px] px-3 py-2.5 bg-[#25D366] hover:bg-[#1ebe5d] active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
                         <svg viewBox="0 0 32 32" class="w-5 h-5 shrink-0" aria-hidden="true"><path fill="currentColor" d="M16 .0C7.18 0 0 7.12 0 15.9c0 2.8.74 5.53 2.15 7.94L.08 32l8.4-2.2a16.1 16.1 0 0 0 7.52 1.86h.01C24.83 31.66 32 24.54 32 15.78 32 7.02 24.82 0 16 0Zm0 28.98h-.01a13.3 13.3 0 0 1-6.78-1.85l-.49-.29-4.99 1.31 1.33-4.84-.32-.5a13.02 13.02 0 0 1-2.02-6.93C2.72 8.66 8.68 2.76 16 2.76c7.32 0 13.28 5.9 13.28 13.15 0 7.25-5.96 13.07-13.28 13.07Zm7.29-9.83c-.4-.2-2.36-1.16-2.73-1.29-.37-.14-.63-.2-.9.2-.26.4-1.03 1.29-1.26 1.56-.23.26-.46.3-.86.1-.4-.2-1.68-.61-3.2-1.94-1.18-1.04-1.98-2.32-2.21-2.72-.23-.4-.02-.61.17-.81.18-.17.4-.46.6-.69.2-.23.27-.4.4-.66.14-.26.07-.5-.03-.7-.1-.2-.9-2.16-1.23-2.96-.32-.77-.65-.67-.9-.68h-.76c-.27 0-.7.1-1.06.5-.37.4-1.4 1.36-1.4 3.32 0 1.96 1.43 3.85 1.63 4.12.2.26 2.81 4.25 6.8 5.96.95.4 1.69.65 2.27.83.95.3 1.82.26 2.5.16.76-.11 2.36-.96 2.7-1.89.33-.93.33-1.73.23-1.9-.1-.17-.36-.27-.76-.47Z"/></svg>
-                        <span class="hidden">KIRIM WHATSAPP</span>
+                        <span>KIRIM WHATSAPP</span>
                     </button>
                 </div>
                 <button type="button" onclick="closeModal('receipt-modal')"
@@ -5797,42 +5796,6 @@ body { font-family: Arial, Helvetica, sans-serif; font-size:10px; line-height:1.
 .mx-auto { margin-left:auto; margin-right:auto; }
 img { max-width:100%; height:auto; }
 @media print { html,body { width:${paperWidth}; } #paper { width:${paperWidth}; } }
-
-
-        /* Tombol aksi struk: ikon saja, dua kolom identik, dan panel mengikuti lebar kertas. */
-        #receipt-modal #receipt-modal-actions {
-            width: var(--receipt-paper-width, 100%) !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        #receipt-modal #receipt-action-buttons {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            width: 100% !important;
-            gap: 8px !important;
-        }
-        #receipt-modal #receipt-action-buttons > button {
-            width: 100% !important;
-            min-width: 0 !important;
-            height: 48px !important;
-            min-height: 48px !important;
-            padding: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 0 !important;
-            box-sizing: border-box !important;
-        }
-        #receipt-modal #receipt-print-btn-label,
-        #receipt-modal #receipt-whatsapp-action > span {
-            display: none !important;
-            visibility: hidden !important;
-            width: 0 !important;
-            height: 0 !important;
-            overflow: hidden !important;
-        }
-        #receipt-modal #receipt-print-action i { width: 24px !important; height: 24px !important; }
-        #receipt-modal #receipt-whatsapp-action svg { width: 24px !important; height: 24px !important; flex: 0 0 24px !important; }
 
 </style>
 </head>
@@ -10438,23 +10401,6 @@ window.addEventListener('afterprint', function () {
             }
         }
 
-        function syncReceiptModalActionWidth() {
-            const paper = document.getElementById('printable-receipt-area');
-            const actions = document.getElementById('receipt-modal-actions');
-            if (!paper || !actions) return;
-            const paperWidth = Math.round(paper.getBoundingClientRect().width || paper.offsetWidth || 0);
-            if (paperWidth > 0) {
-                actions.style.setProperty('--receipt-paper-width', paperWidth + 'px');
-                actions.style.width = paperWidth + 'px';
-            }
-        }
-
-        window.addEventListener('resize', () => {
-            if (document.getElementById('receipt-modal')?.classList.contains('flex')) {
-                syncReceiptModalActionWidth();
-            }
-        });
-
         function getReceiptCustomerPhone(trx) {
             if (!trx) return '';
             // Utamakan relasi ID pelanggan bila transaksi menyimpannya.
@@ -10497,6 +10443,7 @@ window.addEventListener('afterprint', function () {
             paper.innerHTML = buildReceiptHtml(trx);
             paper.querySelectorAll('.receipt-barcode-svg,.qr-code-target').forEach(el => { delete el.dataset.rendered; });
             ensureReceiptCodeRendered();
+
             const shareFormat = document.getElementById('receipt-share-format');
             if (shareFormat) shareFormat.value = 'pdf';
             const sharePhone = document.getElementById('receipt-share-phone');
@@ -10518,9 +10465,6 @@ window.addEventListener('afterprint', function () {
                 receiptModal.style.visibility = 'visible';
                 receiptModal.style.opacity = '1';
                 receiptModal.style.zIndex = '99999';
-                // Ukur setelah modal terlihat agar lebar struk sudah memiliki nilai aktual.
-                requestAnimationFrame(() => requestAnimationFrame(syncReceiptModalActionWidth));
-                setTimeout(syncReceiptModalActionWidth, 120);
             }
             if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
         }
