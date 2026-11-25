@@ -5008,8 +5008,18 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 if (!decoderStarted) showToast('Mesin pembaca barcode belum termuat. Periksa internet lalu coba lagi.', 'error');
             } catch (err) {
                 console.error('Gagal memulai kamera barcode:', err);
+                const errorName = err && err.name ? err.name : '';
                 stopCameraBarcodeScan();
-                showToast('Kamera gagal dimulai: ' + (err && err.message ? err.message : 'periksa izin kamera'), 'error');
+                if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+                    statusEl.textContent = 'Izin kamera belum diberikan. Izinkan kamera di pengaturan Android.';
+                    showToast('Izin kamera belum diberikan. Periksa izin aplikasi AJM Reborn.', 'error');
+                } else if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+                    statusEl.textContent = 'Kamera tidak ditemukan pada perangkat.';
+                    showToast('Perangkat kamera tidak ditemukan.', 'error');
+                } else {
+                    statusEl.textContent = 'Kamera aktif tidak dapat dimulai. Coba tutup scanner lalu buka kembali.';
+                    showToast('Scanner kamera gagal dimulai: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui'), 'error');
+                }
             }
         }
 
