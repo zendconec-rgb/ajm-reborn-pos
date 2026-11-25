@@ -1,6 +1,7 @@
 'use strict';
 
 const { app, BrowserWindow, dialog, shell, session } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,6 +11,53 @@ const SIGNER_HOST = 'http://127.0.0.1:18777';
 let mainWindow = null;
 let localServer = null;
 let appOrigin = '';
+let updateCheckTimer = null;
+let updatePromptOpen = false;
+
+function configureAutoUpdates() {
+  // electron-updater supports the installed NSIS build. Portable builds remain
+  // manual-update editions because they do not have a stable installation target.
+  if (!app.isPackaged || process.env.PORTABLE_EXECUTABLE_DIR) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.allowPrerelease = true;
+  autoUpdater.logger = console;
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    if (updatePromptOpen || !mainWindow || mainWindow.isDestroyed()) return;
+    updatePromptOpen = true;
+    try {
+      const result = await dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Pembaruan AJM Reborn POS siap dipasang',
+        message: 'Versi ' + info.version + ' sudah berhasil diunduh.',
+        detail: 'Simpan transaksi yang sedang dikerjakan. Aplikasi akan ditutup dan dibuka kembali untuk menyelesaikan pembaruan.',
+        buttons: ['Pasang & Restart', 'Nanti'],
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true
+      });
+      if (result.response === 0) autoUpdater.quitAndInstall(false, true);
+    } finally {
+      updatePromptOpen = false;
+    }
+  });
+
+  autoUpdater.on('error', (error) => {
+    console.error('[AJM Auto Update]', error);
+  });
+
+  const check = () => {
+    if (!app.isQuitting) autoUpdater.checkForUpdates().catch(error => {
+      console.error('[AJM Auto Update] Check failed:', error);
+    });
+  };
+
+  // Allow the POS screen to finish loading before checking in the background.
+  setTimeout(check, 20000);
+  updateCheckTimer = setInterval(check, 6 * 60 * 60 * 1000);
+}
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -196,7 +244,10 @@ async function createWindow() {
   await mainWindow.loadURL(startUrl);
 }
 
-app.whenReady().then(createWindow).catch(err => {
+app.whenReady().then(async () => {
+  await createWindow();
+  configureAutoUpdates();
+}).catch(err => {
   dialog.showErrorBox('AJM Reborn POS', 'Aplikasi gagal dibuka:\n' + err.message);
   app.quit();
 });
@@ -211,5 +262,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+  app.isQuitting = true;
+  if (updateCheckTimer) clearInterval(updateCheckTimer);
   if (localServer) localServer.close();
 });
