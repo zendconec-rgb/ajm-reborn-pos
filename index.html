@@ -313,14 +313,13 @@
             margin-right:auto !important;
             display:flex !important;
             flex-direction:column !important;
-            gap:12px !important;
-            container-type:inline-size;
+            gap:6px !important;
             box-sizing:border-box !important;
         }
         #receipt-actions-panel > .grid.grid-cols-2 {
             display:grid !important;
             grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-            gap:8px !important;
+            gap:5px !important;
             width:100% !important;
             min-width:0 !important;
         }
@@ -333,16 +332,16 @@
             gap:5px !important;
             width:100% !important;
             min-width:0 !important;
-            height:72px !important;
-            min-height:72px !important;
-            padding:8px 4px !important;
+            height:38px !important;
+            min-height:38px !important;
+            padding:4px 5px !important;
             box-sizing:border-box !important;
-            border-radius:16px !important;
-            font-size:12px !important;
-            line-height:1.05 !important;
+            border-radius:8px !important;
+            font-size:8px !important;
+            line-height:1 !important;
             white-space:nowrap !important;
             overflow:hidden !important;
-            letter-spacing:-.2px !important;
+            letter-spacing:0 !important;
         }
         #receipt-modal #receipt-print-action span,
         #receipt-modal #receipt-whatsapp-action span {
@@ -352,14 +351,14 @@
             white-space:nowrap !important;
             overflow:hidden !important;
             text-overflow:clip !important;
-            line-height:1.05 !important;
+            line-height:1 !important;
         }
         #receipt-modal #receipt-print-action i,
         #receipt-modal #receipt-whatsapp-action svg {
             display:block !important;
-            flex:0 0 20px !important;
-            width:20px !important;
-            height:20px !important;
+            flex:0 0 18px !important;
+            width:18px !important;
+            height:18px !important;
         }
         #receipt-actions-panel > button:last-child {
             display:flex !important;
@@ -367,40 +366,38 @@
             justify-content:center !important;
             width:100% !important;
             min-width:0 !important;
-            height:72px !important;
-            min-height:72px !important;
-            padding:8px 10px !important;
+            height:38px !important;
+            min-height:38px !important;
+            padding:5px 8px !important;
             box-sizing:border-box !important;
-            border-radius:16px !important;
-            font-size:16px !important;
-            line-height:1.1 !important;
+            border-radius:8px !important;
+            font-size:11px !important;
+            line-height:1 !important;
             text-align:center !important;
-            white-space:normal !important;
-            overflow-wrap:anywhere !important;
+            white-space:nowrap !important;
+            overflow:hidden !important;
         }
-        @container (max-width:280px) {
+        @media (min-width: 768px) {
             #receipt-modal #receipt-print-action,
             #receipt-modal #receipt-whatsapp-action {
-                gap:4px !important;
-                padding:6px 3px !important;
-                font-size:8px !important;
-                letter-spacing:-.25px !important;
+                height:48px !important;
+                min-height:48px !important;
+                font-size:11px !important;
+                gap:7px !important;
+                border-radius:10px !important;
             }
             #receipt-modal #receipt-print-action i,
             #receipt-modal #receipt-whatsapp-action svg {
-                flex-basis:17px !important;
-                width:17px !important;
-                height:17px !important;
+                width:22px !important;
+                height:22px !important;
+                flex-basis:22px !important;
             }
             #receipt-actions-panel > button:last-child {
-                font-size:11px !important;
-                padding:6px !important;
+                height:48px !important;
+                min-height:48px !important;
+                font-size:14px !important;
+                border-radius:10px !important;
             }
-        }
-        @container (min-width:281px) and (max-width:420px) {
-            #receipt-modal #receipt-print-action,
-            #receipt-modal #receipt-whatsapp-action { font-size:11px !important; }
-            #receipt-actions-panel > button:last-child { font-size:14px !important; }
         }
 
 
