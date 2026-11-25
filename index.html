@@ -4884,7 +4884,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
 
             try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                cameraStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } });
                 videoEl.srcObject = cameraStream;
                 videoEl.classList.remove('hidden');
                 btnLabel.textContent = 'Matikan Kamera';
@@ -4900,50 +4900,44 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     closeModal('barcode-modal');
                 };
 
-                if ('BarcodeDetector' in window) {
-                    try {
-                        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'] });
-                        cameraDetectTimer = setInterval(async () => {
-                            if (!cameraStream || videoEl.readyState < 2 || cameraBarcodeHandled) return;
-                            try {
-                                const codes = await detector.detect(videoEl);
-                                if (codes && codes.length > 0) handleDetectedBarcode(codes[0].rawValue);
-                            } catch (err) {}
-                        }, 250);
-                    } catch (detectorError) {
-                        console.warn('BarcodeDetector gagal, beralih ke ZXing', detectorError);
-                    }
+                cameraBarcodeHandled = false;
+                statusEl.textContent = 'Kamera aktif — menyiapkan pembaca barcode…';
+
+                const handleDetectedBarcode = (detectedVal) => {
+                    if (!detectedVal || cameraBarcodeHandled) return;
+                    cameraBarcodeHandled = true;
+                    document.getElementById('barcode-modal-input').value = detectedVal;
+                    processIncomingBarcodeSignal(detectedVal, 'Kamera WebRTC', 35);
+                    stopCameraBarcodeScan();
+                    closeModal('barcode-modal');
+                };
+
+                // ZXing is used directly because Android WebView may expose
+                // BarcodeDetector without actually supporting 1D barcode decoding.
+                if (!window.ZXingBrowser || !window.ZXing) {
+                    throw new Error('Library ZXing belum termuat');
                 }
 
-                if (!cameraBarcodeHandled && (!('BarcodeDetector' in window) || !cameraDetectTimer)) {
-                    if (window.ZXingBrowser && window.ZXing) {
-                        statusEl.textContent = 'Kamera aktif — mesin pembaca barcode siap';
-                        try {
-                            const hints = new Map();
-                            hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-                                window.ZXing.BarcodeFormat.EAN_13,
-                                window.ZXing.BarcodeFormat.EAN_8,
-                                window.ZXing.BarcodeFormat.UPC_A,
-                                window.ZXing.BarcodeFormat.UPC_E,
-                                window.ZXing.BarcodeFormat.CODE_128,
-                                window.ZXing.BarcodeFormat.CODE_39,
-                                window.ZXing.BarcodeFormat.ITF,
-                                window.ZXing.BarcodeFormat.QR_CODE
-                            ]);
-                            const reader = new window.ZXingBrowser.BrowserMultiFormatReader(undefined, 250);
-                            cameraZXingControls = await reader.decodeFromVideoElement(videoEl, (result, error) => {
-                                if (result) handleDetectedBarcode(result.getText());
-                            });
-                        } catch (zxingError) {
-                            console.error('ZXing camera decoder error:', zxingError);
-                            statusEl.textContent = 'Kamera aktif, gagal memulai pembaca barcode. Periksa koneksi internet.';
-                            showToast('Mesin pembaca barcode gagal dimuat. Periksa koneksi internet.', 'error');
-                        }
-                    } else {
-                        statusEl.textContent = 'Kamera aktif, memuat mesin pembaca barcode…';
-                        showToast('Mesin pembaca barcode belum tersedia. Periksa koneksi internet.', 'warning');
+                const hints = new Map();
+                hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                    window.ZXing.BarcodeFormat.EAN_13,
+                    window.ZXing.BarcodeFormat.EAN_8,
+                    window.ZXing.BarcodeFormat.UPC_A,
+                    window.ZXing.BarcodeFormat.UPC_E,
+                    window.ZXing.BarcodeFormat.CODE_128,
+                    window.ZXing.BarcodeFormat.CODE_39,
+                    window.ZXing.BarcodeFormat.ITF,
+                    window.ZXing.BarcodeFormat.QR_CODE
+                ]);
+                hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
+
+                const reader = new window.ZXingBrowser.BrowserMultiFormatReader(hints, 180);
+                cameraZXingControls = await reader.decodeFromVideoElement(videoEl, (result, error) => {
+                    if (result && !cameraBarcodeHandled) {
+                        handleDetectedBarcode(result.getText());
                     }
-                }
+                });
+                statusEl.textContent = 'Kamera aktif — arahkan barcode hingga fokus';
             } catch (err) {
                 showToast('Izin kamera ditolak atau kamera tidak ditemukan', 'error');
             }
