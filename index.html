@@ -3253,7 +3253,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                               <div><label class="block text-xs font-bold mb-1">Jenis Font</label><select id="set-header-marquee-font" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"><option value="Arial, sans-serif">Arial</option><option value="Verdana, sans-serif">Verdana</option><option value="Tahoma, sans-serif">Tahoma</option><option value="Georgia, serif">Georgia</option><option value="\'Trebuchet MS\', sans-serif">Trebuchet MS</option><option value="\'Courier New\', monospace">Courier New</option><option value="system-ui, sans-serif">System UI</option></select></div>
                               <div><label class="block text-xs font-bold mb-1">Ukuran Font (px)</label><input type="number" id="set-header-marquee-size" min="10" max="30" value="16" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"></div>
                               <div><label class="block text-xs font-bold mb-1">Warna Teks</label><input type="color" id="set-header-marquee-color" value="#ffffff" class="w-full h-9 p-1 bg-white border border-slate-200 rounded-xl"></div>
-                              <div class="sm:col-span-3"><label class="block text-xs font-bold mb-1">Kecepatan Gerak Teks</label><select id="set-header-marquee-speed" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"><option value="60">Sangat pelan</option><option value="45" selected>Pelan</option><option value="34">Normal</option><option value="25">Cepat</option><option value="18">Sangat cepat</option></select><p class="mt-1 text-[10px] text-slate-500">Atur seberapa cepat teks bergerak dari kanan ke kiri.</p></div>
+                              <div><div class="flex items-center justify-between mb-1"><label class="block text-xs font-bold">Kecepatan Gerak Teks</label><span id="header-marquee-speed-value" class="text-[11px] font-semibold text-royal-700">Normal</span></div><input type="range" id="set-header-marquee-speed" min="18" max="60" step="1" value="33" oninput="updateHeaderMarqueeSpeedLabel(this.value)" class="w-full accent-blue-600 cursor-pointer"><div class="flex justify-between text-[10px] text-slate-400"><span>Sangat Pelan</span><span>Sangat Cepat</span></div><p class="mt-1 text-[10px] text-slate-500">Semakin panjang area biru, semakin cepat gerakan teks.</p></div>
                             </div>
                         </div>
                         <div class="pt-1 flex justify-end">
@@ -10702,7 +10702,8 @@ window.addEventListener('afterprint', function () {
             document.getElementById('set-header-marquee-font').value = settings.headerMarqueeFont || 'Arial, sans-serif';
             document.getElementById('set-header-marquee-size').value = settings.headerMarqueeSize || 16;
             document.getElementById('set-header-marquee-color').value = settings.headerMarqueeColor || '#ffffff';
-            document.getElementById('set-header-marquee-speed').value = String(settings.headerMarqueeSpeed || 45);
+            document.getElementById('set-header-marquee-speed').value = String(78 - (Number(settings.headerMarqueeSpeed) || 45));
+            updateHeaderMarqueeSpeedLabel(78 - (Number(settings.headerMarqueeSpeed) || 45));
             document.getElementById('set-receipt-header').value = settings.receiptHeader || '';
             document.getElementById('set-receipt-footer').value = settings.receiptFooter || '';
             document.getElementById('set-show-logo').checked = settings.showLogoOnReceipt !== false;
@@ -10744,6 +10745,13 @@ window.addEventListener('afterprint', function () {
             el.style.animationDuration=Math.max(18,Math.min(60,Number(settings.headerMarqueeSpeed)||45))+'s';
         }
 
+        function updateHeaderMarqueeSpeedLabel(value) {
+            const level = Math.max(18, Math.min(60, Number(value) || 33));
+            const label = document.getElementById('header-marquee-speed-value');
+            if (!label) return;
+            label.textContent = level >= 54 ? 'Sangat Cepat' : level >= 43 ? 'Cepat' : level >= 32 ? 'Normal' : level >= 24 ? 'Pelan' : 'Sangat Pelan';
+        }
+
         function saveStoreSettings(e) {
             e.preventDefault();
             settings.storeName = document.getElementById('set-store-name').value.trim() || 'AJM Reborn';
@@ -10754,7 +10762,7 @@ window.addEventListener('afterprint', function () {
             settings.headerMarqueeFont = document.getElementById('set-header-marquee-font').value;
             settings.headerMarqueeSize = Math.max(10, Math.min(30, parseInt(document.getElementById('set-header-marquee-size').value,10) || 16));
             settings.headerMarqueeColor = document.getElementById('set-header-marquee-color').value || '#ffffff';
-            settings.headerMarqueeSpeed = Math.max(18, Math.min(60, parseInt(document.getElementById('set-header-marquee-speed').value,10) || 45));
+            settings.headerMarqueeSpeed = Math.max(18, Math.min(60, 78 - (parseInt(document.getElementById('set-header-marquee-speed').value,10) || 33)));
 
             saveAllData();
             applySettingsUI();
