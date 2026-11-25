@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
                     request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
                 } else {
                     request.deny();
-                    toast("Izin kamera ditolak. Aktifkan izin Kamera di Pengaturan Android untuk memindai barcode.");
+                    // Web app displays the permission state; avoid stale native toast after a later successful grant.
                 }
             }
         }
