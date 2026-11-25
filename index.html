@@ -4419,6 +4419,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
         let btPrinterDevice = null;
         let btPrinterCharacteristic = null;
+        // Windows Bluetooth Classic SPP virtual COM port.
+        let sppPrinterPort = null;
         let qzTrayConnected = false;
         let qzPrinterName = localStorage.getItem("ajm_qz_printer_name") || "";
         let qzConnectPromise = null;
@@ -5512,12 +5514,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         }
 
         function renderPrinterSettingsUI() {
-            // Windows desktop memakai QZ Tray untuk printer USB native.
-            // Web Bluetooth BLE tidak mendukung printer Classic SPP dan tidak dipakai di Windows.
-            if (isWindowsDesktopForQZ() && settings.printerConnectionType === 'bluetooth') {
-                settings.printerConnectionType = 'usb';
-                saveAllData();
-            }
+            // Windows Classic SPP uses Web Serial via the paired virtual COM port.
             const pType = settings.printerConnectionType || 'browser';
             document.querySelectorAll('.printer-type-card').forEach(card => {
                 const active = card.dataset.printerType === pType;
@@ -5536,7 +5533,9 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
             if (!nameLbl) return;
 
-            const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+            const isBleConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+            const isSppConnected = Boolean(sppPrinterPort && sppPrinterPort.writable);
+            const isBtConnected = isBleConnected || isSppConnected;
             const isQZConnected = Boolean(isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName && qzPrinterHardwareOnline);
             const isUsbConnected = Boolean((isWindowsDesktopForQZ() && isQZConnected) || (usbPrinterDevice && usbPrinterDevice.opened));
 
@@ -5551,8 +5550,10 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
             } else if (pType === 'bluetooth') {
                 if (isBtConnected) {
-                    nameLbl.textContent = `Terhubung Bluetooth: ${btPrinterDevice.name || 'Thermal Printer BT'} (${settings.paperSize})`;
-                    hintLbl.textContent = 'Terhubung via BLE/GATT. Cetak ESC/POS langsung jika printer mendukung karakteristik tulis.';                    pillEl.textContent = `BT: ${btPrinterDevice.name || 'Terhubung'}`;
+                    const btName = isSppConnected ? 'Bluetooth SPP (COM)' : (btPrinterDevice?.name || 'Thermal Printer BT');
+                    nameLbl.textContent = `Terhubung Bluetooth: ${btName} (${settings.paperSize})`;
+                    hintLbl.textContent = isSppConnected ? 'Terhubung melalui Bluetooth Classic SPP pada port COM Windows. Siap mengirim ESC/POS langsung.' : 'Terhubung via BLE/GATT. Cetak ESC/POS langsung jika printer mendukung karakteristik tulis.';
+                    pillEl.textContent = `BT: ${btName}`;
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat Bluetooth: Belum Dipasangkan';
@@ -5616,8 +5617,12 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         }
 
         async function connectBluetoothPrinter() {
-            // Coba BLE/GATT terlebih dahulu, termasuk pada Chrome Android.
-            // Printer Bluetooth Classic SPP tidak diekspos oleh Web Bluetooth browser.
+            // Windows Classic SPP uses a virtual COM port, not Web Bluetooth BLE.
+            if (isWindowsDesktopForQZ()) {
+                await connectWindowsBluetoothSPP();
+                return;
+            }
+            // Android BLE/GATT path.
             if (!navigator.bluetooth) {
                 showToast('Browser ini tidak menyediakan Web Bluetooth. Printer Classic SPP memerlukan layanan penghubung Bluetooth khusus; pilih Printer Sistem bila memakai RawBT.', 'warning');
                 return;
@@ -5993,6 +5998,10 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
             btPrinterDevice = null;
             btPrinterCharacteristic = null;
+            if (sppPrinterPort) {
+                try { await sppPrinterPort.close(); } catch (e) {}
+                sppPrinterPort = null;
+            }
 
             if (isWindowsDesktopForQZ() && qzTrayConnected && qz.websocket) {
                 try { await qz.websocket.disconnect(); } catch (e) {}
@@ -6184,6 +6193,15 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             const copies = Math.max(1, Number(settings.printerCopies) || 1);
             const payload = buildEscPosReceiptBytes(trx);
 
+            if (settings.printerConnectionType === 'bluetooth' && sppPrinterPort && sppPrinterPort.writable) {
+                const writer = sppPrinterPort.writable.getWriter();
+                try {
+                    for (let c = 0; c < copies; c++) await writer.write(payload);
+                } finally { writer.releaseLock(); }
+                showToast(`Struk (${copies}x) terkirim melalui Bluetooth SPP Windows!`);
+                return true;
+            }
+
             if (settings.printerConnectionType === 'bluetooth' && btPrinterCharacteristic) {
                 for (let c = 0; c < copies; c++) {
                     const chunkSize = 100;
@@ -6242,6 +6260,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             // tersambung melalui BLE/GATT atau USB. Bluetooth Classic SPP Android
             // tidak dapat diakses langsung oleh browser; gunakan dialog sistem/RawBT.
             const directReady =
+                (settings.printerConnectionType === 'bluetooth' && sppPrinterPort && sppPrinterPort.writable) ||
                 (settings.printerConnectionType === 'bluetooth' && btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected && btPrinterCharacteristic) ||
                 (settings.printerConnectionType === 'usb' && ((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName) || (usbPrinterDevice && usbPrinterDevice.opened)));
             if (settings.printerConnectionType === 'usb' && !(isWindowsDesktopForQZ() ? (qzTrayConnected && qzPrinterName) : (usbPrinterDevice && usbPrinterDevice.opened))) {
@@ -6423,7 +6442,7 @@ window.addEventListener('afterprint', function () {
         function updateHardwareBadgesUI() {
             const bluetoothStatus = document.getElementById('header-bluetooth-status');
             if (bluetoothStatus) {
-                const bluetoothConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+                const bluetoothConnected = Boolean((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) || (sppPrinterPort && sppPrinterPort.writable));
                 bluetoothStatus.classList.toggle('bg-emerald-500', bluetoothConnected);
                 bluetoothStatus.classList.toggle('hover:bg-emerald-600', bluetoothConnected);
                 bluetoothStatus.classList.toggle('bg-amber-400', !bluetoothConnected);
@@ -6466,7 +6485,7 @@ window.addEventListener('afterprint', function () {
             const prText = document.getElementById('header-printer-text');
             if (prDot && prText) {
                 const pType = settings.printerConnectionType || 'browser';
-                const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
+                const isBtConnected = Boolean((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) || (sppPrinterPort && sppPrinterPort.writable));
                 const isUsbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
 
                 if (pType === 'bluetooth') {
