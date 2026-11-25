@@ -37,7 +37,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AJM-Reborn-POS-Windows-${{ github.run_number }}
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
           if-no-files-found: error
           retention-days: 30
 
@@ -49,4 +52,7 @@ jobs:
           name: AJM Reborn POS Windows Build ${{ github.run_number }}
           prerelease: true
           make_latest: false
-          files: dist/*.exe
+          files: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
