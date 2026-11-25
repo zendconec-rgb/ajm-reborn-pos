@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 import android.view.WindowManager;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -31,9 +32,11 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final int REQUEST_BT_PERMISSION = 4101;
+    private static final int REQUEST_CAMERA_PERMISSION = 4102;
     private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String APP_URL = "https://zendconec-rgb.github.io/ajm-reborn-pos/";
     private WebView webView;
+    private PermissionRequest pendingCameraRequest;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket socket;
     private OutputStream outputStream;
@@ -75,7 +78,27 @@ public class MainActivity extends Activity {
         ws.setAllowFileAccess(false);
         ws.setAllowContentAccess(false);
         ws.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override public void onPermissionRequest(PermissionRequest request) {
+                main.post(() -> {
+                    boolean videoRequested = false;
+                    for (String resource : request.getResources()) {
+                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) videoRequested = true;
+                    }
+                    if (!videoRequested) { request.deny(); return; }
+                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                    } else {
+                        if (pendingCameraRequest != null) pendingCameraRequest.deny();
+                        pendingCameraRequest = request;
+                        requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+                    }
+                });
+            }
+            @Override public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (pendingCameraRequest == request) pendingCameraRequest = null;
+            }
+        });
         webView.setWebViewClient(new WebViewClient() { @Override public void onPageFinished(android.webkit.WebView view, String url) { super.onPageFinished(view, url); view.evaluateJavascript("(function(){if(window.__ajmNativeInstalled)return;window.__ajmNativeInstalled=true;function status(t,m){var e=document.getElementById('printer-device-name-label');if(e)e.textContent=m||t;}window.ajmNativePrinterStatus=function(raw){try{var o=typeof raw==='string'?JSON.parse(raw):raw;status(o.status,o.message);if(o.status==='connected'&&typeof showToast==='function')showToast('Printer Bluetooth terhubung: '+o.message);else if(o.status==='error'&&typeof showToast==='function')showToast(o.message);}catch(e){}};var oldPrint=window.sendRawEscPosViaRawBT;window.sendRawEscPosViaRawBT=function(trx){try{if(!window.AJMNativePrinter||AJMNativePrinter.isAvailable()!=='true')return oldPrint?oldPrint(trx):false;var p=buildEscPosReceiptBytes(trx),n=Math.max(1,Number(settings.printerCopies)||1),a=new Uint8Array(p.length*n);for(var c=0;c<n;c++)a.set(p,c*p.length);var b='',step=0x8000;for(var i=0;i<a.length;i+=step)b+=String.fromCharCode.apply(null,a.subarray(i,Math.min(i+step,a.length)));var r=AJMNativePrinter.sendBase64(btoa(b));if(r==='OK'){if(typeof showToast==='function')showToast('Struk dikirim langsung ke printer Bluetooth.');return true;}if(typeof showToast==='function')showToast(r.replace(/^ERROR:/,''));return false;}catch(e){if(typeof showToast==='function')showToast('Cetak Bluetooth gagal: '+e.message);return false;}};window.connectBluetoothPrinter=function(){try{if(!window.AJMNativePrinter||AJMNativePrinter.isAvailable()!=='true'){if(typeof showToast==='function')showToast('Bridge Bluetooth native tidak tersedia.');return;}var ds=JSON.parse(AJMNativePrinter.getBondedDevices()||'[]');if(!ds.length){if(typeof showToast==='function')showToast('Pasangkan RPP210A terlebih dahulu di pengaturan Bluetooth Android, PIN 0000 bila diminta.');return;}var menu=ds.map(function(d,i){return (i+1)+'. '+d.name+' ('+d.address+')';}).join('\\\\n');var pick=prompt('Pilih printer Bluetooth yang sudah dipasangkan:\\\\n'+menu,'1');var ix=parseInt(pick,10)-1;if(!Number.isFinite(ix)||ix<0||ix>=ds.length)return;var r=AJMNativePrinter.connectBluetooth(ds[ix].address);if(typeof showToast==='function')showToast(r==='CONNECTING'?'Menghubungkan ke '+ds[ix].name+'…':r);}catch(e){if(typeof showToast==='function')showToast('Gagal memilih printer: '+e.message);}};window.disconnectHardwarePrinter=function(){if(window.AJMNativePrinter)AJMNativePrinter.disconnect();};})();", null); } });
         webView.addJavascriptInterface(new PrinterBridge(), "AJMNativePrinter");
         webView.loadUrl(APP_URL);
@@ -92,6 +115,18 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_BT_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             toast("Izin Bluetooth diberikan. Silakan muat ulang AJM jika daftar printer belum muncul.");
+        }
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            PermissionRequest request = pendingCameraRequest;
+            pendingCameraRequest = null;
+            if (request != null) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                } else {
+                    request.deny();
+                    toast("Izin kamera ditolak. Aktifkan izin Kamera di Pengaturan Android untuk memindai barcode.");
+                }
+            }
         }
     }
 
