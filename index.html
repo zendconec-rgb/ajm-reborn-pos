@@ -307,12 +307,101 @@
         #receipt-modal #printable-receipt-area { flex-shrink: 0; }
         #receipt-modal .overflow-y-auto { min-height: 0; }
         #receipt-print-action { position: sticky; bottom: 0; z-index: 3; }
-        #receipt-actions-panel { flex:0 0 auto !important; margin-left:auto !important; margin-right:auto !important; display:flex !important; flex-direction:column !important; gap:12px !important; }
-        #receipt-actions-panel > .grid.grid-cols-2 { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; width:100% !important; }
-        #receipt-modal #receipt-print-action, #receipt-modal #receipt-whatsapp-action { width:100% !important; min-width:0 !important; min-height:72px !important; height:72px !important; padding:10px 8px !important; box-sizing:border-box !important; border-radius:16px !important; font-size:clamp(12px,3.4vw,18px) !important; gap:10px !important; white-space:nowrap !important; }
-        #receipt-modal #receipt-print-action i { width:30px !important; height:30px !important; }
-        #receipt-modal #receipt-whatsapp-action svg { width:34px !important; height:34px !important; }
-        #receipt-actions-panel > button:last-child { width:100% !important; min-height:72px !important; height:72px !important; box-sizing:border-box !important; border-radius:16px !important; font-size:clamp(14px,4vw,22px) !important; font-weight:600 !important; }
+        #receipt-actions-panel {
+            flex:0 0 auto !important;
+            margin-left:auto !important;
+            margin-right:auto !important;
+            display:flex !important;
+            flex-direction:column !important;
+            gap:12px !important;
+            container-type:inline-size;
+            box-sizing:border-box !important;
+        }
+        #receipt-actions-panel > .grid.grid-cols-2 {
+            display:grid !important;
+            grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+            gap:8px !important;
+            width:100% !important;
+            min-width:0 !important;
+        }
+        #receipt-modal #receipt-print-action,
+        #receipt-modal #receipt-whatsapp-action {
+            display:flex !important;
+            flex-direction:row !important;
+            align-items:center !important;
+            justify-content:center !important;
+            gap:5px !important;
+            width:100% !important;
+            min-width:0 !important;
+            height:72px !important;
+            min-height:72px !important;
+            padding:8px 4px !important;
+            box-sizing:border-box !important;
+            border-radius:16px !important;
+            font-size:12px !important;
+            line-height:1.05 !important;
+            white-space:nowrap !important;
+            overflow:hidden !important;
+            letter-spacing:-.2px !important;
+        }
+        #receipt-modal #receipt-print-action span,
+        #receipt-modal #receipt-whatsapp-action span {
+            display:block !important;
+            flex:0 1 auto !important;
+            min-width:0 !important;
+            white-space:nowrap !important;
+            overflow:hidden !important;
+            text-overflow:clip !important;
+            line-height:1.05 !important;
+        }
+        #receipt-modal #receipt-print-action i,
+        #receipt-modal #receipt-whatsapp-action svg {
+            display:block !important;
+            flex:0 0 20px !important;
+            width:20px !important;
+            height:20px !important;
+        }
+        #receipt-actions-panel > button:last-child {
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            width:100% !important;
+            min-width:0 !important;
+            height:72px !important;
+            min-height:72px !important;
+            padding:8px 10px !important;
+            box-sizing:border-box !important;
+            border-radius:16px !important;
+            font-size:16px !important;
+            line-height:1.1 !important;
+            text-align:center !important;
+            white-space:normal !important;
+            overflow-wrap:anywhere !important;
+        }
+        @container (max-width:280px) {
+            #receipt-modal #receipt-print-action,
+            #receipt-modal #receipt-whatsapp-action {
+                gap:4px !important;
+                padding:6px 3px !important;
+                font-size:8px !important;
+                letter-spacing:-.25px !important;
+            }
+            #receipt-modal #receipt-print-action i,
+            #receipt-modal #receipt-whatsapp-action svg {
+                flex-basis:17px !important;
+                width:17px !important;
+                height:17px !important;
+            }
+            #receipt-actions-panel > button:last-child {
+                font-size:11px !important;
+                padding:6px !important;
+            }
+        }
+        @container (min-width:281px) and (max-width:420px) {
+            #receipt-modal #receipt-print-action,
+            #receipt-modal #receipt-whatsapp-action { font-size:11px !important; }
+            #receipt-actions-panel > button:last-child { font-size:14px !important; }
+        }
 
 
         /* Lebarkan ruang transaksi: layar sempit memakai panel penuh, desktop panel 520-600px. */
@@ -10452,7 +10541,7 @@ window.addEventListener('afterprint', function () {
 
             const printBtnLabel = document.getElementById('receipt-print-btn-label');
             if (printBtnLabel) {
-                printBtnLabel.textContent = 'CETAK STRUK SEKARANG';
+                printBtnLabel.textContent = 'CETAK STRUK';
             }
 
             paper.innerHTML = buildReceiptHtml(trx);
@@ -10463,7 +10552,7 @@ window.addEventListener('afterprint', function () {
             const receiptPrintButton = document.getElementById('receipt-print-action');
             const receiptPrintLabel = document.getElementById('receipt-print-btn-label');
             if (receiptPrintButton) receiptPrintButton.disabled = false;
-            if (receiptPrintLabel) receiptPrintLabel.textContent = 'CETAK STRUK SEKARANG';
+            if (receiptPrintLabel) receiptPrintLabel.textContent = 'CETAK STRUK';
 
             const receiptModal = document.getElementById('receipt-modal');
             if (receiptModal) {
