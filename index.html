@@ -20,6 +20,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" referrerpolicy="no-referrer"></script>
     <script>
         // Fallback agar fungsi aplikasi tetap berjalan saat CDN ikon tidak tersedia.
         window.lucide = window.lucide || { createIcons: function() {} };
@@ -3584,14 +3586,34 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div id="printable-receipt-area" class="thermal-paper paper-58mm p-3.5"></div>
             </div>
 
-            <div class="w-full flex flex-col gap-2 mt-3 shrink-0">
-                <button id="receipt-print-action" type="button" onclick="executeReceiptPrintAction()"
-                    class="w-full min-h-[54px] py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-white font-extrabold rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition">
-                    <i data-lucide="printer" class="w-5 h-5"></i>
-                    <span id="receipt-print-btn-label">CETAK STRUK SEKARANG</span>
-                </button>
+            <div class="w-full flex flex-col gap-2.5 mt-3 shrink-0">
+                <div class="w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <label for="receipt-share-format" class="text-[11px] font-extrabold tracking-wide text-slate-600">FORMAT STRUK WHATSAPP</label>
+                        <span class="text-[10px] text-slate-400">Pilih satu format</span>
+                    </div>
+                    <select id="receipt-share-format" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                        <option value="pdf">Dokumen PDF</option>
+                        <option value="image">Gambar PNG</option>
+                    </select>
+                    <label for="receipt-share-phone" class="block text-[11px] font-bold text-slate-600 mt-3 mb-1.5">Nomor WhatsApp pelanggan <span class="font-normal text-slate-400">(opsional)</span></label>
+                    <input id="receipt-share-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                    <p class="text-[10px] text-slate-400 mt-1">Nomor hanya digunakan untuk membuka tujuan chat WhatsApp.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="receipt-print-action" type="button" onclick="executeReceiptPrintAction()"
+                        class="min-h-[48px] px-3 py-2.5 bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span id="receipt-print-btn-label">CETAK STRUK</span>
+                    </button>
+                    <button id="receipt-whatsapp-action" type="button" onclick="shareReceiptViaWhatsApp()"
+                        class="min-h-[48px] px-3 py-2.5 bg-[#25D366] hover:bg-[#1ebe5d] active:scale-[0.98] text-white font-extrabold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition">
+                        <svg viewBox="0 0 32 32" class="w-5 h-5 shrink-0" aria-hidden="true"><path fill="currentColor" d="M16 .0C7.18 0 0 7.12 0 15.9c0 2.8.74 5.53 2.15 7.94L.08 32l8.4-2.2a16.1 16.1 0 0 0 7.52 1.86h.01C24.83 31.66 32 24.54 32 15.78 32 7.02 24.82 0 16 0Zm0 28.98h-.01a13.3 13.3 0 0 1-6.78-1.85l-.49-.29-4.99 1.31 1.33-4.84-.32-.5a13.02 13.02 0 0 1-2.02-6.93C2.72 8.66 8.68 2.76 16 2.76c7.32 0 13.28 5.9 13.28 13.15 0 7.25-5.96 13.07-13.28 13.07Zm7.29-9.83c-.4-.2-2.36-1.16-2.73-1.29-.37-.14-.63-.2-.9.2-.26.4-1.03 1.29-1.26 1.56-.23.26-.46.3-.86.1-.4-.2-1.68-.61-3.2-1.94-1.18-1.04-1.98-2.32-2.21-2.72-.23-.4-.02-.61.17-.81.18-.17.4-.46.6-.69.2-.23.27-.4.4-.66.14-.26.07-.5-.03-.7-.1-.2-.9-2.16-1.23-2.96-.32-.77-.65-.67-.9-.68h-.76c-.27 0-.7.1-1.06.5-.37.4-1.4 1.36-1.4 3.32 0 1.96 1.43 3.85 1.63 4.12.2.26 2.81 4.25 6.8 5.96.95.4 1.69.65 2.27.83.95.3 1.82.26 2.5.16.76-.11 2.36-.96 2.7-1.89.33-.93.33-1.73.23-1.9-.1-.17-.36-.27-.76-.47Z"/></svg>
+                        <span>KIRIM WHATSAPP</span>
+                    </button>
+                </div>
                 <button type="button" onclick="closeModal('receipt-modal')"
-                    class="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs transition">
+                    class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs transition">
                     SELESAI / TRANSAKSI BARU
                 </button>
             </div>
@@ -10394,6 +10416,13 @@ window.addEventListener('afterprint', function () {
             paper.querySelectorAll('.receipt-barcode-svg,.qr-code-target').forEach(el => { delete el.dataset.rendered; });
             ensureReceiptCodeRendered();
 
+            const shareFormat = document.getElementById('receipt-share-format');
+            if (shareFormat) shareFormat.value = 'pdf';
+            const sharePhone = document.getElementById('receipt-share-phone');
+            if (sharePhone) {
+                const customerPhone = trx.customerPhone || trx.phone || trx.customer?.phone || '';
+                sharePhone.value = customerPhone;
+            }
             const receiptPrintButton = document.getElementById('receipt-print-action');
             const receiptPrintLabel = document.getElementById('receipt-print-btn-label');
             if (receiptPrintButton) receiptPrintButton.disabled = false;
@@ -10410,6 +10439,90 @@ window.addEventListener('afterprint', function () {
                 receiptModal.style.zIndex = '99999';
             }
             if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+        }
+
+        // ==========================================
+        // 12. BAGIKAN STRUK PDF / GAMBAR VIA WHATSAPP
+        // ==========================================
+        function normalizeWhatsAppNumber(value) {
+            let digits = String(value || '').replace(/[^0-9]/g, '');
+            if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+            return digits;
+        }
+
+        function buildReceiptShareMessage(trx) {
+            const invoice = trx?.invoice || '-';
+            const total = typeof formatRupiah === 'function' ? formatRupiah(Number(trx?.total || 0)) : String(trx?.total || 0);
+            return 'Halo, berikut struk transaksi ' + invoice + ' dari ' + (settings.storeName || 'AJM Reborn') + '. Total: ' + total + '. Terima kasih.';
+        }
+
+        async function createReceiptShareBlob(format) {
+            const source = document.getElementById('printable-receipt-area');
+            if (!source || !activeReceiptTrx) throw new Error('Pratinjau struk belum tersedia.');
+            if (typeof window.html2canvas !== 'function') throw new Error('Komponen pembuat gambar belum termuat. Periksa koneksi internet lalu coba lagi.');
+            source.querySelectorAll('.receipt-barcode-svg,.qr-code-target').forEach(el => { delete el.dataset.rendered; });
+            if (typeof ensureReceiptCodeRendered === 'function') ensureReceiptCodeRendered();
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            const canvas = await window.html2canvas(source, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: Math.max(source.scrollWidth, source.offsetWidth)
+            });
+            const imageBlob = await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Gagal membuat gambar struk.')), 'image/png'));
+            if (format === 'image') return { blob: imageBlob, mime: 'image/png', extension: 'png', name: 'Struk-' + String(activeReceiptTrx.invoice || 'AJM').replace(/[^a-z0-9_-]/gi, '-') + '.png' };
+            if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('Komponen pembuat PDF belum termuat. Periksa koneksi internet lalu coba lagi.');
+            const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, Math.max(100, canvas.height * 80 / canvas.width)] });
+            const imageData = canvas.toDataURL('image/png');
+            const height = canvas.height * 80 / canvas.width;
+            pdf.addImage(imageData, 'PNG', 0, 0, 80, height, undefined, 'FAST');
+            return { blob: pdf.output('blob'), mime: 'application/pdf', extension: 'pdf', name: 'Struk-' + String(activeReceiptTrx.invoice || 'AJM').replace(/[^a-z0-9_-]/gi, '-') + '.pdf' };
+        }
+
+        async function shareReceiptViaWhatsApp() {
+            const button = document.getElementById('receipt-whatsapp-action');
+            const format = document.getElementById('receipt-share-format')?.value || 'pdf';
+            const phone = normalizeWhatsAppNumber(document.getElementById('receipt-share-phone')?.value || '');
+            if (!activeReceiptTrx) { showToast('Data transaksi tidak ditemukan.', 'error'); return; }
+            if (phone && (phone.length < 9 || phone.length > 15)) { showToast('Nomor WhatsApp tidak valid. Gunakan kode negara, contoh 6281234567890.', 'warning'); return; }
+            if (button) { button.disabled = true; button.classList.add('opacity-70'); button.querySelector('span')?.replaceChildren(document.createTextNode('MENYIAPKAN...')); }
+            try {
+                const fileData = await createReceiptShareBlob(format);
+                const file = new File([fileData.blob], fileData.name, { type: fileData.mime });
+                const message = buildReceiptShareMessage(activeReceiptTrx);
+                const waUrl = 'https://wa.me/' + (phone || '') + '?text=' + encodeURIComponent(message);
+                if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+                    try {
+                        await navigator.share({ files: [file], title: 'Struk ' + (activeReceiptTrx.invoice || ''), text: message });
+                        showToast('Menu berbagi dibuka. Pilih WhatsApp untuk mengirim struk.');
+                    } catch (shareError) {
+                        if (shareError?.name === 'AbortError') return;
+                        throw shareError;
+                    }
+                } else {
+                    const objectUrl = URL.createObjectURL(fileData.blob);
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = fileData.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+                    window.open(waUrl, '_blank', 'noopener,noreferrer');
+                    showToast('File struk diunduh. Lampirkan file tersebut pada chat WhatsApp yang terbuka.');
+                }
+            } catch (error) {
+                console.error('Gagal menyiapkan struk WhatsApp:', error);
+                showToast(error?.message || 'Gagal menyiapkan file struk.', 'error');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.classList.remove('opacity-70');
+                    const label = button.querySelector('span');
+                    if (label) label.textContent = 'KIRIM WHATSAPP';
+                }
+            }
         }
 
         function printWithMode(modeClass) {
