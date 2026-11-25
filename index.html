@@ -1624,6 +1624,17 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 }
 </style>
 
+<style id="ajm-desktop-header-marquee">
+@media(min-width:768px){
+#app-topbar-inner.ajm-topbar-inner{display:flex!important;align-items:center!important;gap:clamp(12px,1.6vw,24px)!important}
+#app-topbar-brand{flex:0 0 auto!important;max-width:34%!important}
+#ajm-desktop-marquee{display:block;position:relative;flex:1 1 0;min-width:80px;height:42px;overflow:hidden;white-space:nowrap;pointer-events:none}
+#ajm-desktop-marquee-text{position:absolute;top:50%;left:0;display:inline-block;width:max-content;white-space:nowrap;transform:translateY(-50%);animation:ajm-marquee-ltr 34s linear infinite;font-weight:600;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+#app-topbar-actions.ajm-topbar-actions{flex:0 0 auto!important;margin-left:0!important}
+}
+@media(max-width:767px){#ajm-desktop-marquee{display:none!important}}
+@keyframes ajm-marquee-ltr{from{left:0;transform:translate(-100%,-50%)}to{left:100%;transform:translate(0,-50%)}}
+</style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -1701,6 +1712,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 </div>
             </div>
 
+            <div id="ajm-desktop-marquee" aria-live="polite"><span id="ajm-desktop-marquee-text"></span></div>
             <div id="app-topbar-actions" class="ajm-topbar-actions">
                 <!-- Indikator koneksi internet dan jam digital -->
                 <div id="header-network-status" class="flex items-center gap-1.5 bg-white/15 border border-white/25 px-2.5 py-1 rounded-full text-[11px] font-semibold" title="Status koneksi internet">
@@ -3066,6 +3078,14 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                             </div>
                         </div>
 
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Teks Berjalan Header (Khusus Desktop)</label><textarea id="set-header-marquee-text" rows="2" maxlength="240" placeholder="Contoh: Selamat Datang di AJM Reborn" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm"></textarea><p class="mt-1 text-[10px] text-slate-500">Kosongkan untuk menyembunyikan teks. Hanya tampil di desktop.</p></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div><label class="block text-xs font-bold mb-1">Jenis Font</label><select id="set-header-marquee-font" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"><option value="Arial, sans-serif">Arial</option><option value="Verdana, sans-serif">Verdana</option><option value="Tahoma, sans-serif">Tahoma</option><option value="Georgia, serif">Georgia</option><option value="\'Trebuchet MS\', sans-serif">Trebuchet MS</option><option value="\'Courier New\', monospace">Courier New</option><option value="system-ui, sans-serif">System UI</option></select></div>
+                              <div><label class="block text-xs font-bold mb-1">Ukuran Font (px)</label><input type="number" id="set-header-marquee-size" min="10" max="30" value="16" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"></div>
+                              <div><label class="block text-xs font-bold mb-1">Warna Teks</label><input type="color" id="set-header-marquee-color" value="#ffffff" class="w-full h-9 p-1 bg-white border border-slate-200 rounded-xl"></div>
+                            </div>
+                        </div>
                         <div class="pt-1 flex justify-end">
                             <button type="submit" class="px-5 py-2.5 bg-royal-600 hover:bg-royal-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition">
                                 <i data-lucide="save" class="w-4 h-4"></i>
@@ -4008,6 +4028,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             storeAddress: 'Pemalang, Jawa Tengah',
             storePhone: '0812-3456-7890',
             cashierName: 'Admin Bengkel',
+            headerMarqueeText: '', headerMarqueeFont: 'Arial, sans-serif', headerMarqueeSize: 16, headerMarqueeColor: '#ffffff',
             storeLogo: '',
             showLogoOnReceipt: true,
             paperSize: '58mm',
@@ -4346,6 +4367,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             normalizeLegacyTransactions();
 
             renderBrandLogos();
+            applyDesktopHeaderMarquee();
             applySettingsUI();
             applyAppearanceSettings();
             applyPrintLayoutSettings();
@@ -10449,6 +10471,10 @@ window.addEventListener('afterprint', function () {
             document.getElementById('set-cashier-name').value = settings.cashierName || '';
             document.getElementById('set-store-address').value = settings.storeAddress || '';
             document.getElementById('set-store-phone').value = settings.storePhone || '';
+            document.getElementById('set-header-marquee-text').value = settings.headerMarqueeText || '';
+            document.getElementById('set-header-marquee-font').value = settings.headerMarqueeFont || 'Arial, sans-serif';
+            document.getElementById('set-header-marquee-size').value = settings.headerMarqueeSize || 16;
+            document.getElementById('set-header-marquee-color').value = settings.headerMarqueeColor || '#ffffff';
             document.getElementById('set-receipt-header').value = settings.receiptHeader || '';
             document.getElementById('set-receipt-footer').value = settings.receiptFooter || '';
             document.getElementById('set-show-logo').checked = settings.showLogoOnReceipt !== false;
@@ -10478,15 +10504,32 @@ window.addEventListener('afterprint', function () {
             showToast('Pengaturan printer dan struk berhasil disimpan.');
         }
 
+        function applyDesktopHeaderMarquee(){
+            const wrap=document.getElementById('ajm-desktop-marquee'), el=document.getElementById('ajm-desktop-marquee-text');
+            if(!wrap||!el)return;
+            const msg=String(settings.headerMarqueeText||'').trim();
+            if(!msg){wrap.style.display='none';el.textContent='';return;}
+            wrap.style.display='';el.textContent=msg;
+            el.style.fontFamily=settings.headerMarqueeFont||'Arial, sans-serif';
+            el.style.fontSize=Math.max(10,Math.min(30,Number(settings.headerMarqueeSize)||16))+'px';
+            el.style.color=settings.headerMarqueeColor||'#ffffff';
+            el.style.animationDuration=Math.max(18,Math.min(70,msg.length*.42))+'s';
+        }
+
         function saveStoreSettings(e) {
             e.preventDefault();
             settings.storeName = document.getElementById('set-store-name').value.trim() || 'AJM Reborn';
             settings.cashierName = document.getElementById('set-cashier-name').value.trim() || 'Admin Bengkel';
             settings.storeAddress = document.getElementById('set-store-address').value.trim();
             settings.storePhone = document.getElementById('set-store-phone').value.trim();
+            settings.headerMarqueeText = document.getElementById('set-header-marquee-text').value.trim();
+            settings.headerMarqueeFont = document.getElementById('set-header-marquee-font').value;
+            settings.headerMarqueeSize = Math.max(10, Math.min(30, parseInt(document.getElementById('set-header-marquee-size').value,10) || 16));
+            settings.headerMarqueeColor = document.getElementById('set-header-marquee-color').value || '#ffffff';
 
             saveAllData();
             applySettingsUI();
+            applyDesktopHeaderMarquee();
             showToast('Pengaturan bengkel berhasil disimpan!');
         }
 
