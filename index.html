@@ -1856,7 +1856,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
   }
 }
 @media (prefers-reduced-motion:reduce){
-  #ajm-desktop-marquee-text{animation:none!important;transform:translate3d(0,-50%,0)!important}
+  body:not(.ajm-electron-desktop) #ajm-desktop-marquee-text{animation:none!important;transform:translate3d(0,-50%,0)!important}
 }
 </style>
 </head>
@@ -11183,8 +11183,11 @@ window.addEventListener('afterprint', function () {
         function applyDesktopHeaderMarquee(){
             const wrap=document.getElementById('ajm-desktop-marquee'), el=document.getElementById('ajm-desktop-marquee-text');
             if(!wrap||!el)return;
+            const isElectronDesktop=/Electron\//i.test(navigator.userAgent);
+            if(isElectronDesktop)document.body.classList.add('ajm-electron-desktop');
+            const stopElectronAnimation=()=>{if(el._ajmElectronMarqueeAnimation){el._ajmElectronMarqueeAnimation.cancel();el._ajmElectronMarqueeAnimation=null;}};
             const msg=String(settings.headerMarqueeText||'').trim();
-            if(!msg){wrap.style.display='none';el.textContent='';return;}
+            if(!msg){stopElectronAnimation();wrap.style.display='none';el.textContent='';return;}
             wrap.style.display='';el.textContent=msg;
             el.style.fontFamily=settings.headerMarqueeFont||'Arial, sans-serif';
             el.style.fontSize=Math.max(10,Math.min(30,Number(settings.headerMarqueeSize)||16))+'px';
@@ -11192,6 +11195,25 @@ window.addEventListener('afterprint', function () {
             const duration=Math.max(18,Math.min(60,Number(settings.headerMarqueeSpeed)||45));
             el.style.setProperty('--ajm-marquee-duration',duration+'s');
             el.style.animationDuration=duration+'s';
+            if(isElectronDesktop&&typeof el.animate==='function'){
+                stopElectronAnimation();
+                el.style.animation='none';
+                const startX=Math.max(1,wrap.clientWidth);
+                const endX=-Math.max(1,el.scrollWidth);
+                el._ajmElectronMarqueeAnimation=el.animate(
+                    [{transform:'translate3d('+startX+'px,-50%,0)'},{transform:'translate3d('+endX+'px,-50%,0)'}],
+                    {duration:duration*1000,iterations:Infinity,easing:'linear'}
+                );
+            }else{
+                stopElectronAnimation();
+                el.style.animation='';
+            }
+        }
+        if(!window.__ajmElectronMarqueeResizeBound){
+            window.__ajmElectronMarqueeResizeBound=true;
+            window.addEventListener('resize',()=>{
+                if(/Electron\//i.test(navigator.userAgent))applyDesktopHeaderMarquee();
+            },{passive:true});
         }
 
         function saveStoreSettings(e) {
