@@ -16,6 +16,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
@@ -3992,6 +3994,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         let serialScannerPort = null;
         let serialReaderActive = false;
         let cameraStream = null;
+        let cameraZXingControls = null;
+        let cameraBarcodeHandled = false;
         let cameraDetectTimer = null;
 
         let btPrinterDevice = null;
@@ -4886,23 +4890,59 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 btnLabel.textContent = 'Matikan Kamera';
                 statusEl.textContent = 'Kamera aktif — arahkan ke barcode';
 
+                cameraBarcodeHandled = false;
+                const handleDetectedBarcode = (detectedVal) => {
+                    if (!detectedVal || cameraBarcodeHandled) return;
+                    cameraBarcodeHandled = true;
+                    document.getElementById('barcode-modal-input').value = detectedVal;
+                    processIncomingBarcodeSignal(detectedVal, 'Kamera WebRTC', 35);
+                    stopCameraBarcodeScan();
+                    closeModal('barcode-modal');
+                };
+
                 if ('BarcodeDetector' in window) {
-                    const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'qr_code'] });
-                    cameraDetectTimer = setInterval(async () => {
-                        if (!cameraStream || videoEl.readyState < 2) return;
+                    try {
+                        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'] });
+                        cameraDetectTimer = setInterval(async () => {
+                            if (!cameraStream || videoEl.readyState < 2 || cameraBarcodeHandled) return;
+                            try {
+                                const codes = await detector.detect(videoEl);
+                                if (codes && codes.length > 0) handleDetectedBarcode(codes[0].rawValue);
+                            } catch (err) {}
+                        }, 250);
+                    } catch (detectorError) {
+                        console.warn('BarcodeDetector gagal, beralih ke ZXing', detectorError);
+                    }
+                }
+
+                if (!cameraBarcodeHandled && (!('BarcodeDetector' in window) || !cameraDetectTimer)) {
+                    if (window.ZXingBrowser && window.ZXing) {
+                        statusEl.textContent = 'Kamera aktif — mesin pembaca barcode siap';
                         try {
-                            const codes = await detector.detect(videoEl);
-                            if (codes && codes.length > 0) {
-                                const detectedVal = codes[0].rawValue;
-                                document.getElementById('barcode-modal-input').value = detectedVal;
-                                processIncomingBarcodeSignal(detectedVal, 'Kamera WebRTC', 35);
-                                stopCameraBarcodeScan();
-                                closeModal('barcode-modal');
-                            }
-                        } catch (err) {}
-                    }, 450);
-                } else {
-                    statusEl.textContent = 'Kamera aktif (ketik/scan kode di bawah jika auto-detect tidak didukung)';
+                            const hints = new Map();
+                            hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                                window.ZXing.BarcodeFormat.EAN_13,
+                                window.ZXing.BarcodeFormat.EAN_8,
+                                window.ZXing.BarcodeFormat.UPC_A,
+                                window.ZXing.BarcodeFormat.UPC_E,
+                                window.ZXing.BarcodeFormat.CODE_128,
+                                window.ZXing.BarcodeFormat.CODE_39,
+                                window.ZXing.BarcodeFormat.ITF,
+                                window.ZXing.BarcodeFormat.QR_CODE
+                            ]);
+                            const reader = new window.ZXingBrowser.BrowserMultiFormatReader(undefined, 250);
+                            cameraZXingControls = await reader.decodeFromVideoElement(videoEl, (result, error) => {
+                                if (result) handleDetectedBarcode(result.getText());
+                            });
+                        } catch (zxingError) {
+                            console.error('ZXing camera decoder error:', zxingError);
+                            statusEl.textContent = 'Kamera aktif, gagal memulai pembaca barcode. Periksa koneksi internet.';
+                            showToast('Mesin pembaca barcode gagal dimuat. Periksa koneksi internet.', 'error');
+                        }
+                    } else {
+                        statusEl.textContent = 'Kamera aktif, memuat mesin pembaca barcode…';
+                        showToast('Mesin pembaca barcode belum tersedia. Periksa koneksi internet.', 'warning');
+                    }
                 }
             } catch (err) {
                 showToast('Izin kamera ditolak atau kamera tidak ditemukan', 'error');
@@ -4914,6 +4954,11 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 clearInterval(cameraDetectTimer);
                 cameraDetectTimer = null;
             }
+            if (cameraZXingControls) {
+                try { cameraZXingControls.stop(); } catch (err) {}
+                cameraZXingControls = null;
+            }
+            cameraBarcodeHandled = false;
             if (cameraStream) {
                 cameraStream.getTracks().forEach(t => t.stop());
                 cameraStream = null;
