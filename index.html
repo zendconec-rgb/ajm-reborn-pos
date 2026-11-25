@@ -2409,6 +2409,18 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <option value="all">Semua Kategori</option>
                             </select>
                         </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input id="inventory-select-all" type="checkbox" onchange="toggleSelectAllInventory(this.checked)" class="w-4 h-4 rounded border-slate-300 text-royal-600 focus:ring-royal-500">
+                                Pilih semua hasil
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="inventory-selected-count" class="text-[11px] font-semibold text-slate-500">0 produk dipilih</span>
+                                <button id="inventory-bulk-delete" type="button" onclick="deleteSelectedInventoryProducts()" disabled class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-700">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Terpilih
+                                </button>
+                            </div>
+                        </div>
                         <div id="inventory-list" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
                     </div>
 
@@ -8736,6 +8748,58 @@ window.addEventListener('afterprint', function () {
             }
         }
 
+        // Pilihan produk master disimpan selama sesi agar tetap terpilih saat daftar dirender ulang.
+        window.ajmSelectedProductIds = window.ajmSelectedProductIds instanceof Set ? window.ajmSelectedProductIds : new Set();
+
+        function toggleInventoryProductSelection(id, checked) {
+            if (checked) window.ajmSelectedProductIds.add(String(id));
+            else window.ajmSelectedProductIds.delete(String(id));
+            updateInventoryBulkSelectionUI();
+        }
+
+        function toggleSelectAllInventory(checked) {
+            const visibleIds = Array.from(document.querySelectorAll('#inventory-list [data-inventory-select]')).map(el => String(el.value));
+            visibleIds.forEach(id => checked ? window.ajmSelectedProductIds.add(id) : window.ajmSelectedProductIds.delete(id));
+            renderInventoryList();
+        }
+
+        function updateInventoryBulkSelectionUI() {
+            const selected = window.ajmSelectedProductIds;
+            const countEl = document.getElementById('inventory-selected-count');
+            const deleteBtn = document.getElementById('inventory-bulk-delete');
+            const selectAll = document.getElementById('inventory-select-all');
+            const visible = Array.from(document.querySelectorAll('#inventory-list [data-inventory-select]'));
+            const selectedVisible = visible.filter(el => selected.has(String(el.value))).length;
+            if (countEl) countEl.textContent = selected.size + ' produk dipilih';
+            if (deleteBtn) deleteBtn.disabled = selected.size === 0;
+            if (selectAll) {
+                selectAll.checked = visible.length > 0 && selectedVisible === visible.length;
+                selectAll.indeterminate = selectedVisible > 0 && selectedVisible < visible.length;
+            }
+            document.querySelectorAll('#inventory-list [data-inventory-select]').forEach(el => {
+                const card = el.closest('[data-product-card]');
+                if (card) card.classList.toggle('ring-2', el.checked), card.classList.toggle('ring-royal-400', el.checked), card.classList.toggle('bg-royal-50', el.checked);
+            });
+        }
+
+        function deleteSelectedInventoryProducts() {
+            const ids = Array.from(window.ajmSelectedProductIds).filter(id => products.some(p => String(p.id) === id));
+            if (!ids.length) {
+                window.ajmSelectedProductIds.clear();
+                updateInventoryBulkSelectionUI();
+                return;
+            }
+            showConfirm('Hapus ' + ids.length + ' Produk?', 'Semua produk yang dipilih akan dihapus dari master produk. Tindakan ini tidak dapat dibatalkan.', () => {
+                const removeIds = new Set(ids);
+                products = products.filter(p => !removeIds.has(String(p.id)));
+                ids.forEach(id => window.ajmSelectedProductIds.delete(id));
+                saveAllData();
+                renderInventoryList();
+                renderPosProducts();
+                showToast(ids.length + ' produk berhasil dihapus');
+            });
+        }
+
         function renderInventoryList() {
             const catFilterEl = document.getElementById('inventory-cat-filter');
             const currentCat = catFilterEl.value;
@@ -8745,25 +8809,31 @@ window.addEventListener('afterprint', function () {
             const search = document.getElementById('inventory-search').value.trim().toLowerCase();
             const filtered = products.filter(p => {
                 const matchCat = catFilterEl.value === 'all' || p.category === catFilterEl.value;
-                const matchText = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
+                const matchText = String(p.name || '').toLowerCase().includes(search) || String(p.code || '').toLowerCase().includes(search);
                 return matchCat && matchText;
             });
+            const productIds = new Set(products.map(p => String(p.id)));
+            Array.from(window.ajmSelectedProductIds).forEach(id => { if (!productIds.has(id)) window.ajmSelectedProductIds.delete(id); });
 
             const container = document.getElementById('inventory-list');
             container.innerHTML = filtered.map(p => {
                 const isService = p.category === 'Jasa Servis';
                 const low = !isService && p.stock <= p.minStock;
+                const selected = window.ajmSelectedProductIds.has(String(p.id));
                 return `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center justify-between gap-2">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 mb-0.5">
-                                <span class="font-mono text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${p.code}</span>
-                                <span class="text-[10px] font-bold text-royal-600">${p.category}</span>
+                    <div data-product-card class="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center justify-between gap-2 ${selected ? 'ring-2 ring-royal-400 bg-royal-50' : ''}">
+                        <div class="flex items-start gap-2 min-w-0">
+                            <input data-inventory-select type="checkbox" value="${String(p.id).replace(/"/g, '&quot;')}" ${selected ? 'checked' : ''} onchange="toggleInventoryProductSelection(this.value, this.checked)" aria-label="Pilih ${String(p.name || '').replace(/"/g, '&quot;')}" class="mt-1 w-4 h-4 shrink-0 rounded border-slate-300 text-royal-600 focus:ring-royal-500 cursor-pointer">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 mb-0.5">
+                                    <span class="font-mono text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${p.code}</span>
+                                    <span class="text-[10px] font-bold text-royal-600">${p.category}</span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-xs sm:text-sm truncate">${p.name}</h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">
+                                    Modal: ${formatRupiah(p.cost)} • Jual: <strong class="text-slate-800">${formatRupiah(p.price)}</strong>
+                                </p>
                             </div>
-                            <h4 class="font-bold text-slate-800 text-xs sm:text-sm truncate">${p.name}</h4>
-                            <p class="text-[11px] text-slate-500 mt-0.5">
-                                Modal: ${formatRupiah(p.cost)} • Jual: <strong class="text-slate-800">${formatRupiah(p.price)}</strong>
-                            </p>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
                             <span class="text-xs font-extrabold px-2.5 py-1 rounded-xl ${isService ? 'bg-amber-50 text-amber-700' : low ? 'bg-rose-100 text-rose-700' : 'bg-emerald-50 text-emerald-700'}">
@@ -8782,6 +8852,7 @@ window.addEventListener('afterprint', function () {
                     </div>
                 `;
             }).join('');
+            updateInventoryBulkSelectionUI();
             lucide.createIcons();
         }
 
