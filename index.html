@@ -1873,9 +1873,13 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <i data-lucide="clock-3" class="w-3.5 h-3.5"></i>
                     <span id="header-clock">00:00:00</span>
                 </div>
-                <!-- Tombol Aktifkan Printer via USB -->
-                <span id="header-bluetooth-status" role="status" aria-label="Printer Bluetooth belum terhubung" title="Printer Bluetooth belum terhubung" class="ajm-device-status-indicator text-amber-300"><i data-lucide="bluetooth" class="w-6 h-6"></i></span>
-                <span id="header-usb-status" role="status" aria-label="Printer USB belum terhubung" title="Printer USB belum terhubung" class="ajm-device-status-indicator text-amber-300"><i data-lucide="usb" class="w-6 h-6"></i></span>
+                <!-- Tombol cepat koneksi printer Bluetooth dan USB -->
+                <button type="button" id="header-bluetooth-status" onclick="connectBluetoothPrinter()" aria-label="Hubungkan printer Bluetooth" title="Hubungkan printer Bluetooth" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
+                    <i data-lucide="bluetooth" class="w-5 h-5 stroke-[2.5]"></i>
+                </button>
+                <button type="button" id="header-usb-status" onclick="connectUsbPrinter()" aria-label="Hubungkan printer USB" title="Hubungkan printer USB" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
+                    <i data-lucide="usb" class="w-5 h-5 stroke-[2.5]"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -6296,18 +6300,24 @@ window.addEventListener('afterprint', function () {
             const bluetoothStatus = document.getElementById('header-bluetooth-status');
             if (bluetoothStatus) {
                 const bluetoothConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
-                bluetoothStatus.classList.toggle('text-emerald-400', bluetoothConnected);
-                bluetoothStatus.classList.toggle('text-amber-300', !bluetoothConnected);
-                bluetoothStatus.setAttribute('aria-label', bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Printer Bluetooth belum terhubung');
-                bluetoothStatus.title = bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Printer Bluetooth belum terhubung';
+                bluetoothStatus.classList.toggle('bg-emerald-500', bluetoothConnected);
+                bluetoothStatus.classList.toggle('hover:bg-emerald-600', bluetoothConnected);
+                bluetoothStatus.classList.toggle('bg-amber-400', !bluetoothConnected);
+                bluetoothStatus.classList.toggle('hover:bg-amber-500', !bluetoothConnected);
+                bluetoothStatus.classList.add('text-white');
+                bluetoothStatus.setAttribute('aria-label', bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Klik untuk menghubungkan printer Bluetooth');
+                bluetoothStatus.title = bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Klik untuk menghubungkan printer Bluetooth';
             }
             const usbStatus = document.getElementById('header-usb-status');
             if (usbStatus) {
                 const usbConnected = Boolean((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName && qzPrinterHardwareOnline) || (usbPrinterDevice && usbPrinterDevice.opened));
-                usbStatus.classList.toggle('text-emerald-400', usbConnected);
-                usbStatus.classList.toggle('text-amber-300', !usbConnected);
-                usbStatus.setAttribute('aria-label', usbConnected ? 'Printer USB terhubung' : 'Printer USB belum terhubung');
-                usbStatus.title = usbConnected ? 'Printer USB terhubung' : 'Printer USB belum terhubung';
+                usbStatus.classList.toggle('bg-emerald-500', usbConnected);
+                usbStatus.classList.toggle('hover:bg-emerald-600', usbConnected);
+                usbStatus.classList.toggle('bg-amber-400', !usbConnected);
+                usbStatus.classList.toggle('hover:bg-amber-500', !usbConnected);
+                usbStatus.classList.add('text-white');
+                usbStatus.setAttribute('aria-label', usbConnected ? 'Printer USB terhubung' : 'Klik untuk menghubungkan printer USB');
+                usbStatus.title = usbConnected ? 'Printer USB terhubung' : 'Klik untuk menghubungkan printer USB';
             }
             const scanDot = document.getElementById('header-scanner-dot');
             const scanText = document.getElementById('header-scanner-text');
