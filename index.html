@@ -1785,6 +1785,46 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 }
 </style>
 
+
+<style id="ajm-header-printer-buttons-final">
+/* Override CSS indikator lama yang sebelumnya mematikan klik dan menghapus latar tombol. */
+#app-topbar-actions button#header-bluetooth-status,
+#app-topbar-actions button#header-usb-status{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:40px!important;height:40px!important;
+  min-width:40px!important;max-width:40px!important;
+  min-height:40px!important;max-height:40px!important;
+  flex:0 0 40px!important;
+  padding:0!important;margin:0!important;
+  border:0!important;border-radius:9999px!important;
+  background:#fbbf24!important;
+  color:#fff!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.18)!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+  opacity:1!important;
+  position:relative!important;
+  z-index:20!important;
+  transition:background-color .18s ease,transform .12s ease!important;
+}
+#app-topbar-actions button#header-bluetooth-status:hover,
+#app-topbar-actions button#header-usb-status:hover{background:#f59e0b!important}
+#app-topbar-actions button#header-bluetooth-status:active,
+#app-topbar-actions button#header-usb-status:active{transform:scale(.94)!important}
+#app-topbar-actions button#header-bluetooth-status svg,
+#app-topbar-actions button#header-usb-status svg,
+#app-topbar-actions button#header-bluetooth-status i,
+#app-topbar-actions button#header-usb-status i{
+  display:block!important;width:21px!important;height:21px!important;
+  color:#fff!important;stroke:#fff!important;pointer-events:none!important;
+}
+#app-topbar-actions button#header-bluetooth-status.bg-emerald-500,
+#app-topbar-actions button#header-usb-status.bg-emerald-500{background:#10b981!important}
+#app-topbar-actions button#header-bluetooth-status.bg-emerald-500:hover,
+#app-topbar-actions button#header-usb-status.bg-emerald-500:hover{background:#059669!important}
+</style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
