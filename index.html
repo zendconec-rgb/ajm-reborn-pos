@@ -4169,7 +4169,27 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         function initApp() {
             // Pulihkan sesi login dari localStorage agar refresh/perubahan mode tampilan
             // tidak mengeluarkan pengguna. Sesi hanya dihapus melalui tombol Logout.
-            loadAllData();
+            // Keep the POS usable even if one legacy/localStorage entry is malformed.
+            // Do not clear or overwrite stored records: preserve every collection that loaded.
+            try {
+                loadAllData();
+            } catch (storageError) {
+                console.error('AJM storage initialization recovered:', storageError);
+                if (!Array.isArray(products)) products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+                if (!Array.isArray(categories)) categories = [...DEFAULT_CATEGORIES];
+                if (!Array.isArray(customers)) customers = [];
+                if (!Array.isArray(mechanics)) mechanics = [];
+                if (!Array.isArray(workOrders)) workOrders = [];
+                if (!Array.isArray(transactions)) transactions = [];
+                if (!Array.isArray(stockLogs)) stockLogs = [];
+                if (!Array.isArray(cashflows)) cashflows = [];
+                if (!Array.isArray(users) || !users.length) users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+                if (!settings || typeof settings !== 'object' || Array.isArray(settings)) settings = Object.assign({}, DEFAULT_SETTINGS);
+                else settings = Object.assign({}, DEFAULT_SETTINGS, settings);
+                if (!Array.isArray(syncQueue)) syncQueue = [];
+                if (!driveMeta || typeof driveMeta !== 'object') driveMeta = { folderId: null, lastSyncAt: null, lastError: null, accessToken: null, tokenExpiry: 0 };
+                currentSession = null;
+            }
             ensureEveryProductHasBarcode();
             normalizeLegacyTransactions();
 
