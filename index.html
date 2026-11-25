@@ -10402,12 +10402,50 @@ window.addEventListener('afterprint', function () {
             }
         }
 
+        /* Tombol aksi struk: ikon saja, dua kolom identik, dan panel mengikuti lebar kertas. */
+        #receipt-modal #receipt-modal-actions {
+            width: var(--receipt-paper-width, 100%) !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        #receipt-modal #receipt-action-buttons {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            width: 100% !important;
+            gap: 8px !important;
+        }
+        #receipt-modal #receipt-action-buttons > button {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            box-sizing: border-box !important;
+        }
+        #receipt-modal #receipt-print-btn-label,
+        #receipt-modal #receipt-whatsapp-action > span {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
+        #receipt-modal #receipt-print-action i { width: 24px !important; height: 24px !important; }
+        #receipt-modal #receipt-whatsapp-action svg { width: 24px !important; height: 24px !important; flex: 0 0 24px !important; }
+
         function syncReceiptModalActionWidth() {
             const paper = document.getElementById('printable-receipt-area');
             const actions = document.getElementById('receipt-modal-actions');
             if (!paper || !actions) return;
-            const paperWidth = Math.round(paper.getBoundingClientRect().width);
-            if (paperWidth > 0) actions.style.setProperty('--receipt-paper-width', paperWidth + 'px');
+            const paperWidth = Math.round(paper.getBoundingClientRect().width || paper.offsetWidth || 0);
+            if (paperWidth > 0) {
+                actions.style.setProperty('--receipt-paper-width', paperWidth + 'px');
+                actions.style.width = paperWidth + 'px';
+            }
         }
 
         window.addEventListener('resize', () => {
@@ -10458,8 +10496,6 @@ window.addEventListener('afterprint', function () {
             paper.innerHTML = buildReceiptHtml(trx);
             paper.querySelectorAll('.receipt-barcode-svg,.qr-code-target').forEach(el => { delete el.dataset.rendered; });
             ensureReceiptCodeRendered();
-            requestAnimationFrame(syncReceiptModalActionWidth);
-
             const shareFormat = document.getElementById('receipt-share-format');
             if (shareFormat) shareFormat.value = 'pdf';
             const sharePhone = document.getElementById('receipt-share-phone');
@@ -10481,6 +10517,9 @@ window.addEventListener('afterprint', function () {
                 receiptModal.style.visibility = 'visible';
                 receiptModal.style.opacity = '1';
                 receiptModal.style.zIndex = '99999';
+                // Ukur setelah modal terlihat agar lebar struk sudah memiliki nilai aktual.
+                requestAnimationFrame(() => requestAnimationFrame(syncReceiptModalActionWidth));
+                setTimeout(syncReceiptModalActionWidth, 120);
             }
             if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
         }
