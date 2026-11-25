@@ -1,0 +1,57 @@
+{
+  "name": "ajm-reborn-pos-windows",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AJM Reborn POS Windows desktop wrapper",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start:desktop": "electron .",
+    "build:win": "electron-builder --win nsis portable --x64"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "id.ajmreborn.pos",
+    "productName": "AJM Reborn POS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "AJM-Reborn-POS-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AJM Reborn POS"
+    },
+    "portable": {
+      "artifactName": "AJM-Reborn-POS-Portable-${version}-${arch}.${ext}"
+    }
+  }
+}
