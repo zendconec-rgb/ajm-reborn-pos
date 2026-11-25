@@ -307,10 +307,10 @@
         #receipt-modal #printable-receipt-area { flex-shrink: 0; }
         #receipt-modal .overflow-y-auto { min-height: 0; }
         #receipt-print-action { position: sticky; bottom: 0; z-index: 3; }
-        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 { flex: 0 0 auto !important; margin-left:auto !important; margin-right:auto !important; }
-        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 > .grid.grid-cols-2 { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px !important; width:100% !important; }
+        #receipt-modal > div > div.w-full.flex.flex-col.mt-3 { flex: 0 0 auto !important; margin-left:auto !important; margin-right:auto !important; }
+        #receipt-modal > div > div.w-full.flex.flex-col.mt-3 > .grid.grid-cols-2 { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px !important; width:100% !important; }
         #receipt-modal #receipt-print-action, #receipt-modal #receipt-whatsapp-action { width:100% !important; min-width:0 !important; min-height:48px !important; height:48px !important; padding:8px 5px !important; box-sizing:border-box !important; }
-        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 > button:last-child { width:100% !important; min-height:48px !important; height:48px !important; box-sizing:border-box !important; }
+        #receipt-modal > div > div.w-full.flex.flex-col.mt-3 > button:last-child { width:100% !important; min-height:48px !important; height:48px !important; box-sizing:border-box !important; }
 
 
         /* Lebarkan ruang transaksi: layar sempit memakai panel penuh, desktop panel 520-600px. */
@@ -10435,7 +10435,7 @@ window.addEventListener('afterprint', function () {
 
         function syncReceiptActionWidth() {
             const paper = document.getElementById('printable-receipt-area');
-            const actions = document.querySelector('#receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3');
+            const actions = document.querySelector('#receipt-modal > div > div.w-full.flex.flex-col.mt-3');
             if (!paper || !actions) return;
             const width = Math.round(paper.getBoundingClientRect().width);
             if (width > 0) {
