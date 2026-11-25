@@ -2996,7 +2996,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <span class="text-[10px] font-bold text-slate-400">ESC/POS</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">Bluetooth Thermal</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Hanya printer BLE dengan layanan ESC/POS; Bluetooth Classic SPP gunakan Printer Sistem + RawBT</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Untuk printer BLE pada Android. Windows gunakan USB Kasir Direct melalui QZ Tray.</p>
                         </button>
 
                         <button type="button" onclick="selectPrinterConnectionType('usb')" data-printer-type="usb" class="printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300">
@@ -3005,7 +3005,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <span class="text-[10px] font-bold text-slate-400">WebUSB</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">USB Kasir Direct</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Cetak langsung tanpa dialog via kabel USB</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Windows: USB langsung melalui QZ Tray. Android: USB OTG/WebUSB.</p>
                         </button>
                     </div>
 
@@ -5512,6 +5512,12 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         }
 
         function renderPrinterSettingsUI() {
+            // Windows desktop memakai QZ Tray untuk printer USB native.
+            // Web Bluetooth BLE tidak mendukung printer Classic SPP dan tidak dipakai di Windows.
+            if (isWindowsDesktopForQZ() && settings.printerConnectionType === 'bluetooth') {
+                settings.printerConnectionType = 'usb';
+                saveAllData();
+            }
             const pType = settings.printerConnectionType || 'browser';
             document.querySelectorAll('.printer-type-card').forEach(card => {
                 const active = card.dataset.printerType === pType;
