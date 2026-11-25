@@ -39,3 +39,17 @@ Node integration is disabled in the page, context isolation and Chromium web
 security remain enabled, and external links open in the default browser.
 The installer is currently unsigned; Windows SmartScreen may show an
 unknown-publisher warning until a code-signing certificate is configured.
+
+## Automatic updates
+
+The installed NSIS edition checks the GitHub prerelease feed after startup and
+then every six hours. New installer packages download in the background.
+When the download is complete, the user is asked whether to install and restart
+now or defer it. Updates are published by the Windows Actions workflow together
+with `latest.yml` and blockmap metadata required by electron-updater.
+
+The portable EXE does not self-update; download the latest portable build
+manually. The first installation that includes the updater must also be
+installed manually over the existing NSIS installation. Subsequent NSIS
+releases can update in-app. The app uses the same Electron app ID and user-data
+directory, so app profile data is retained across normal in-place upgrades.
