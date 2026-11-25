@@ -1825,6 +1825,40 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 #app-topbar-actions button#header-bluetooth-status.bg-emerald-500:hover,
 #app-topbar-actions button#header-usb-status.bg-emerald-500:hover{background:#059669!important}
 </style>
+
+<style id="ajm-marquee-gpu-smooth-final">
+/* Keep the workshop ticker on the compositor: animate transform only, never left/top. */
+@media (min-width:768px){
+  #ajm-desktop-marquee{
+    position:relative!important;
+    overflow:hidden!important;
+    contain:layout paint!important;
+    isolation:isolate!important;
+  }
+  #ajm-desktop-marquee-text{
+    left:0!important;
+    top:50%!important;
+    width:max-content!important;
+    max-width:none!important;
+    white-space:nowrap!important;
+    display:inline-block!important;
+    transform:translate3d(100vw,-50%,0)!important;
+    will-change:transform!important;
+    backface-visibility:hidden!important;
+    -webkit-backface-visibility:hidden!important;
+    perspective:1000px!important;
+    animation:ajm-marquee-rtl-gpu var(--ajm-marquee-duration,45s) linear infinite!important;
+    animation-play-state:running!important;
+  }
+  @keyframes ajm-marquee-rtl-gpu{
+    0%{transform:translate3d(100vw,-50%,0)}
+    100%{transform:translate3d(-100%,-50%,0)}
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  #ajm-desktop-marquee-text{animation:none!important;transform:translate3d(0,-50%,0)!important}
+}
+</style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -11155,7 +11189,9 @@ window.addEventListener('afterprint', function () {
             el.style.fontFamily=settings.headerMarqueeFont||'Arial, sans-serif';
             el.style.fontSize=Math.max(10,Math.min(30,Number(settings.headerMarqueeSize)||16))+'px';
             el.style.color=settings.headerMarqueeColor||'#ffffff';
-            el.style.animationDuration=Math.max(18,Math.min(60,Number(settings.headerMarqueeSpeed)||45))+'s';
+            const duration=Math.max(18,Math.min(60,Number(settings.headerMarqueeSpeed)||45));
+            el.style.setProperty('--ajm-marquee-duration',duration+'s');
+            el.style.animationDuration=duration+'s';
         }
 
         function saveStoreSettings(e) {
