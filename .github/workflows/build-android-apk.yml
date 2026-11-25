@@ -5,26 +5,65 @@ on:
     paths:
       - 'android-bridge/**'
       - '.github/workflows/build-android-apk.yml'
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build debug APK
+
+      - name: Build debug APK (fallback)
         working-directory: android-bridge
         run: gradle --no-daemon assembleDebug
+
+      - name: Prepare stable release signing key
+        id: signing
+        env:
+          AJM_KEYSTORE_BASE64: ${{ secrets.AJM_KEYSTORE_BASE64 }}
+          AJM_KEYSTORE_PASSWORD: ${{ secrets.AJM_KEYSTORE_PASSWORD }}
+          AJM_KEY_ALIAS: ${{ secrets.AJM_KEY_ALIAS }}
+          AJM_KEY_PASSWORD: ${{ secrets.AJM_KEY_PASSWORD }}
+        run: |
+          if [ -n "$AJM_KEYSTORE_BASE64" ] && [ -n "$AJM_KEYSTORE_PASSWORD" ] && [ -n "$AJM_KEY_ALIAS" ] && [ -n "$AJM_KEY_PASSWORD" ]; then
+            echo "$AJM_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/ajm-reborn-release.jks"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Release signing secrets are not configured yet; only debug APK will be built."
+          fi
+
+      - name: Build signed release APK
+        if: steps.signing.outputs.available == 'true'
+        working-directory: android-bridge
+        env:
+          AJM_KEYSTORE_PATH: ${{ runner.temp }}/ajm-reborn-release.jks
+          AJM_KEYSTORE_PASSWORD: ${{ secrets.AJM_KEYSTORE_PASSWORD }}
+          AJM_KEY_ALIAS: ${{ secrets.AJM_KEY_ALIAS }}
+          AJM_KEY_PASSWORD: ${{ secrets.AJM_KEY_PASSWORD }}
+        run: gradle --no-daemon assembleRelease
+
       - uses: actions/upload-artifact@v4
         with:
           name: AJM-Reborn-POS-Android-debug
           path: android-bridge/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.available == 'true'
+        with:
+          name: AJM-Reborn-POS-Android-release-signed
+          path: android-bridge/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
