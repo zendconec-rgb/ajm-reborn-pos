@@ -6,7 +6,7 @@
   "main": "electron/main.cjs",
   "scripts": {
     "start:desktop": "electron .",
-    "build:win": "electron-builder --win nsis portable --x64"
+    "build:win": "electron-builder --win nsis portable --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^39.0.0",
