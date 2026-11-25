@@ -1472,6 +1472,124 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 }
 </style>
 
+ 
+<style id="ajm-desktop-compact-workshop-pattern">
+/* Desktop: compact, balanced workshop toolbar with subtle motorcycle-parts pattern.
+   Mobile layout is intentionally left unchanged. */
+@media (min-width: 768px) {
+  #app-topbar {
+    background:
+      radial-gradient(circle at 82% 18%, rgba(255,255,255,.12), transparent 25%),
+      linear-gradient(112deg,#102b62 0%,#174a9c 52%,#1558b8 100%) !important;
+    box-shadow:0 5px 16px rgba(8,26,70,.16)!important;
+    border-radius:0 0 16px 16px;
+  }
+  #app-topbar::before {
+    opacity:.20!important;
+    background-image:
+      radial-gradient(circle,rgba(255,255,255,.42) 1px,transparent 1.7px),
+      repeating-linear-gradient(132deg,transparent 0 19px,rgba(255,255,255,.09) 20px,transparent 22px 42px),
+      radial-gradient(circle at 78% 50%,transparent 0 27px,rgba(255,255,255,.10) 28px 30px,transparent 31px 43px,rgba(255,255,255,.07) 44px 46px,transparent 47px);
+    background-size:22px 22px, auto, 180px 180px;
+    background-position:0 0,0 0, right 30px center;
+  }
+  #app-topbar::after {
+    width:150px!important;height:150px!important;right:17%!important;top:-94px!important;
+    border-color:rgba(255,255,255,.10)!important;
+    box-shadow:0 0 0 12px rgba(255,255,255,.025),0 0 0 26px rgba(255,255,255,.02)!important;
+  }
+  #app-topbar-inner.ajm-topbar-inner {
+    min-height:66px!important;height:66px!important;
+    padding:7px clamp(18px,2.5vw,34px)!important;
+    gap:14px!important;
+  }
+  #app-topbar-brand {gap:10px!important}
+  #app-topbar-brand > button {
+    width:38px!important;height:38px!important;min-width:38px!important;
+    border-radius:11px!important;
+  }
+  #app-topbar-brand > button svg,
+  #app-topbar-brand > button i {width:20px!important;height:20px!important}
+  #header-brand-logo-wrap {
+    width:42px!important;height:42px!important;flex-basis:42px!important;
+    border-radius:11px!important;
+  }
+  #app-topbar-brand span.font-extrabold {
+    font-size:19px!important;line-height:1.1!important;letter-spacing:-.025em!important;
+  }
+  #app-topbar-brand #header-subtitle {
+    font-size:11px!important;line-height:1.2!important;margin-top:2px!important;
+  }
+  #app-topbar-actions.ajm-topbar-actions {gap:10px!important}
+  #header-network-status {
+    min-height:32px!important;height:32px!important;padding:0 10px!important;
+    border-radius:999px!important;font-size:12px!important;gap:7px!important;
+  }
+  #header-network-dot {width:8px!important;height:8px!important;flex-basis:8px!important}
+  #app-topbar-actions > div[title="Waktu Indonesia Barat"] {
+    min-height:32px!important;height:32px!important;padding:0 9px!important;
+    border-radius:999px!important;font-size:12px!important;
+  }
+  #app-topbar-actions > div[title="Waktu Indonesia Barat"] svg {width:15px!important;height:15px!important}
+  #app-topbar-actions .ajm-device-status-indicator {
+    width:34px!important;height:34px!important;min-width:34px!important;max-width:34px!important;
+    min-height:34px!important;max-height:34px!important;flex-basis:34px!important;
+    border-radius:50%!important;
+  }
+  #app-topbar-actions .ajm-device-status-indicator svg,
+  #app-topbar-actions .ajm-device-status-indicator i {width:17px!important;height:17px!important}
+}
+
+/* Barcode label modal: use the available desktop width and avoid horizontal scrolling. */
+#barcode-label-modal {overflow-y:auto!important;overflow-x:hidden!important}
+#barcode-label-modal > div {
+  width:min(1040px,calc(100vw - 32px))!important;
+  max-width:1040px!important;
+  max-height:min(88vh,820px)!important;
+}
+#barcode-label-modal > div > .overflow-y-auto {
+  overflow-x:hidden!important;
+  min-width:0!important;
+  padding:14px 18px!important;
+  gap:11px!important;
+}
+#barcode-label-modal .barcode-sheet {
+  display:grid!important;
+  grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important;
+  gap:8px!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:6px!important;
+}
+#barcode-label-modal .barcode-label-card {
+  width:100%!important;min-width:0!important;max-width:none!important;
+  padding:6px!important;overflow:hidden!important;
+}
+#barcode-label-modal .barcode-label-card * {max-width:100%}
+#barcode-label-modal .barcode-svg {height:38px!important;max-width:100%!important}
+#barcode-label-modal > div > .overflow-y-auto > div:has(#printable-barcode-area) {
+  max-height:clamp(130px,30vh,250px)!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  padding:8px!important;
+}
+@media (min-width:768px) {
+  #barcode-label-modal > div > .overflow-y-auto > .flex:first-child {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+  }
+  #barcode-label-modal #label-product-select {min-width:0!important;width:100%!important}
+  #barcode-label-modal > div > .overflow-y-auto > div:nth-child(2) {
+    display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+    justify-content:space-between!important;
+  }
+}
+@media (max-width:767px) {
+  #barcode-label-modal > div {width:calc(100vw - 20px)!important;max-height:92dvh!important}
+  #barcode-label-modal .barcode-sheet {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+</style>
+
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
