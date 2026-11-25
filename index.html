@@ -6230,7 +6230,7 @@ window.addEventListener('afterprint', function () {
             }
             const usbStatus = document.getElementById('header-usb-status');
             if (usbStatus) {
-                const usbConnected = Boolean(usbPrinterDevice && usbPrinterDevice.opened);
+                const usbConnected = Boolean((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName) || (usbPrinterDevice && usbPrinterDevice.opened));
                 usbStatus.classList.toggle('text-emerald-400', usbConnected);
                 usbStatus.classList.toggle('text-amber-300', !usbConnected);
                 usbStatus.setAttribute('aria-label', usbConnected ? 'Printer USB terhubung' : 'Printer USB belum terhubung');
