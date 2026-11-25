@@ -58,6 +58,16 @@ function startLocalAppServer() {
 function configurePermissions() {
   const ses = session.defaultSession;
 
+  // Device access is granted only for the local AJM origin and only after
+  // Chromium has shown the USB/serial device picker to the user.
+  if (typeof ses.setDevicePermissionHandler === 'function') {
+    ses.setDevicePermissionHandler(details => {
+      const origin = details && details.origin ? details.origin : '';
+      const deviceType = details && details.deviceType;
+      return origin.startsWith(appOrigin) && (deviceType === 'usb' || deviceType === 'serial');
+    });
+  }
+
   ses.setPermissionRequestHandler((webContents, permission, callback, details) => {
     const origin = details && details.requestingUrl ? details.requestingUrl : webContents.getURL();
     const isApp = origin.startsWith(appOrigin);
