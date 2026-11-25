@@ -5792,7 +5792,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             if (settings.printerConnectionType === 'usb' && !(usbPrinterDevice && usbPrinterDevice.opened)) {
                 showToast('Printer USB belum aktif. Buka Pengaturan Printer lalu tekan Aktifkan Printer via USB.', 'warning');
                 if (btn) btn.disabled = false;
-                if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                if (label) label.textContent = 'CETAK STRUK';
                 return;
             }
             if (directReady) {
@@ -5800,26 +5800,26 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     const sent = await sendRawEscPosToConnectedPrinter(activeReceiptTrx);
                     if (sent) {
                         if (btn) btn.disabled = false;
-                        if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                        if (label) label.textContent = 'CETAK STRUK';
                         return;
                     }
                 } catch (error) {
                     console.error('Cetak langsung gagal:', error);
                     showToast('Cetak langsung gagal. Periksa koneksi printer dan coba lagi; dialog cetak tidak akan dibuka otomatis.', 'error');
                     if (btn) btn.disabled = false;
-                    if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                    if (label) label.textContent = 'CETAK STRUK';
                     return;
                 }
             } else if (settings.printerConnectionType === 'bluetooth') {
                 // For Android Classic SPP, route straight to RawBT and never open A4 print preview.
                 if (sendRawEscPosViaRawBT(activeReceiptTrx)) {
                     if (btn) btn.disabled = false;
-                    if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                    if (label) label.textContent = 'CETAK STRUK';
                     return;
                 }
                 showToast('Cetak langsung Bluetooth SPP memerlukan aplikasi RawBT di Android. Dialog cetak sistem tidak dibuka.', 'warning');
                 if (btn) btn.disabled = false;
-                if (label) label.textContent = 'CETAK STRUK SEKARANG';
+                if (label) label.textContent = 'CETAK STRUK';
                 return;
             }
 
@@ -5924,7 +5924,7 @@ window.addEventListener('afterprint', function () {
                 showToast('Browser tidak dapat membuka dialog cetak. Izinkan pop-up dan coba lagi.', 'error');
             }
             if (btn) btn.disabled = false;
-            if (label) label.textContent = 'CETAK STRUK SEKARANG';
+            if (label) label.textContent = 'CETAK STRUK';
         }
 
         function printReceiptInBrowser() {
