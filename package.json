@@ -1,6 +1,6 @@
 {
   "name": "ajm-reborn-pos-windows",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "AJM Reborn POS Windows desktop wrapper",
   "main": "electron/main.cjs",
@@ -52,6 +52,17 @@
     },
     "portable": {
       "artifactName": "AJM-Reborn-POS-Portable-${version}-${arch}.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "zendconec-rgb",
+        "repo": "ajm-reborn-pos",
+        "releaseType": "prerelease"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
   }
 }
