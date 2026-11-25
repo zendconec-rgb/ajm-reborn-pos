@@ -6093,12 +6093,22 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             chunks.push(encoder.encode(`Tgl  : ${formatDateTime(trx.date)}\n`));
             chunks.push(encoder.encode(`Kasir: ${trx.cashier || settings.cashierName}\n`));
             if (settings.showPlate) chunks.push(encoder.encode(`Motor: ${trx.plateMotor || 'Umum'}\n`));
-            // Samakan output ESC/POS fisik dengan preview HTML: tampilkan nama pelanggan
-            // hanya jika opsi "Sertakan Nama Pelanggan di Struk Lengkap" diaktifkan.
-            if (settings.showCustomerNameOnReceipt) {
-                const customerInfo = resolveCustomerDebtDisplayInfo(trx);
-                const customerName = String(customerInfo?.customerName || trx.customerName || 'Pelanggan Umum').trim();
-                chunks.push(encoder.encode(`Pelanggan: ${customerName}\n`));
+            // Nama pelanggan dari transaksi/master pelanggan harus ikut pada struk fisik.
+            // Jangan bergantung pada toggle UI: transaksi lama/setting tersimpan dapat
+            // membuat nilainya false walaupun nama sudah tampil pada review struk.
+            const linkedCustomer = Array.isArray(customers)
+                ? customers.find(c => String(c?.id) === String(trx?.customerId || trx?.customer?.id || trx?.customer_id || ''))
+                : null;
+            const resolvedCustomer = resolveCustomerDebtDisplayInfo(trx);
+            const rawCustomerName = String(
+                trx?.customerName ||
+                trx?.customer?.name ||
+                linkedCustomer?.name ||
+                (resolvedCustomer?.customerName && !/^(Pelanggan Umum|Pelanggan Umum \/ Tanpa Plat)$/i.test(resolvedCustomer.customerName)
+                    ? resolvedCustomer.customerName : '')
+            ).trim();
+            if (rawCustomerName) {
+                chunks.push(encoder.encode(`Pelanggan: ${rawCustomerName}\n`));
             }
             if (settings.showMechanic) chunks.push(encoder.encode(`Mek  : ${trx.mechanic || 'Umum'}\n`));
             chunks.push(encoder.encode(lineSep));
