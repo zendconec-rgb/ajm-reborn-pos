@@ -1730,58 +1730,62 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 @keyframes ajm-marquee-rtl{from{left:100%;transform:translate(0,-50%)}to{left:0;transform:translate(-100%,-50%)}}
 </style>
 <style id="ajm-receipt-premium-actions">
-/* Tombol aksi minimalis: panel dan kedua tombol tepat selebar kertas struk. */
+/* Panel tombol checkout struk: tampilan navy premium, konsisten desktop dan Android WebView. */
 #receipt-modal #receipt-actions-panel{
-  width:100%; max-width:100%; box-sizing:border-box; padding:0; margin:8px auto 0;
-  display:flex; flex-direction:column; gap:7px; align-self:center;
-  background:transparent; border:0; border-radius:0; box-shadow:none;
+  width:min(250px,100%)!important;max-width:250px!important;box-sizing:border-box!important;
+  padding:14px!important;margin:9px auto 0!important;display:flex!important;
+  flex-direction:column!important;gap:7px!important;align-self:center!important;
+  background:linear-gradient(145deg,#08213c,#061a30)!important;
+  border:1px solid #0878bd!important;border-radius:22px!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.24)!important;
 }
 #receipt-modal #receipt-actions-panel > .grid.grid-cols-1{
-  display:grid!important; grid-template-columns:minmax(0,1fr)!important;
-  gap:7px!important; width:100%!important; min-width:0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:7px!important;width:100%!important;min-width:0!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-print-action,
 #receipt-modal #receipt-actions-panel #receipt-finish-action{
-  display:flex!important; flex-direction:row!important; align-items:center!important; justify-content:center!important;
-  width:100%!important; min-width:0!important; max-width:100%!important;
-  height:44px!important; min-height:44px!important; box-sizing:border-box!important;
-  padding:6px 8px!important; border-radius:11px!important;
-  font-family:Inter,Arial,sans-serif!important; font-size:12px!important;
-  line-height:1.15!important; font-weight:750!important; letter-spacing:0!important;
-  white-space:nowrap!important; overflow:hidden!important; gap:8px!important;
+  display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:68px!important;min-height:68px!important;box-sizing:border-box!important;
+  padding:8px 10px!important;border-radius:16px!important;
+  font-family:Inter,Arial,sans-serif!important;font-size:15px!important;
+  line-height:1.1!important;font-weight:800!important;letter-spacing:0!important;
+  white-space:nowrap!important;overflow:hidden!important;gap:9px!important;
   transition:background .18s ease,border-color .18s ease,transform .18s ease!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-print-action{
-  color:#fff!important; background:linear-gradient(135deg,#1e4975,#123254)!important;
-  border:1px solid #347db8!important; box-shadow:0 2px 6px rgba(15,45,75,.16)!important;
+  color:#fff!important;background:linear-gradient(145deg,#244c75,#102e4e)!important;
+  border:1px solid #36a7ff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-print-action i,
 #receipt-modal #receipt-actions-panel #receipt-print-action svg{
-  display:block!important; flex:0 0 17px!important; width:17px!important; height:17px!important;
+  display:block!important;flex:0 0 17px!important;width:17px!important;height:17px!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-print-action span{
-  display:block!important; flex:0 1 auto!important; min-width:0!important;
-  overflow:hidden!important; text-overflow:ellipsis!important; white-space:nowrap!important;
+  display:block!important;flex:0 1 auto!important;min-width:0!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action{
-  color:#17436d!important; background:#f8fbff!important;
-  border:1px solid #c9dced!important; box-shadow:0 2px 6px rgba(15,45,75,.08)!important;
-  font-size:11px!important; gap:7px!important;
+  color:#173f68!important;background:linear-gradient(180deg,#fff,#e7f2ff)!important;
+  border:1px solid #c4dcf4!important;box-shadow:0 2px 5px rgba(0,0,0,.08)!important;
+  font-size:14px!important;gap:7px!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action span{
-  display:block!important; flex:0 1 auto!important; min-width:0!important;
-  overflow:hidden!important; text-overflow:ellipsis!important; white-space:nowrap!important;
+  display:block!important;flex:1 1 auto!important;min-width:0!important;
+  overflow:hidden!important;text-overflow:clip!important;white-space:nowrap!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-check{
-  display:block!important; width:18px!important; height:18px!important; flex:0 0 18px!important;
-  color:#1680d4!important;
+  display:block!important;width:24px!important;height:24px!important;flex:0 0 24px!important;
+  color:#0878d1!important;
 }
-#receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-arrow{display:none!important}
-@media(min-width:768px){
-  #receipt-modal #receipt-actions-panel{gap:8px!important;margin-top:9px!important}
-  #receipt-modal #receipt-actions-panel > .grid.grid-cols-1{gap:8px!important}
-  #receipt-modal #receipt-actions-panel #receipt-print-action,
-  #receipt-modal #receipt-actions-panel #receipt-finish-action{height:46px!important;min-height:46px!important;font-size:12px!important}
+#receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-arrow{
+  display:block!important;width:18px!important;height:18px!important;flex:0 0 18px!important;
+  color:#0878d1!important;
+}
+@media(max-width:360px){
+  #receipt-modal #receipt-actions-panel{width:min(250px,100%)!important;padding:12px!important}
+  #receipt-modal #receipt-actions-panel #receipt-finish-action{font-size:12px!important;gap:5px!important}
 }
 </style>
 
