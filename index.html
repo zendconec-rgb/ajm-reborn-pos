@@ -307,6 +307,10 @@
         #receipt-modal #printable-receipt-area { flex-shrink: 0; }
         #receipt-modal .overflow-y-auto { min-height: 0; }
         #receipt-print-action { position: sticky; bottom: 0; z-index: 3; }
+        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 { flex: 0 0 auto !important; margin-left:auto !important; margin-right:auto !important; }
+        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 > .grid.grid-cols-2 { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px !important; width:100% !important; }
+        #receipt-modal #receipt-print-action, #receipt-modal #receipt-whatsapp-action { width:100% !important; min-width:0 !important; min-height:48px !important; height:48px !important; padding:8px 5px !important; box-sizing:border-box !important; }
+        #receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3 > button:last-child { width:100% !important; min-height:48px !important; height:48px !important; box-sizing:border-box !important; }
 
 
         /* Lebarkan ruang transaksi: layar sempit memakai panel penuh, desktop panel 520-600px. */
@@ -2867,6 +2871,13 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                             <div>
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Format Berbagi WhatsApp</label>
+                                <select id="set-receipt-share-format" onchange="saveGriyoReceiptSettings()" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500">
+                                    <option value="pdf">Dokumen PDF</option>
+                                    <option value="image">Gambar PNG</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Template Struk</label>
                                 <select id="set-receipt-template" onchange="saveGriyoReceiptSettings()" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500">
                                     <option value="standard">Standar Toko & Bengkel</option>
@@ -3587,18 +3598,9 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             </div>
 
             <div class="w-full flex flex-col gap-2.5 mt-3 shrink-0">
-                <div class="w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div class="flex items-center justify-between gap-2 mb-2">
-                        <label for="receipt-share-format" class="text-[11px] font-extrabold tracking-wide text-slate-600">FORMAT STRUK WHATSAPP</label>
-                        <span class="text-[10px] text-slate-400">Pilih satu format</span>
-                    </div>
-                    <select id="receipt-share-format" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
-                        <option value="pdf">Dokumen PDF</option>
-                        <option value="image">Gambar PNG</option>
-                    </select>
-                    <label for="receipt-share-phone" class="block text-[11px] font-bold text-slate-600 mt-3 mb-1.5">Nomor WhatsApp pelanggan <span class="font-normal text-slate-400">(opsional)</span></label>
-                    <input id="receipt-share-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
-                    <p class="text-[10px] text-slate-400 mt-1">Nomor hanya digunakan untuk membuka tujuan chat WhatsApp.</p>
+                <div class="w-full">
+                    <label for="receipt-share-phone" class="block text-[11px] font-bold text-slate-600 mb-1.5">Nomor WhatsApp pelanggan <span class="font-normal text-slate-400">(opsional)</span></label>
+                    <input id="receipt-share-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Nomor WhatsApp pelanggan" class="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="receipt-print-action" type="button" onclick="executeReceiptPrintAction()"
@@ -10190,6 +10192,7 @@ window.addEventListener('afterprint', function () {
             const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
             const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = Boolean(v); };
 
+            setVal('set-receipt-share-format', settings.receiptShareFormat || 'pdf');
             setVal('set-receipt-template', cfg.template);
             setVal('set-receipt-align', cfg.align);
             setVal('set-receipt-font-weight', cfg.fontWeight);
@@ -10218,6 +10221,7 @@ window.addEventListener('afterprint', function () {
             const getVal = (id, fallback) => { const el = document.getElementById(id); return el ? el.value : fallback; };
             const getChk = (id, fallback) => { const el = document.getElementById(id); return el ? el.checked : fallback; };
 
+            settings.receiptShareFormat = getVal('set-receipt-share-format', settings.receiptShareFormat || 'pdf');
             settings.receiptTemplateStyle = getVal('set-receipt-template', settings.receiptTemplateStyle || 'standard');
             settings.receiptAlign = getVal('set-receipt-align', settings.receiptAlign || 'left');
             settings.receiptFontWeight = getVal('set-receipt-font-weight', settings.receiptFontWeight || 'normal');
@@ -10429,6 +10433,19 @@ window.addEventListener('afterprint', function () {
             return String(customer?.phone || trx.customerPhone || trx.phone || trx.customer?.phone || '').trim();
         }
 
+        function syncReceiptActionWidth() {
+            const paper = document.getElementById('printable-receipt-area');
+            const actions = document.querySelector('#receipt-modal > div > .w-full.flex.flex-col.gap-2.mt-3');
+            if (!paper || !actions) return;
+            const width = Math.round(paper.getBoundingClientRect().width);
+            if (width > 0) {
+                actions.style.width = width + 'px';
+                actions.style.maxWidth = '100%';
+                actions.style.alignSelf = 'center';
+                actions.style.boxSizing = 'border-box';
+            }
+        }
+
         function showReceiptModal(trx) {
             activeReceiptTrx = trx;
             const paper = document.getElementById('printable-receipt-area');
@@ -10444,8 +10461,7 @@ window.addEventListener('afterprint', function () {
             paper.querySelectorAll('.receipt-barcode-svg,.qr-code-target').forEach(el => { delete el.dataset.rendered; });
             ensureReceiptCodeRendered();
 
-            const shareFormat = document.getElementById('receipt-share-format');
-            if (shareFormat) shareFormat.value = 'pdf';
+            /* Format berbagi diambil dari Pengaturan Struk. */
             const sharePhone = document.getElementById('receipt-share-phone');
             if (sharePhone) {
                 // Ambil nomor dari Master Pelanggan terlebih dahulu, termasuk transaksi lama via plat nomor.
@@ -10467,7 +10483,12 @@ window.addEventListener('afterprint', function () {
                 receiptModal.style.zIndex = '99999';
             }
             if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+            requestAnimationFrame(() => requestAnimationFrame(syncReceiptActionWidth));
         }
+
+        window.addEventListener('resize', () => {
+            if (!document.getElementById('receipt-modal')?.classList.contains('hidden')) syncReceiptActionWidth();
+        });
 
         // ==========================================
         // 12. BAGIKAN STRUK PDF / GAMBAR VIA WHATSAPP
@@ -10510,7 +10531,7 @@ window.addEventListener('afterprint', function () {
 
         async function shareReceiptViaWhatsApp() {
             const button = document.getElementById('receipt-whatsapp-action');
-            const format = document.getElementById('receipt-share-format')?.value || 'pdf';
+            const format = settings.receiptShareFormat || 'pdf';
             const phone = normalizeWhatsAppNumber(document.getElementById('receipt-share-phone')?.value || '');
             if (!activeReceiptTrx) { showToast('Data transaksi tidak ditemukan.', 'error'); return; }
             if (phone && (phone.length < 9 || phone.length > 15)) { showToast('Nomor WhatsApp tidak valid. Gunakan kode negara, contoh 6281234567890.', 'warning'); return; }
