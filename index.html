@@ -4891,16 +4891,6 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 statusEl.textContent = 'Kamera aktif — arahkan ke barcode';
 
                 cameraBarcodeHandled = false;
-                const handleDetectedBarcode = (detectedVal) => {
-                    if (!detectedVal || cameraBarcodeHandled) return;
-                    cameraBarcodeHandled = true;
-                    document.getElementById('barcode-modal-input').value = detectedVal;
-                    processIncomingBarcodeSignal(detectedVal, 'Kamera WebRTC', 35);
-                    stopCameraBarcodeScan();
-                    closeModal('barcode-modal');
-                };
-
-                cameraBarcodeHandled = false;
                 statusEl.textContent = 'Kamera aktif — menyiapkan pembaca barcode…';
 
                 const handleDetectedBarcode = (detectedVal) => {
