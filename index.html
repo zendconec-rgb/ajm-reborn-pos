@@ -5542,53 +5542,110 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
         let usbAutoConnectInProgress = false;
         let usbAutoReconnectEnabled = false;
+        let usbConnectPromise = null; // Mencegah dua proses membuka perangkat USB secara bersamaan.
 
         async function connectUsbPrinter(preAuthorizedDevice = null) {
-            if (!navigator.usb) {
-                showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome Android/Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
-                return;
-            }
-            let device = null;
-            try {
-                device = preAuthorizedDevice || await navigator.usb.requestDevice({ filters: [] });
-                await device.open();
-                if (device.configuration === null) {
-                    const config = device.configurations && device.configurations[0];
-                    if (!config) throw new Error('Konfigurasi USB printer tidak ditemukan');
-                    await device.selectConfiguration(config.configurationValue);
+            // Klik manual dan auto-reconnect dapat terjadi hampir bersamaan.
+            // Gunakan satu proses koneksi agar USBDevice.open() tidak dipanggil dua kali.
+            if (usbConnectPromise) return usbConnectPromise;
+
+            usbConnectPromise = (async () => {
+                if (!navigator.usb) {
+                    showToast('WebUSB tidak tersedia. Buka AJM melalui Chrome/Edge pada HTTPS dan izinkan akses USB.', 'warning');
+                    return false;
                 }
 
-                // Cari interface printer yang benar-benar memiliki endpoint OUT.
-                // Beberapa printer thermal tidak menggunakan interface index 0.
-                let chosen = null;
-                for (const iface of (device.configuration?.interfaces || [])) {
-                    for (const alt of (iface.alternates || [])) {
-                        const out = (alt.endpoints || []).find(ep => ep.direction === 'out' && (ep.type === 'bulk' || ep.type === 'interrupt'));
-                        if (out) { chosen = { iface, alt, out }; break; }
+                let device = null;
+                let openedHere = false;
+                let claimedHere = false;
+                let interfaceNumber = null;
+
+                try {
+                    device = preAuthorizedDevice || await navigator.usb.requestDevice({ filters: [] });
+                    if (!device) return false;
+
+                    // Perangkat yang dipulihkan dari sesi sebelumnya bisa saja masih terbuka.
+                    // Jangan memanggil open() lagi pada USBDevice yang sudah opened.
+                    if (!device.opened) {
+                        await device.open();
+                        openedHere = true;
                     }
-                    if (chosen) break;
-                }
-                if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT untuk mengirim data ESC/POS');
 
-                await device.claimInterface(chosen.iface.interfaceNumber);
-                if (chosen.alt.alternateSetting !== 0) {
-                    await device.selectAlternateInterface(chosen.iface.interfaceNumber, chosen.alt.alternateSetting);
+                    if (device.configuration === null) {
+                        const config = device.configurations && device.configurations[0];
+                        if (!config) throw new Error('Konfigurasi USB printer tidak ditemukan');
+                        await device.selectConfiguration(config.configurationValue);
+                    }
+
+                    // Cari interface dengan endpoint OUT; tidak mengasumsikan interface 0.
+                    let chosen = null;
+                    for (const iface of (device.configuration?.interfaces || [])) {
+                        for (const alt of (iface.alternates || [])) {
+                            const out = (alt.endpoints || []).find(ep =>
+                                ep.direction === 'out' && (ep.type === 'bulk' || ep.type === 'interrupt')
+                            );
+                            if (out) { chosen = { iface, alt, out }; break; }
+                        }
+                        if (chosen) break;
+                    }
+                    if (!chosen) throw new Error('Tidak ditemukan endpoint USB OUT untuk mengirim data ESC/POS');
+
+                    interfaceNumber = chosen.iface.interfaceNumber;
+                    try {
+                        await device.claimInterface(interfaceNumber);
+                        claimedHere = true;
+                    } catch (claimError) {
+                        // Pulihkan klaim lama milik sesi AJM pada perangkat yang sama.
+                        const claimMessage = String(claimError?.message || '');
+                        if (/already claimed|claimed/i.test(claimMessage) && device.opened) {
+                            try { await device.releaseInterface(interfaceNumber); } catch (releaseError) {}
+                            await device.claimInterface(interfaceNumber);
+                            claimedHere = true;
+                        } else {
+                            throw claimError;
+                        }
+                    }
+
+                    if (chosen.alt.alternateSetting !== 0) {
+                        await device.selectAlternateInterface(interfaceNumber, chosen.alt.alternateSetting);
+                    }
+
+                    usbPrinterDevice = device;
+                    usbPrinterEndpoint = chosen.out.endpointNumber;
+                    usbPrinterInterface = interfaceNumber;
+                    usbAutoReconnectEnabled = true;
+                    try { localStorage.setItem('ajm_usb_auto_reconnect', '1'); } catch (e) {}
+                    settings.printerConnectionType = 'usb';
+                    savePrinterSettingsLive();
+                    renderPrinterSettingsUI();
+                    updateHardwareBadgesUI();
+                    showToast(`Printer USB "${device.productName || 'Thermal Printer'}" aktif. Siap cetak langsung.`);
+                    return true;
+                } catch (err) {
+                    console.error('Aktivasi printer USB gagal:', err);
+                    if (device && interfaceNumber !== null && claimedHere) {
+                        try { await device.releaseInterface(interfaceNumber); } catch (releaseError) {}
+                    }
+                    // Jangan menutup perangkat yang sudah dibuka sebelum fungsi ini dipanggil.
+                    if (device && openedHere && device.opened) {
+                        try { await device.close(); } catch (closeError) {}
+                    }
+
+                    let msg = err?.message || 'Koneksi USB gagal';
+                    if (/access denied|permission denied|not allowed/i.test(msg)) {
+                        msg = 'Akses USB ditolak atau sedang dipakai aplikasi/tab lain. Tutup tab AJM lain dan aplikasi printer, cabut-pasang kabel USB, lalu tekan Hubungkan USB kembali.';
+                    } else if (/open.*already|already.*open/i.test(msg)) {
+                        msg = 'Perangkat USB sudah terbuka. Tekan Putuskan Koneksi lalu hubungkan kembali.';
+                    }
+                    showToast(`Printer USB gagal diaktifkan: ${msg}`, 'error');
+                    return false;
                 }
-                usbPrinterDevice = device;
-                usbAutoReconnectEnabled = true;
-                try { localStorage.setItem('ajm_usb_auto_reconnect', '1'); } catch (e) {}
-                usbPrinterEndpoint = chosen.out.endpointNumber;
-                usbPrinterInterface = chosen.iface.interfaceNumber;
-                settings.printerConnectionType = 'usb';
-                savePrinterSettingsLive();
-                renderPrinterSettingsUI();
-                updateHardwareBadgesUI();
-                showToast(`Printer USB "${device.productName || 'Thermal Printer'}" aktif. Siap cetak langsung.`);
-            } catch (err) {
-                console.error('Aktivasi printer USB gagal:', err);
-                try { if (device && device.opened) await device.close(); } catch (e) {}
-                const msg = err?.message || 'Koneksi USB gagal';
-                showToast(`Printer USB gagal diaktifkan: ${msg}`, 'error');
+            })();
+
+            try {
+                return await usbConnectPromise;
+            } finally {
+                usbConnectPromise = null;
             }
         }
 
