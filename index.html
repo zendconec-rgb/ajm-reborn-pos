@@ -5556,7 +5556,53 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             return /Windows/i.test(navigator.userAgent || '') && !/Android/i.test(navigator.userAgent || '');
         }
 
+        // Konfigurasi sertifikat dan tanda tangan digital melalui signer lokal Windows.
+        // Private key tetap berada di C:\\AJM_Auto_Print_Service dan tidak dikirim ke GitHub.
+        let ajmQZSecurityConfigured = false;
+        function configureAJMQZSecurity() {
+            if (ajmQZSecurityConfigured) return;
+            if (!window.qz || !qz.security) {
+                throw new Error('Modul keamanan QZ Tray belum tersedia.');
+            }
+
+            qz.security.setCertificatePromise(function(resolve, reject) {
+                fetch('http://127.0.0.1:18777/certificate', {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'text/plain' }
+                }).then(async response => {
+                    const certificate = await response.text();
+                    if (!response.ok) throw new Error(certificate || 'Sertifikat QZ tidak dapat dibaca.');
+                    if (!certificate.includes('-----BEGIN CERTIFICATE-----')) {
+                        throw new Error('Format sertifikat QZ Tray tidak valid.');
+                    }
+                    resolve(certificate);
+                }).catch(reject);
+            });
+
+            qz.security.setSignatureAlgorithm('SHA512');
+            qz.security.setSignaturePromise(function(toSign) {
+                return function(resolve, reject) {
+                    fetch('http://127.0.0.1:18777/sign', {
+                        method: 'POST',
+                        cache: 'no-store',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ toSign: toSign })
+                    }).then(async response => {
+                        const signature = (await response.text()).trim();
+                        if (!response.ok) throw new Error(signature || 'Signer lokal menolak permintaan tanda tangan.');
+                        if (!signature || !/^[A-Za-z0-9+/]+=*$/.test(signature)) {
+                            throw new Error('Respons tanda tangan dari signer lokal tidak valid.');
+                        }
+                        resolve(signature);
+                    }).catch(reject);
+                };
+            });
+            ajmQZSecurityConfigured = true;
+        }
+
         async function ensureQZTrayConnection() {
+            configureAJMQZSecurity();
             if (!window.qz || !qz.websocket) {
                 throw new Error('Library QZ Tray belum termuat. Periksa koneksi internet lalu muat ulang AJM.');
             }
