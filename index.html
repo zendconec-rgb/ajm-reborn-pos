@@ -1590,6 +1590,40 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 }
 </style>
 
+
+<style id="ajm-desktop-device-indicators-and-label-qr-fix">
+/* Desktop device status icons should match the compact network/time indicators. */
+@media (min-width:768px) {
+  #app-topbar-actions .ajm-device-status-indicator {
+    width:28px!important;height:28px!important;min-width:28px!important;max-width:28px!important;
+    min-height:28px!important;max-height:28px!important;flex:0 0 28px!important;
+    border-radius:50%!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    border-width:1px!important;
+  }
+  #app-topbar-actions .ajm-device-status-indicator svg,
+  #app-topbar-actions .ajm-device-status-indicator i {
+    width:14px!important;height:14px!important;min-width:14px!important;min-height:14px!important;
+  }
+}
+/* QR label preview: keep generated canvas/image visible and centered. */
+#printable-barcode-area .qr-code-target {
+  width:100px!important;height:100px!important;min-width:100px!important;min-height:100px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  margin:5px auto!important;background:#fff!important;overflow:visible!important;
+}
+#printable-barcode-area .qr-code-target canvas,
+#printable-barcode-area .qr-code-target img {
+  width:100px!important;height:100px!important;max-width:100%!important;
+  display:block!important;image-rendering:pixelated;
+}
+@media print {
+  #printable-barcode-area .qr-code-target,
+  #printable-barcode-area .qr-code-target canvas,
+  #printable-barcode-area .qr-code-target img {break-inside:avoid!important}
+}
+</style>
+
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -9091,7 +9125,12 @@ window.addEventListener('afterprint', function () {
                 container.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-400">Pilih produk di atas lalu klik Tambah untuk membuat label barcode.</div>`;
             } else {
                 container.innerHTML = cards.join('');
-                renderQrCodeIfNeeded();
+                // Render QR targets inside the label sheet itself (not the receipt preview).
+                // The default renderer root is the receipt area, so passing no root skips these labels.
+                const renderLabelQr = () => renderQrCodeIfNeeded(container);
+                renderLabelQr();
+                window.requestAnimationFrame(renderLabelQr);
+                setTimeout(renderLabelQr, 180);
             }
         }
 
