@@ -5633,9 +5633,21 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
                     let msg = err?.message || 'Koneksi USB gagal';
                     if (/access denied|permission denied|not allowed/i.test(msg)) {
-                        msg = 'Akses USB ditolak atau sedang dipakai aplikasi/tab lain. Tutup tab AJM lain dan aplikasi printer, cabut-pasang kabel USB, lalu tekan Hubungkan USB kembali.';
+                        // Di Windows, printer USB standar biasanya dipegang driver usbprint.
+                        // WebUSB membutuhkan interface yang dapat diakses melalui WinUSB.
+                        // Jangan mengulang auto-reconnect terus-menerus pada kegagalan driver.
+                        usbAutoReconnectEnabled = false;
+                        try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (storageError) {}
+                        console.error('Diagnostik WebUSB Windows:', {
+                            productName: device?.productName || '',
+                            vendorId: device?.vendorId,
+                            productId: device?.productId,
+                            opened: !!device?.opened,
+                            error: err
+                        });
+                        msg = 'Windows menolak akses langsung ke printer. Kemungkinan driver USB Printing Support (usbprint) sedang menguasai perangkat. WebUSB memerlukan driver WinUSB. Jangan ganti driver dulu jika Anda masih ingin mencetak melalui Windows; lihat petunjuk diagnosis AJM sebelum mengubah driver.';
                     } else if (/open.*already|already.*open/i.test(msg)) {
-                        msg = 'Perangkat USB sudah terbuka. Tekan Putuskan Koneksi lalu hubungkan kembali.';
+                        msg = 'Perangkat USB sudah terbuka. Putuskan koneksi dari sesi AJM lain, lalu hubungkan kembali.';
                     }
                     showToast(`Printer USB gagal diaktifkan: ${msg}`, 'error');
                     return false;
