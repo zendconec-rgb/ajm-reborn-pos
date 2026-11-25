@@ -47,7 +47,7 @@ function startLocalAppServer() {
       }).pipe(res);
     });
     localServer.once('error', reject);
-    localServer.listen(0, APP_HOST, () => {
+    localServer.listen(18778, APP_HOST, () => {
       const address = localServer.address();
       appOrigin = 'http://' + APP_HOST + ':' + address.port;
       resolve(appOrigin + '/');
@@ -177,7 +177,7 @@ async function createWindow() {
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith(appOrigin)) {
       event.preventDefault();
-      if (/^https?:\\/\\//i.test(url)) shell.openExternal(url);
+      if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
     }
   });
 
