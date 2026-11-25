@@ -4332,6 +4332,9 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         let qzTrayConnected = false;
         let qzPrinterName = localStorage.getItem("ajm_qz_printer_name") || "";
         let qzConnectPromise = null;
+        let qzPrinterHardwareOnline = false;
+        let qzAutoConnectBusy = false;
+        let qzStatusListenerReady = false;
         let usbPrinterDevice = null;
         let usbPrinterEndpoint = null;
         let usbPrinterInterface = null;
@@ -4545,6 +4548,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             setupGlobalHidBarcodeListener();
             initPasswordVisibilityButtons();
             updateHardwareBadgesUI();
+            startQZAutoConnectionMonitor();
             initAjmSupabase();
 
             // Tampilkan area kasir; login overlay wajib dilewati sebelum transaksi.
@@ -5436,7 +5440,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             if (!nameLbl) return;
 
             const isBtConnected = Boolean(btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected);
-            const isQZConnected = Boolean(isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName);
+            const isQZConnected = Boolean(isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName && qzPrinterHardwareOnline);
             const isUsbConnected = Boolean((isWindowsDesktopForQZ() && isQZConnected) || (usbPrinterDevice && usbPrinterDevice.opened));
 
             btnBt.classList.toggle('hidden', pType !== 'bluetooth' || isBtConnected);
@@ -5618,6 +5622,72 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             return qzConnectPromise;
         }
 
+        function setupQZPrinterStatusListener() {
+            if (!window.qz || !qz.printers || qzStatusListenerReady || !qzPrinterName) return;
+            try {
+                qz.printers.setPrinterCallbacks(evt => {
+                    if (!evt || (evt.printerName && evt.printerName !== qzPrinterName)) return;
+                    const status = String(evt.statusText || evt.status || '').toUpperCase();
+                    const severity = String(evt.severity || '').toUpperCase();
+                    const offline = /OFFLINE|NOT_AVAILABLE|ERROR|PAPER_JAM|NO_TONER|PAPER_OUT|PAPEROUT|DOOR_OPEN/.test(status) || severity === 'FATAL';
+                    if (offline) qzPrinterHardwareOnline = false;
+                    else if (severity === 'INFO' || /OK|IO_ACTIVE|WAITING|PRINTING|PROCESSING|INITIALIZING|WARMING_UP|BUSY/.test(status)) qzPrinterHardwareOnline = true;
+                    renderPrinterSettingsUI();
+                    updateHardwareBadgesUI();
+                });
+                qz.printers.startListening(qzPrinterName).then(() => qz.printers.getStatus()).catch(err => {
+                    console.warn('Status printer QZ belum dapat dipantau:', err);
+                });
+                qzStatusListenerReady = true;
+            } catch (err) {
+                console.warn('Listener status printer QZ gagal dipasang:', err);
+            }
+        }
+
+        async function autoConnectSavedQZPrinter() {
+            if (!isWindowsDesktopForQZ() || !qzPrinterName || qzAutoConnectBusy) return false;
+            qzAutoConnectBusy = true;
+            try {
+                await ensureQZTrayConnection();
+                const printers = await qz.printers.find();
+                if (!Array.isArray(printers) || !printers.includes(qzPrinterName)) {
+                    qzPrinterHardwareOnline = false;
+                    renderPrinterSettingsUI();
+                    updateHardwareBadgesUI();
+                    return false;
+                }
+                settings.printerConnectionType = 'usb';
+                qzPrinterHardwareOnline = true;
+                setupQZPrinterStatusListener();
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+                return true;
+            } catch (err) {
+                qzTrayConnected = false;
+                qzPrinterHardwareOnline = false;
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+                return false;
+            } finally {
+                qzAutoConnectBusy = false;
+            }
+        }
+
+        function startQZAutoConnectionMonitor() {
+            if (!isWindowsDesktopForQZ() || window.ajmQZAutoMonitorStarted) return;
+            window.ajmQZAutoMonitorStarted = true;
+            autoConnectSavedQZPrinter();
+            window.setInterval(() => {
+                if (!qzTrayConnected || !qz.websocket || !qz.websocket.isActive || !qz.websocket.isActive()) {
+                    qzTrayConnected = false;
+                    qzStatusListenerReady = false;
+                    autoConnectSavedQZPrinter();
+                } else if (qzPrinterName) {
+                    qz.printers.getStatus().catch(() => {});
+                }
+            }, 5000);
+        }
+
         async function connectQZTrayPrinter() {
             try {
                 showToast('Menghubungkan ke QZ Tray di Windows...');
@@ -5652,6 +5722,9 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
                 qzPrinterName = selected;
                 try { localStorage.setItem('ajm_qz_printer_name', selected); } catch (e) {}
+                qzPrinterHardwareOnline = true;
+                qzStatusListenerReady = false;
+                setupQZPrinterStatusListener();
                 settings.printerConnectionType = 'usb';
                 saveAllData();
                 renderPrinterSettingsUI();
@@ -6230,7 +6303,7 @@ window.addEventListener('afterprint', function () {
             }
             const usbStatus = document.getElementById('header-usb-status');
             if (usbStatus) {
-                const usbConnected = Boolean((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName) || (usbPrinterDevice && usbPrinterDevice.opened));
+                const usbConnected = Boolean((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName && qzPrinterHardwareOnline) || (usbPrinterDevice && usbPrinterDevice.opened));
                 usbStatus.classList.toggle('text-emerald-400', usbConnected);
                 usbStatus.classList.toggle('text-amber-300', !usbConnected);
                 usbStatus.setAttribute('aria-label', usbConnected ? 'Printer USB terhubung' : 'Printer USB belum terhubung');
