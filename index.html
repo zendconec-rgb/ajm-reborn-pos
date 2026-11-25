@@ -2996,7 +2996,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <span class="text-[10px] font-bold text-slate-400">ESC/POS</span>
                             </div>
                             <p class="font-extrabold text-xs text-slate-800">Bluetooth Thermal</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Untuk printer BLE pada Android. Windows gunakan USB Kasir Direct melalui QZ Tray.</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Windows: Bluetooth Classic SPP melalui port COM. Android: printer BLE atau RawBT untuk SPP.</p>
                         </button>
 
                         <button type="button" onclick="selectPrinterConnectionType('usb')" data-printer-type="usb" class="printer-type-card p-3 rounded-2xl border text-left transition bg-slate-50 border-slate-200 hover:border-royal-300">
@@ -5527,6 +5527,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             });
 
             const btnBt = document.getElementById('btn-pair-bluetooth-printer');
+            if (btnBt) btnBt.innerHTML = isWindowsDesktopForQZ() ? '<i data-lucide="bluetooth-searching" class="w-3.5 h-3.5"></i> Hubungkan Bluetooth SPP' : '<i data-lucide="bluetooth-searching" class="w-3.5 h-3.5"></i> Cari Printer BLE';
             const btnUsb = document.getElementById('btn-pair-usb-printer');
             const btnDisc = document.getElementById('btn-disconnect-printer');
             const nameLbl = document.getElementById('printer-device-name-label');
@@ -5545,7 +5546,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
             if (pType === 'browser') {
                 nameLbl.textContent = `Perangkat Aktif: Printer Sistem / OS (${settings.paperSize})`;
-                hintLbl.textContent = 'Mode cadangan: memakai dialog cetak sistem. Untuk cetak tanpa dialog, pilih USB atau Bluetooth BLE lalu aktifkan koneksi perangkat.';
+                hintLbl.textContent = 'Mode cadangan: memakai dialog cetak sistem. Untuk cetak langsung Windows pilih Bluetooth Thermal (SPP) atau USB.';
                 pillEl.textContent = `Printer Sistem (${settings.paperSize})`;
                 pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 self-start sm:self-auto';
             } else if (pType === 'bluetooth') {
@@ -5555,7 +5556,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto';
                 } else {
                     nameLbl.textContent = 'Perangkat Bluetooth: Belum Dipasangkan';
-                    hintLbl.textContent = 'AJM mencoba koneksi BLE/GATT untuk cetak ESC/POS langsung. Printer Classic SPP 58mm tidak dapat diakses langsung oleh browser; diperlukan jembatan Bluetooth.';
+                    hintLbl.textContent = isWindowsDesktopForQZ() ? 'Pilih port COM Bluetooth SPP yang dibuat Windows setelah printer dipasangkan. Cetak ESC/POS langsung melalui Web Serial.' : 'AJM mencoba koneksi BLE/GATT. Printer Classic SPP Android menggunakan jembatan RawBT.';
                     pillEl.textContent = 'BT Belum Terhubung';
                     pillEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 self-start sm:self-auto';
                 }
@@ -5581,6 +5582,37 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             document.getElementById('set-printer-autoprint').checked = Boolean(settings.printerAutoPrint);
             document.getElementById('set-printer-autocut').checked = settings.printerAutoCut !== false;
             document.getElementById('set-printer-drawer').checked = Boolean(settings.printerOpenDrawer);
+        }
+
+        async function connectWindowsBluetoothSPP() {
+            if (!('serial' in navigator) || !navigator.serial?.requestPort) {
+                showToast('Bluetooth SPP membutuhkan Chrome/Edge terbaru dan Web Serial. Pasangkan printer di Windows lalu coba lagi.', 'warning');
+                return false;
+            }
+            try {
+                // Windows exposes a paired Bluetooth Classic SPP printer as a virtual COM port.
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none', flowControl: 'none' });
+                sppPrinterPort = port;
+                if (port.addEventListener) {
+                    port.addEventListener('disconnect', () => {
+                        if (sppPrinterPort === port) sppPrinterPort = null;
+                        renderPrinterSettingsUI();
+                        updateHardwareBadgesUI();
+                    });
+                }
+                renderPrinterSettingsUI();
+                updateHardwareBadgesUI();
+                showToast('Bluetooth Classic SPP terhubung melalui port COM Windows.');
+                return true;
+            } catch (err) {
+                console.warn('Koneksi Bluetooth SPP Windows gagal:', err);
+                const msg = err?.name === 'NotFoundError' ? 'Port COM printer tidak dipilih.' :
+                    err?.name === 'SecurityError' ? 'Akses Serial ditolak. Buka AJM melalui HTTPS atau localhost.' :
+                    (err?.message || 'Periksa pairing Bluetooth dan port COM printer.');
+                showToast('Gagal menghubungkan Bluetooth SPP: ' + msg, 'warning');
+                return false;
+            }
         }
 
         async function connectBluetoothPrinter() {
