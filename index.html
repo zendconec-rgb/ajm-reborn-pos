@@ -6093,6 +6093,13 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             chunks.push(encoder.encode(`Tgl  : ${formatDateTime(trx.date)}\n`));
             chunks.push(encoder.encode(`Kasir: ${trx.cashier || settings.cashierName}\n`));
             if (settings.showPlate) chunks.push(encoder.encode(`Motor: ${trx.plateMotor || 'Umum'}\n`));
+            // Samakan output ESC/POS fisik dengan preview HTML: tampilkan nama pelanggan
+            // hanya jika opsi "Sertakan Nama Pelanggan di Struk Lengkap" diaktifkan.
+            if (settings.showCustomerNameOnReceipt) {
+                const customerInfo = resolveCustomerDebtDisplayInfo(trx);
+                const customerName = String(customerInfo?.customerName || trx.customerName || 'Pelanggan Umum').trim();
+                chunks.push(encoder.encode(`Pelanggan: ${customerName}\n`));
+            }
             if (settings.showMechanic) chunks.push(encoder.encode(`Mek  : ${trx.mechanic || 'Umum'}\n`));
             chunks.push(encoder.encode(lineSep));
 
