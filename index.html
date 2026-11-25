@@ -10401,6 +10401,34 @@ window.addEventListener('afterprint', function () {
             }
         }
 
+        function getReceiptCustomerPhone(trx) {
+            if (!trx) return '';
+            // Utamakan relasi ID pelanggan bila transaksi menyimpannya.
+            const customerId = trx.customerId || trx.customer?.id || trx.customer_id || '';
+            let customer = customerId
+                ? customers.find(c => String(c.id) === String(customerId))
+                : null;
+
+            // Transaksi lama biasanya hanya menyimpan plat/motor; cocokkan ke master pelanggan.
+            if (!customer) {
+                const rawVehicle = String(trx.plateMotor || trx.plate || trx.vehicle || '').trim();
+                const platePrefix = rawVehicle.split(/\s+-\s+|\s+–\s+/)[0].trim();
+                const plateKey = typeof normalizePlateKey === 'function'
+                    ? normalizePlateKey(platePrefix)
+                    : platePrefix.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (plateKey) {
+                    customer = customers.find(c => {
+                        const masterPlate = typeof normalizePlateKey === 'function'
+                            ? normalizePlateKey(c.plate || '')
+                            : String(c.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        return masterPlate && masterPlate === plateKey;
+                    });
+                }
+            }
+
+            return String(customer?.phone || trx.customerPhone || trx.phone || trx.customer?.phone || '').trim();
+        }
+
         function showReceiptModal(trx) {
             activeReceiptTrx = trx;
             const paper = document.getElementById('printable-receipt-area');
@@ -10420,8 +10448,8 @@ window.addEventListener('afterprint', function () {
             if (shareFormat) shareFormat.value = 'pdf';
             const sharePhone = document.getElementById('receipt-share-phone');
             if (sharePhone) {
-                const customerPhone = trx.customerPhone || trx.phone || trx.customer?.phone || '';
-                sharePhone.value = customerPhone;
+                // Ambil nomor dari Master Pelanggan terlebih dahulu, termasuk transaksi lama via plat nomor.
+                sharePhone.value = getReceiptCustomerPhone(trx);
             }
             const receiptPrintButton = document.getElementById('receipt-print-action');
             const receiptPrintLabel = document.getElementById('receipt-print-btn-label');
