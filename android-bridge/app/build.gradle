@@ -3,11 +3,31 @@ plugins { id 'com.android.application' }
 android {
     namespace 'com.ajmreborn.pos'
     compileSdk 35
+
     defaultConfig {
         applicationId 'com.ajmreborn.pos'
         minSdk 23
         targetSdk 34
         versionCode 1
         versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            def storePath = System.getenv('AJM_KEYSTORE_PATH')
+            if (storePath) {
+                storeFile file(storePath)
+                storePassword System.getenv('AJM_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('AJM_KEY_ALIAS')
+                keyPassword System.getenv('AJM_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
     }
 }
