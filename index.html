@@ -997,8 +997,7 @@
         width:100%;
         gap:clamp(8px,2.2vw,14px) !important;
     }
-    #header-network-status{min-height:44px;padding:0 13px !important;font-size:13px !important}
-    #app-topbar-actions > div[title="Waktu Indonesia Barat"]{min-height:44px;padding:0 12px !important;font-size:14px !important}
+    #header-network-status{min-height:44px;padding:0 13px !important;font-size:13px !important}    #app-topbar-actions > div[title="Waktu Indonesia Barat"]{min-height:44px;padding:0 12px !important;font-size:14px !important}
     .ajm-header-icon-btn{width:48px !important;height:48px !important;min-width:48px !important;border-radius:15px !important}
     .ajm-header-icon-btn i{width:21px !important;height:21px !important}
 }
@@ -1836,13 +1835,16 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
     isolation:isolate!important;
   }
   #ajm-desktop-marquee-text{
+    position:absolute!important;
     left:0!important;
     top:50%!important;
     width:max-content!important;
     max-width:none!important;
     white-space:nowrap!important;
     display:inline-block!important;
-    transform:translate3d(100vw,-50%,0)!important;
+    /* Jangan beri !important pada transform: itu akan mengunci posisi dan
+       mencegah keyframes CSS mengubah posisi teks. */
+    transform:translate3d(100vw,-50%,0);
     will-change:transform!important;
     backface-visibility:hidden!important;
     -webkit-backface-visibility:hidden!important;
@@ -1855,8 +1857,36 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
     100%{transform:translate3d(-100%,-50%,0)}
   }
 }
-@media (prefers-reduced-motion:reduce){
-  body:not(.ajm-electron-desktop) #ajm-desktop-marquee-text{animation:none!important;transform:translate3d(0,-50%,0)!important}
+/* Ticker kasir harus tetap berjalan meskipun OS/browser memilih Reduce Motion. */
+@media (min-width:768px){
+  #ajm-desktop-marquee-text{
+    animation-name:ajm-marquee-rtl-gpu!important;
+    animation-duration:var(--ajm-marquee-duration,45s)!important;
+    animation-timing-function:linear!important;
+    animation-iteration-count:infinite!important;
+    animation-play-state:running!important;
+    transform:translate3d(100vw,-50%,0);
+  }
+}
+</style>
+
+<style id="ajm-marquee-transform-animation-fix-v3">
+@media (min-width:768px){
+  #ajm-desktop-marquee{display:block!important;min-width:80px!important;overflow:hidden!important;}
+  #ajm-desktop-marquee-text{
+    left:0!important;top:50%!important;position:absolute!important;
+    display:inline-block!important;width:max-content!important;white-space:nowrap!important;
+    transform:translate3d(100vw,-50%,0);
+    animation-name:ajm-marquee-rtl-gpu!important;
+    animation-duration:var(--ajm-marquee-duration,45s)!important;
+    animation-timing-function:linear!important;
+    animation-iteration-count:infinite!important;
+    animation-play-state:running!important;
+  }
+  @keyframes ajm-marquee-rtl-gpu{
+    from{transform:translate3d(100vw,-50%,0)}
+    to{transform:translate3d(-100%,-50%,0)}
+  }
 }
 </style>
 </head>
@@ -1966,8 +1996,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         <!-- Drawer Profile Header -->
         <div class="bg-gradient-to-br from-royal-800 via-royal-700 to-royal-600 p-4 text-white shrink-0">
             <div class="flex items-start justify-between mb-3">
-                <div id="drawer-brand-logo-wrap" class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-inner overflow-hidden">
-                    <i data-lucide="bike" class="w-6 h-6 text-amber-300"></i>
+                <div id="drawer-brand-logo-wrap" class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-inner overflow-hidden">                    <i data-lucide="bike" class="w-6 h-6 text-amber-300"></i>
                 </div>
                 <button onclick="toggleDrawer()" class="p-1.5 rounded-lg hover:bg-white/15 text-blue-100">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -2966,8 +2995,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div id="card-printer-settings" class="settings-panel bg-white rounded-2xl border-2 border-sky-200/90 p-4 sm:p-5 shadow-xs space-y-4 hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center shrink-0">
-                                <i data-lucide="printer" class="w-5 h-5"></i>
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center shrink-0">                                <i data-lucide="printer" class="w-5 h-5"></i>
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-sm">Koneksi & Pengaturan Printer Thermal</h3>
@@ -3966,8 +3994,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <p class="text-[11px] text-blue-100">Impor sparepart & jasa bengkel sekaligus dengan validasi & pratinjau data</p>
                 </div>
                 <button onclick="closeModal('csv-bulk-modal')" class="p-1 rounded-lg hover:bg-white/15">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                    <i data-lucide="x" class="w-4 h-4"></i>                </button>
             </div>
 
             <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
@@ -4966,8 +4993,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             const {data:{session}}=await ajmSupabase.auth.getSession();
             if(!session){if(showMessage)showToast('Hubungkan akun Supabase terlebih dahulu.','warning');return false;}
             try{
-                const {data,error}=await ajmSupabase.from('ajm_pos_database').select('payload,revision,updated_at').eq('id','main').single();
-                if(error) throw error;
+                const {data,error}=await ajmSupabase.from('ajm_pos_database').select('payload,revision,updated_at').eq('id','main').single();                if(error) throw error;
                 ajmCloudRevision=Number(data.revision)||0;
                 const payload=data.payload;
                 if(payload && Array.isArray(payload.products) && Array.isArray(payload.transactions)){
@@ -5966,8 +5992,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                         // WebUSB membutuhkan interface yang dapat diakses melalui WinUSB.
                         // Jangan mengulang auto-reconnect terus-menerus pada kegagalan driver.
                         usbAutoReconnectEnabled = false;
-                        try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (storageError) {}
-                        console.error('Diagnostik WebUSB Windows:', {
+                        try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (storageError) {}                        console.error('Diagnostik WebUSB Windows:', {
                             productName: device?.productName || '',
                             vendorId: device?.vendorId,
                             productId: device?.productId,
@@ -6067,6 +6092,27 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
         }
 
+        function getReceiptCustomerName(trx) {
+            if (!trx || typeof trx !== 'object') return '';
+            const customerId = trx.customerId || trx.customer?.id || trx.customer_id || '';
+            const linkedCustomer = Array.isArray(customers)
+                ? customers.find(c => String(c?.id) === String(customerId))
+                : null;
+            const resolved = resolveCustomerDebtDisplayInfo(trx);
+            const candidates = [
+                trx.customerName,
+                typeof trx.customer === 'string' ? trx.customer : trx.customer?.name,
+                trx.customer_name,
+                linkedCustomer?.name,
+                resolved?.customerName
+            ];
+            for (const candidate of candidates) {
+                const name = String(candidate || '').trim();
+                if (name && !/^(Pelanggan Umum|Pelanggan Umum \/ Tanpa Plat)$/i.test(name)) return name;
+            }
+            return '';
+        }
+
         function buildEscPosReceiptBytes(trx) {
             const encoder = new TextEncoder();
             const width = settings.paperSize === '80mm' ? 48 : 32;
@@ -6096,17 +6142,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             // Nama pelanggan dari transaksi/master pelanggan harus ikut pada struk fisik.
             // Jangan bergantung pada toggle UI: transaksi lama/setting tersimpan dapat
             // membuat nilainya false walaupun nama sudah tampil pada review struk.
-            const linkedCustomer = Array.isArray(customers)
-                ? customers.find(c => String(c?.id) === String(trx?.customerId || trx?.customer?.id || trx?.customer_id || ''))
-                : null;
-            const resolvedCustomer = resolveCustomerDebtDisplayInfo(trx);
-            const rawCustomerName = String(
-                trx?.customerName ||
-                trx?.customer?.name ||
-                linkedCustomer?.name ||
-                (resolvedCustomer?.customerName && !/^(Pelanggan Umum|Pelanggan Umum \/ Tanpa Plat)$/i.test(resolvedCustomer.customerName)
-                    ? resolvedCustomer.customerName : '')
-            ).trim();
+            const rawCustomerName = getReceiptCustomerName(trx);
             if (rawCustomerName) {
                 chunks.push(encoder.encode(`Pelanggan: ${rawCustomerName}\n`));
             }
@@ -6955,8 +6991,7 @@ window.addEventListener('afterprint', function () {
                         client_id: clientId,
                         scope: 'https://www.googleapis.com/auth/drive.file',
                         callback: (tokenResponse) => {
-                            if (tokenResponse && tokenResponse.access_token) {
-                                driveMeta.accessToken = tokenResponse.access_token;
+                            if (tokenResponse && tokenResponse.access_token) {                                driveMeta.accessToken = tokenResponse.access_token;
                                 driveMeta.tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3500) * 1000);
                                 driveMeta.lastError = null;
                                 saveAllData();
@@ -7955,8 +7990,7 @@ window.addEventListener('afterprint', function () {
 
             const dpm = document.getElementById('dpm-method');
             if (dpm) {
-                const current = dpm.value;
-                dpm.innerHTML = '';
+                const current = dpm.value;                dpm.innerHTML = '';
                 [['Tunai', 'Tunai'], ...lists.transfer.map(x => [`Transfer - ${x}`, `Transfer - ${x}`]), ...lists.ewallet.map(x => [`E-Wallet - ${x}`, `E-Wallet - ${x}`])].forEach(([value, label]) => {
                     const opt = document.createElement('option'); opt.value = value; opt.textContent = label; dpm.appendChild(opt);
                 });
@@ -8955,8 +8989,7 @@ window.addEventListener('afterprint', function () {
                             </button>
                             <button onclick="deleteProduct('${p.id}')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl" title="Hapus">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
+                            </button>                        </div>
                     </div>
                 `;
             }).join('');
@@ -9955,8 +9988,7 @@ window.addEventListener('afterprint', function () {
             const physicalItems = products.filter(p => p.category !== 'Jasa Servis');
             document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
             document.getElementById('op-qty').value = 1;
-            document.getElementById('op-note').value = '';
-            openModal('opname-modal');
+            document.getElementById('op-note').value = '';            openModal('opname-modal');
         }
 
         function saveStockOpnameForm(e) {
@@ -10793,7 +10825,7 @@ window.addEventListener('afterprint', function () {
                         <div class="flex justify-between"><span>Tanggal:</span><span>${formatDateTime(trx.date)}</span></div>
                         ${cfg.showCashier ? `<div class="flex justify-between"><span>Kasir:</span><span>${escapeHtml(trx.cashier || settings.cashierName)}</span></div>` : ''}
                         ${settings.showPlate ? `<div class="flex justify-between"><span>Motor:</span><span class="font-bold text-right">${escapeHtml(trx.plateMotor || 'Umum')}</span></div>` : ''}
-                        ${settings.showCustomerNameOnReceipt ? `<div class="flex justify-between"><span>Pelanggan:</span><span class="font-bold text-right">${escapeHtml(resolveCustomerDebtDisplayInfo(trx).customerName || 'Pelanggan Umum')}</span></div>` : ''}
+                        ${getReceiptCustomerName(trx) ? `<div class="flex justify-between"><span>Pelanggan:</span><span class="font-bold text-right">${escapeHtml(getReceiptCustomerName(trx))}</span></div>` : ''}
                         ${settings.showMechanic ? `<div class="flex justify-between"><span>Mekanik:</span><span class="text-right">${escapeHtml(trx.mechanic || 'Umum')}</span></div>` : ''}
                     </div>
 
@@ -10955,8 +10987,7 @@ window.addEventListener('afterprint', function () {
                 invoice: 'INV-20261123-001',
                 date: new Date().toISOString(),
                 plateMotor: 'G 4821 XM - Vario 150 LED',
-                mechanic: 'Mas Agung',
-                cashier: getActiveCashierDisplay(),
+                mechanic: 'Mas Agung',                cashier: getActiveCashierDisplay(),
                 items: [
                     { id: 'p1', code: '899100100011', name: 'Oli AHM MPX2 0.8L Matic', price: 55000, qty: 1 },
                     { id: 'p12', code: '899100500123', name: 'Jasa Servis Injeksi & CVT Lengkap', price: 65000, qty: 1 }
@@ -11255,39 +11286,48 @@ window.addEventListener('afterprint', function () {
         }
 
         function applyDesktopHeaderMarquee(){
-            const wrap=document.getElementById('ajm-desktop-marquee'), el=document.getElementById('ajm-desktop-marquee-text');
-            if(!wrap||!el)return;
-            const isElectronDesktop=/Electron\//i.test(navigator.userAgent);
-            if(isElectronDesktop)document.body.classList.add('ajm-electron-desktop');
-            const stopElectronAnimation=()=>{if(el._ajmElectronMarqueeAnimation){el._ajmElectronMarqueeAnimation.cancel();el._ajmElectronMarqueeAnimation=null;}};
-            const msg=String(settings.headerMarqueeText||'').trim();
-            if(!msg){stopElectronAnimation();wrap.style.display='none';el.textContent='';return;}
-            wrap.style.display='';el.textContent=msg;
-            el.style.fontFamily=settings.headerMarqueeFont||'Arial, sans-serif';
-            el.style.fontSize=Math.max(10,Math.min(30,Number(settings.headerMarqueeSize)||16))+'px';
-            el.style.color=settings.headerMarqueeColor||'#ffffff';
-            const duration=Math.max(18,Math.min(60,Number(settings.headerMarqueeSpeed)||45));
-            el.style.setProperty('--ajm-marquee-duration',duration+'s');
-            el.style.animationDuration=duration+'s';
-            if(isElectronDesktop&&typeof el.animate==='function'){
-                stopElectronAnimation();
-                el.style.animation='none';
-                const startX=Math.max(1,wrap.clientWidth);
-                const endX=-Math.max(1,el.scrollWidth);
-                el._ajmElectronMarqueeAnimation=el.animate(
-                    [{transform:'translate3d('+startX+'px,-50%,0)'},{transform:'translate3d('+endX+'px,-50%,0)'}],
-                    {duration:duration*1000,iterations:Infinity,easing:'linear'}
-                );
-            }else{
-                stopElectronAnimation();
-                el.style.animation='';
+            const wrap = document.getElementById('ajm-desktop-marquee');
+            const el = document.getElementById('ajm-desktop-marquee-text');
+            if (!wrap || !el) return;
+
+            const isElectronDesktop = /Electron\//i.test(navigator.userAgent);
+            if (isElectronDesktop) document.body.classList.add('ajm-electron-desktop');
+
+            const msg = String(settings.headerMarqueeText || '').trim();
+            if (!msg) {
+                wrap.style.display = 'none';
+                el.textContent = '';
+                return;
             }
+
+            // Hindari Web Animations API + pembacaan scrollWidth/clientWidth berulang.
+            // Animasi CSS transform berjalan di compositor sehingga tidak bergantung
+            // pada proses render daftar produk yang dapat memakan waktu saat data besar.
+            wrap.style.display = '';
+            el.textContent = msg;
+            el.style.fontFamily = settings.headerMarqueeFont || 'Arial, sans-serif';
+            el.style.fontSize = Math.max(10, Math.min(30, Number(settings.headerMarqueeSize) || 16)) + 'px';
+            el.style.color = settings.headerMarqueeColor || '#ffffff';
+            const duration = Math.max(18, Math.min(60, Number(settings.headerMarqueeSpeed) || 45));
+            el.style.setProperty('--ajm-marquee-duration', duration + 's');
+            el.style.setProperty('animation-duration', duration + 's', 'important');
+            el.style.setProperty('animation-name', 'ajm-marquee-rtl-gpu', 'important');
+            el.style.setProperty('animation-iteration-count', 'infinite', 'important');
+            el.style.setProperty('animation-play-state', 'running', 'important');
         }
-        if(!window.__ajmElectronMarqueeResizeBound){
-            window.__ajmElectronMarqueeResizeBound=true;
-            window.addEventListener('resize',()=>{
-                if(/Electron\//i.test(navigator.userAgent))applyDesktopHeaderMarquee();
-            },{passive:true});
+
+        if (!window.__ajmMarqueeLifecycleBound) {
+            window.__ajmMarqueeLifecycleBound = true;
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    const marquee = document.getElementById('ajm-desktop-marquee-text');
+                    if (marquee) marquee.style.animationPlayState = 'running';
+                }
+            }, { passive: true });
+            window.addEventListener('pageshow', () => {
+                const marquee = document.getElementById('ajm-desktop-marquee-text');
+                if (marquee) marquee.style.animationPlayState = 'running';
+            }, { passive: true });
         }
 
         function saveStoreSettings(e) {
