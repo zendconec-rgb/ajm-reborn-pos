@@ -11290,30 +11290,45 @@ window.addEventListener('afterprint', function () {
             const el = document.getElementById('ajm-desktop-marquee-text');
             if (!wrap || !el) return;
 
-            const isElectronDesktop = /Electron\//i.test(navigator.userAgent);
-            if (isElectronDesktop) document.body.classList.add('ajm-electron-desktop');
-
             const msg = String(settings.headerMarqueeText || '').trim();
+            if (el._ajmMarqueeAnimation) {
+                try { el._ajmMarqueeAnimation.cancel(); } catch (e) {}
+                el._ajmMarqueeAnimation = null;
+            }
             if (!msg) {
                 wrap.style.display = 'none';
                 el.textContent = '';
                 return;
             }
 
-            // Hindari Web Animations API + pembacaan scrollWidth/clientWidth berulang.
-            // Animasi CSS transform berjalan di compositor sehingga tidak bergantung
-            // pada proses render daftar produk yang dapat memakan waktu saat data besar.
             wrap.style.display = '';
             el.textContent = msg;
             el.style.fontFamily = settings.headerMarqueeFont || 'Arial, sans-serif';
             el.style.fontSize = Math.max(10, Math.min(30, Number(settings.headerMarqueeSize) || 16)) + 'px';
             el.style.color = settings.headerMarqueeColor || '#ffffff';
-            const duration = Math.max(18, Math.min(60, Number(settings.headerMarqueeSpeed) || 45));
-            el.style.setProperty('--ajm-marquee-duration', duration + 's');
-            el.style.setProperty('animation-duration', duration + 's', 'important');
-            el.style.setProperty('animation-name', 'ajm-marquee-rtl-gpu', 'important');
-            el.style.setProperty('animation-iteration-count', 'infinite', 'important');
-            el.style.setProperty('animation-play-state', 'running', 'important');
+            const duration = Math.max(18, Math.min(60, Number(settings.headerMarqueeSpeed) || 45)) * 1000;
+
+            // Gunakan Web Animations API secara konsisten di Chrome dan Electron.
+            // Animasi tetap berjalan di compositor dan tidak tertimpa aturan CSS/reduce-motion.
+            el.style.setProperty('animation', 'none', 'important');
+            el.style.setProperty('transform', 'translate3d(0,-50%,0)', 'important');
+            requestAnimationFrame(() => {
+                if (!document.documentElement.contains(el) || !el.textContent.trim()) return;
+                const startX = Math.max(1, wrap.getBoundingClientRect().width);
+                const endX = -Math.max(1, el.getBoundingClientRect().width);
+                if (typeof el.animate !== 'function') {
+                    el.style.setProperty('animation', 'ajm-marquee-rtl-gpu ' + (duration / 1000) + 's linear infinite', 'important');
+                    return;
+                }
+                el._ajmMarqueeAnimation = el.animate(
+                    [
+                        { transform: 'translate3d(' + startX + 'px,-50%,0)' },
+                        { transform: 'translate3d(' + endX + 'px,-50%,0)' }
+                    ],
+                    { duration, iterations: Infinity, easing: 'linear' }
+                );
+                el._ajmMarqueeAnimation.play();
+            });
         }
 
         if (!window.__ajmMarqueeLifecycleBound) {
@@ -11321,12 +11336,12 @@ window.addEventListener('afterprint', function () {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     const marquee = document.getElementById('ajm-desktop-marquee-text');
-                    if (marquee) marquee.style.animationPlayState = 'running';
+                    if (marquee && marquee._ajmMarqueeAnimation) marquee._ajmMarqueeAnimation.play();
                 }
             }, { passive: true });
-            window.addEventListener('pageshow', () => {
-                const marquee = document.getElementById('ajm-desktop-marquee-text');
-                if (marquee) marquee.style.animationPlayState = 'running';
+            window.addEventListener('pageshow', () => applyDesktopHeaderMarquee(), { passive: true });
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) applyDesktopHeaderMarquee();
             }, { passive: true });
         }
 
