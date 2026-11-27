@@ -11301,34 +11301,40 @@ window.addEventListener('afterprint', function () {
                 return;
             }
 
-            wrap.style.display = '';
+            wrap.style.display = 'block';
             el.textContent = msg;
             el.style.fontFamily = settings.headerMarqueeFont || 'Arial, sans-serif';
             el.style.fontSize = Math.max(10, Math.min(30, Number(settings.headerMarqueeSize) || 16)) + 'px';
             el.style.color = settings.headerMarqueeColor || '#ffffff';
             const duration = Math.max(18, Math.min(60, Number(settings.headerMarqueeSpeed) || 45)) * 1000;
 
-            // Gunakan Web Animations API secara konsisten di Chrome dan Electron.
-            // Animasi tetap berjalan di compositor dan tidak tertimpa aturan CSS/reduce-motion.
+            // Pisahkan gerak horizontal dari transform vertikal CSS (translateY).
+            // Properti individual translate tidak tertimpa aturan transform lama.
             el.style.setProperty('animation', 'none', 'important');
-            el.style.setProperty('transform', 'translate3d(0,-50%,0)', 'important');
-            requestAnimationFrame(() => {
+            el.style.setProperty('transform', 'translateY(-50%)', 'important');
+            el.style.setProperty('translate', '0 0');
+            el.style.setProperty('left', '0');
+            el.style.setProperty('will-change', 'translate');
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
                 if (!document.documentElement.contains(el) || !el.textContent.trim()) return;
-                const startX = Math.max(1, wrap.getBoundingClientRect().width);
-                const endX = -Math.max(1, el.getBoundingClientRect().width);
+                const wrapWidth = wrap.getBoundingClientRect().width;
+                const textWidth = el.getBoundingClientRect().width;
+                if (!wrapWidth || !textWidth) return;
+
                 if (typeof el.animate !== 'function') {
                     el.style.setProperty('animation', 'ajm-marquee-rtl-gpu ' + (duration / 1000) + 's linear infinite', 'important');
                     return;
                 }
                 el._ajmMarqueeAnimation = el.animate(
                     [
-                        { transform: 'translate3d(' + startX + 'px,-50%,0)' },
-                        { transform: 'translate3d(' + endX + 'px,-50%,0)' }
+                        { translate: wrapWidth + 'px 0px' },
+                        { translate: (-textWidth) + 'px 0px' }
                     ],
-                    { duration, iterations: Infinity, easing: 'linear' }
+                    { duration, iterations: Infinity, easing: 'linear', fill: 'both' }
                 );
                 el._ajmMarqueeAnimation.play();
-            });
+            }));
         }
 
         if (!window.__ajmMarqueeLifecycleBound) {
@@ -11336,7 +11342,7 @@ window.addEventListener('afterprint', function () {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     const marquee = document.getElementById('ajm-desktop-marquee-text');
-                    if (marquee && marquee._ajmMarqueeAnimation) marquee._ajmMarqueeAnimation.play();
+                    if (marquee) applyDesktopHeaderMarquee();
                 }
             }, { passive: true });
             window.addEventListener('pageshow', () => applyDesktopHeaderMarquee(), { passive: true });
