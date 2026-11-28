@@ -20,6 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/ajm-multidevice-client.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" referrerpolicy="no-referrer"></script>
@@ -5224,9 +5225,13 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     setAjmCloudStatus('SDK tidak termuat', 'error'); return;
                 }
                 ajmSupabase = window.supabase.createClient(AJM_SUPABASE_URL, AJM_SUPABASE_PUBLISHABLE_KEY, {
+                    
                     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
                     realtime: { params: { eventsPerSecond: 2 } }
                 });
+                if (window.AJM_MULTI_DEVICE && typeof window.AJM_MULTI_DEVICE.configure === 'function') {
+                    window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase, appVersion: 'AJM-Reborn-POS' });
+                }
                 ajmSupabase.auth.getSession().then(({data, error}) => {
                     if (error) throw error;
                     if (data.session) {
