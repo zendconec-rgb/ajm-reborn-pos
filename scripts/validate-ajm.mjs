@@ -41,6 +41,12 @@ for (const [name, source, tokens] of [
 }
 assert.ok(html.includes('assets/js/ajm-multidevice-client.js'),
   'Multi-device client must be loaded by the application');
+assert.ok(html.includes('window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true;'),
+  'Multi-device release must remain explicitly disabled by default');
+assert.ok(html.includes('prepareAjmMultiDeviceOperator(matched)'),
+  'Local login should attempt operator linking only through the release gate');
+assert.ok(html.includes('await prepareAjmMultiDeviceOperator(users.find'),
+  'Cloud login should link the currently logged-in local operator');
 assert.ok(html.includes('window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase'),
   'Multi-device client must receive the initialized Supabase client');
 assert.ok(html.includes('.catch(err => {\n                            window.ajmMultiDeviceModuleReady = false;'),
