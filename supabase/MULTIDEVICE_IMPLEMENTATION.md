@@ -289,3 +289,30 @@ processor for each operation type and a controlled way to transition inbox statu
 Until those processors exist, generic operations can remain submitted indefinitely.
 The three dedicated business operations (sale, debt payment, work-order completion)
 use their own RPCs and do not depend on this generic inbox worker.
+
+
+## Source audit correction — debt migration and numeric validation
+
+A later source-level audit found that the first committed draft of
+`20261128_006_atomic_debt_payment.sql` contained a truncated and duplicated
+PL/pgSQL block. It has been replaced in full with one coherent function body.
+The corrected version also:
+- checks that a replayed operation UUID belongs to `debt.payment`, not another
+  business operation type;
+- validates the legacy debt balance and consistency of paid + remaining amounts;
+- handles legacy Piutang invoices without explicit `paidAmount`/`remainingDebt`;
+- validates the optional payment history array before iterating it;
+- uses an unambiguous decimal regular expression.
+
+The sale processor's quantity decimal validation was also changed to an
+unambiguous decimal-point expression.
+
+Added `supabase/diagnostics/verify_staged_release_readiness.sql`, a read-only
+structural audit for required tables, RLS, RPC security settings, direct table
+privileges, policies, idempotency constraints, Realtime membership and
+operational row counts.
+
+**Validation status:** these are source-level corrections only. No migration has
+been executed against PostgreSQL/Supabase in this work session, and no browser,
+three-device, offline, accounting or printer test has been run. The new audit
+must be run against a staging project after migrations 001-007 are applied.
