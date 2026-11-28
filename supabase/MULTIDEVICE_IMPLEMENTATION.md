@@ -172,3 +172,22 @@ This is still staged on the development branch. It has not been run against Supa
 Run the read-only verification after applying it in a staging project. Production
 migration and end-to-end testing remain blocked until the complete sale side effects
 (stock logs, cashflows, work orders, debt/DP, commissions) are handled atomically.
+
+
+## Phase 7 — SQL and offline-client correction (staged; not deployed)
+
+A source review identified malformed SQL in the initial Phase 2 migration and literal
+escape sequences in the browser client output. The Phase 2 migration has been rewritten
+with valid quantity validation, aggregate validation for repeated SKU lines, snapshot
+row serialization before idempotency lookup, and an explicit limitation statement.
+The client now has corrected line breaks and publicly exposes the offline invoice,
+sale queue, and retry helpers that were implemented but not exported.
+
+This correction is a source-level repair only. It has not been executed by PostgreSQL
+or validated in a browser runtime. Before production use, run migrations in a staging
+Supabase project and test with two authenticated users/devices, repeated operation IDs,
+duplicate invoices, insufficient stock, offline replay, and all transaction side effects.
+
+**Still not implemented in this phase:** atomic posting of stockLogs, cashflows,
+workOrders, debtPayments, mechanic commissions, and corresponding reversal/refund flows.
+The production `index.html` remains unchanged and checkout is not cloud-enabled.
