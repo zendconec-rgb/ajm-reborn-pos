@@ -46,7 +46,15 @@ assert.ok(html.includes('window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MU
 assert.ok(html.includes('prepareAjmMultiDeviceOperator(matched)'),
   'Local login should attempt operator linking only through the release gate');
 assert.ok(html.includes('await prepareAjmMultiDeviceOperator(users.find'),
-  'Cloud login should link the currently logged-in local operator');
+
+assert.ok(html.includes("if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return false;"),
+  'Legacy snapshot writes must be blocked in multi-device mode');
+assert.ok(html.includes("Pengambilan snapshot lama dinonaktifkan pada mode multi-perangkat."),
+  'Manual legacy snapshot pulls must be blocked in multi-device mode');
+assert.ok(html.includes("if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return;"),
+  'Legacy realtime subscriptions must be blocked in multi-device mode');
+assert.ok(html.includes("ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true"),
+  'Online reconnect must not trigger legacy snapshot writes in multi-device mode');  'Cloud login should link the currently logged-in local operator');
 assert.ok(html.includes('window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase'),
   'Multi-device client must receive the initialized Supabase client');
 assert.ok(html.includes('.catch(err => {\n                            window.ajmMultiDeviceModuleReady = false;'),
