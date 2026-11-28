@@ -5250,6 +5250,34 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 }).catch(err => { console.warn('Supabase session:', err); setAjmCloudStatus('Perlu login cloud', 'warning'); });
             } catch (err) { console.error(err); setAjmCloudStatus('Gagal inisialisasi', 'error'); }
         }
+        // Multi-device release stays OFF until migrations and end-to-end checks are completed.
+        // Enable only through an intentional release change after the legacy snapshot path is gated.
+        window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true;
+
+        async function prepareAjmMultiDeviceOperator(localUser) {
+            if (!window.AJM_MULTI_DEVICE_RELEASE_ENABLED) return { enabled: false };
+            if (!ajmSupabase || !window.ajmMultiDeviceModuleReady || !window.AJM_MULTI_DEVICE) {
+                setAjmCloudStatus('Multi-perangkat belum siap', 'warning');
+                return { enabled: true, ready: false };
+            }
+            const { data: authData, error: authError } = await ajmSupabase.auth.getSession();
+            if (authError) throw authError;
+            if (!authData?.session) {
+                setAjmCloudStatus('Login cloud operator diperlukan', 'warning');
+                return { enabled: true, ready: false, needsCloudLogin: true };
+            }
+            try {
+                const prepared = await window.AJM_MULTI_DEVICE.prepareSession(localUser);
+                setAjmCloudStatus('Operator & perangkat terdaftar', 'success');
+                return { enabled: true, ready: true, prepared };
+            } catch (err) {
+                console.error('AJM operator/device linking:', err);
+                setAjmCloudStatus('Akun/perangkat belum terdaftar', 'warning');
+                showToast('Login lokal tetap berjalan. Hubungkan akun cloud operator yang sesuai untuk mengaktifkan multi-perangkat.', 'warning');
+                return { enabled: true, ready: false, error: err };
+            }
+        }
+
         function setAjmCloudStatus(label, state='warning') {
             const el=document.getElementById('supabase-cloud-status');
             const detail=document.getElementById('supabase-cloud-detail');
@@ -5315,6 +5343,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 setAjmCloudStatus('Terhubung', 'success');
                 await pullAjmSupabaseNow(false);
                 subscribeAjmCloudChanges();
+                if (currentSession) await prepareAjmMultiDeviceOperator(users.find(u => String(u.id) === String(currentSession.userId)));
                 showToast('Akun cloud terhubung dan data berhasil diperiksa.');
             }catch(err){setAjmCloudStatus('Login cloud gagal','error');showToast('Login Supabase gagal: '+(err.message||'Periksa email/password dan akun Auth.'),'error');}
         }
@@ -7233,6 +7262,7 @@ window.addEventListener('afterprint', function () {
             renderAccountManagementPanel();
             navigateTo('kasir');
             showToast(`Selamat datang, ${matched.username} (${matched.role})!`);
+            prepareAjmMultiDeviceOperator(matched).catch(err => console.warn('AJM multi-device operator setup:', err));
         }
 
         function logoutSession() {
