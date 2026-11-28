@@ -1,0 +1,246 @@
+/* AJM Reborn POS — multi-device client foundation
+ * This module is intentionally NOT wired into transaction checkout yet.
+ * It provides a durable IndexedDB outbox, per-browser device identity,
+ * Supabase device registration, and idempotent outbox delivery.
+ *
+ * Load after supabase-js and after creating the authenticated Supabase client:
+ *   window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase, appVersion: '...' });
+ *
+ * Do not call enqueueOperation from checkout until the server-side transaction
+ * processor, stock locking, conflict policy, and UI recovery flow are deployed.
+ */
+(function (global) {
+  'use strict';
+
+  const DB_NAME = 'ajm_reborn_multidevice';
+  const DB_VERSION = 1;
+  const DEVICE_STORE = 'device';
+  const OUTBOX_STORE = 'outbox';
+  const DEFAULT_BATCH_SIZE = 20;
+  let supabase = null;
+  let appVersion = null;
+  let devicePromise = null;
+  let flushPromise = null;
+
+  function openDb() {
+    return new Promise((resolve, reject) => {
+      if (!global.indexedDB) return reject(new Error('IndexedDB tidak tersedia di browser ini.'));
+      const request = global.indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(DEVICE_STORE)) {
+          db.createObjectStore(DEVICE_STORE, { keyPath: 'key' });
+        }
+        if (!db.objectStoreNames.contains(OUTBOX_STORE)) {
+          const store = db.createObjectStore(OUTBOX_STORE, { keyPath: 'operation_id' });
+          store.createIndex('created_at', 'created_at', { unique: false });
+          store.createIndex('status', 'status', { unique: false });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Gagal membuka IndexedDB.'));
+      request.onblocked = () => reject(new Error('Database lokal sedang digunakan tab lain. Tutup tab AJM lain lalu coba lagi.'));
+    });
+  }
+
+  function requestResult(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Operasi IndexedDB gagal.'));
+    });
+  }
+
+  async function getDeviceKey() {
+    if (devicePromise) return devicePromise;
+    devicePromise = (async () => {
+      const db = await openDb();
+      try {
+        const tx = db.transaction(DEVICE_STORE, 'readonly');
+        const saved = await requestResult(tx.objectStore(DEVICE_STORE).get('primary'));
+        if (saved && saved.device_key) return saved.device_key;
+        const deviceKey = (global.crypto && global.crypto.randomUUID)
+          ? global.crypto.randomUUID()
+          : 'ajm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+        const writeTx = db.transaction(DEVICE_STORE, 'readwrite');
+        writeTx.objectStore(DEVICE_STORE).put({
+          key: 'primary',
+          device_key: deviceKey,
+          device_name: (global.navigator && global.navigator.userAgent || 'AJM Device').slice(0, 110),
+          created_at: new Date().toISOString()
+        });
+        await new Promise((resolve, reject) => {
+          writeTx.oncomplete = resolve;
+          writeTx.onerror = () => reject(writeTx.error || new Error('Gagal menyimpan identitas perangkat.'));
+          writeTx.onabort = () => reject(writeTx.error || new Error('Penyimpanan identitas perangkat dibatalkan.'));
+        });
+        return deviceKey;
+      } finally {
+        db.close();
+      }
+    })().catch(err => {
+      devicePromise = null;
+      throw err;
+    });
+    return devicePromise;
+  }
+
+  async function configure(options) {
+    if (!options || !options.supabase) throw new Error('Klien Supabase AJM belum diberikan.');
+    supabase = options.supabase;
+    appVersion = options.appVersion || null;
+    return { deviceKey: await getDeviceKey() };
+  }
+
+  async function registerDevice() {
+    if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!sessionData || !sessionData.session) throw new Error('Login Supabase diperlukan untuk mendaftarkan perangkat.');
+    const deviceKey = await getDeviceKey();
+    const { data, error } = await supabase.rpc('ajm_register_device', {
+      p_device_key: deviceKey,
+      p_device_name: ((global.navigator && global.navigator.userAgent) || 'AJM Device').slice(0, 110),
+      p_app_version: appVersion
+    });
+    if (error) throw error;
+    return { deviceKey, registration: Array.isArray(data) ? data[0] : data };
+  }
+
+  async function enqueueOperation(operationType, payload, options) {
+    if (!operationType || typeof operationType !== 'string') throw new Error('Jenis operasi AJM wajib diisi.');
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Payload operasi harus berupa objek.');
+    const deviceKey = await getDeviceKey();
+    const operationId = (global.crypto && global.crypto.randomUUID)
+      ? global.crypto.randomUUID()
+      : 'op-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    const item = {
+      operation_id: operationId,
+      device_key: deviceKey,
+      operation_type: operationType,
+      payload: payload,
+      client_created_at: (options && options.clientCreatedAt) || new Date().toISOString(),
+      created_at: Date.now(),
+      attempts: 0,
+      status: 'pending',
+      last_error: null
+    };
+    const db = await openDb();
+    try {
+      const tx = db.transaction(OUTBOX_STORE, 'readwrite');
+      tx.objectStore(OUTBOX_STORE).add(item);
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error || new Error('Gagal menyimpan antrean offline.'));
+        tx.onabort = () => reject(tx.error || new Error('Antrean offline dibatalkan.'));
+      });
+    } finally {
+      db.close();
+    }
+    return { operationId, queued: true };
+  }
+
+  async function listOutbox() {
+    const db = await openDb();
+    try {
+      const tx = db.transaction(OUTBOX_STORE, 'readonly');
+      const all = await requestResult(tx.objectStore(OUTBOX_STORE).getAll());
+      return all.sort((a, b) => a.created_at - b.created_at);
+    } finally {
+      db.close();
+    }
+  }
+
+  async function updateOutbox(item) {
+    const db = await openDb();
+    try {
+      const tx = db.transaction(OUTBOX_STORE, 'readwrite');
+      tx.objectStore(OUTBOX_STORE).put(item);
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error || new Error('Gagal memperbarui antrean.'));
+        tx.onabort = () => reject(tx.error || new Error('Pembaruan antrean dibatalkan.'));
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  async function removeOutbox(operationId) {
+    const db = await openDb();
+    try {
+      const tx = db.transaction(OUTBOX_STORE, 'readwrite');
+      tx.objectStore(OUTBOX_STORE).delete(operationId);
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error || new Error('Gagal menghapus operasi yang sudah diterima.'));
+        tx.onabort = () => reject(tx.error || new Error('Penghapusan antrean dibatalkan.'));
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  async function flushQueue(options) {
+    if (flushPromise) return flushPromise;
+    if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
+    if (global.navigator && global.navigator.onLine === false) return { sent: 0, pending: (await listOutbox()).length, offline: true };
+    const batchSize = Math.max(1, Math.min(100, Number(options && options.batchSize) || DEFAULT_BATCH_SIZE));
+    flushPromise = (async () => {
+      await registerDevice();
+      const queue = (await listOutbox()).filter(item => item.status === 'pending').slice(0, batchSize);
+      let sent = 0;
+      for (const item of queue) {
+        try {
+          const { data, error } = await supabase.rpc('ajm_submit_sync_operation', {
+            p_operation_id: item.operation_id,
+            p_device_key: item.device_key,
+            p_operation_type: item.operation_type,
+            p_payload: item.payload,
+            p_client_created_at: item.client_created_at
+          });
+          if (error) throw error;
+          if (!data || !data.length) throw new Error('Server tidak mengonfirmasi operasi; item tetap disimpan di antrean.');
+          await removeOutbox(item.operation_id);
+          sent++;
+        } catch (error) {
+          item.attempts = (item.attempts || 0) + 1;
+          item.last_error = String(error && error.message || error).slice(0, 500);
+          item.last_attempt_at = new Date().toISOString();
+          // Permission/validation failures remain visible and are not silently discarded.
+          if (error && ['42501', '22023', '28000'].includes(error.code)) item.status = 'blocked';
+          await updateOutbox(item);
+          break; // preserve order; retry later after the first failure is resolved
+        }
+      }
+      const remaining = await listOutbox();
+      return {
+        sent,
+        pending: remaining.filter(item => item.status === 'pending').length,
+        blocked: remaining.filter(item => item.status === 'blocked').length
+      };
+    })().finally(() => { flushPromise = null; });
+    return flushPromise;
+  }
+
+  async function getStatus() {
+    const queue = await listOutbox();
+    return {
+      deviceKey: await getDeviceKey(),
+      queued: queue.length,
+      blocked: queue.filter(item => item.status === 'blocked').length,
+      pending: queue.filter(item => item.status === 'pending').length,
+      operations: queue.map(({ operation_id, operation_type, status, attempts, last_error, created_at }) => ({
+        operation_id, operation_type, status, attempts, last_error, created_at
+      }))
+    };
+  }
+
+  global.AJM_MULTI_DEVICE = Object.freeze({
+    configure,
+    registerDevice,
+    enqueueOperation,
+    flushQueue,
+    getStatus,
+    getDeviceKey
+  });
+})(window);
