@@ -226,3 +226,18 @@ collections from separate devices, and preservation of historical invoice fields
 Work-order completion still needs a transaction-safe server path. The current
 sale processor has not yet been changed to include `workOrderId`; therefore the
 existing local work-order completion must not be considered cloud-atomic.
+
+
+## Client outbox safety correction — generic inbox acceptance is not completion
+
+The IndexedDB outbox client now distinguishes a server inbox acknowledgement from a
+completed business operation. For non-sale operations sent through
+`ajm_submit_sync_operation`, an acknowledgement with status `pending` is retained
+locally as `submitted`; it is no longer deleted or counted as a completed operation.
+The client exposes this count and server receipt time through `getStatus()`.
+
+This prevents silent data loss: the generic RPC is only an append-only inbox and
+does not execute debt payments, work-order transitions, or other business effects.
+Only a dedicated processor may safely mark such an operation `processed` and allow
+the client to remove it. A submitted item currently requires a later processor/status
+reconciliation path; it is intentionally not auto-resubmitted on every flush.
