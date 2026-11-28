@@ -87,15 +87,23 @@ end; $$;
 
 create or replace function public.ajm_pos_restore_device(p_id uuid)
 returns boolean language plpgsql security definer
-set search_path = '' as $$
+set search_path = '' as $
+declare v_user uuid; v_count integer;
 begin
   if auth.uid() is null or not public.ajm_pos_is_device_admin() then
     raise exception 'AJM_DEVICE_ADMIN_REQUIRED';
   end if;
+  select user_id into v_user from public.ajm_pos_devices
+    where id=p_id and revoked_at is not null;
+  if v_user is null then return false; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_user::text, 0));
+  select count(*) into v_count from public.ajm_pos_devices
+    where user_id=v_user and revoked_at is null;
+  if v_count >= 3 then raise exception 'AJM_DEVICE_LIMIT_REACHED'; end if;
   update public.ajm_pos_devices set revoked_at=null, revoked_by=null
     where id=p_id and revoked_at is not null;
   return found;
-end; $$;
+end; $;
 
 revoke all on function public.ajm_pos_is_device_admin() from public, anon;
 revoke all on function public.ajm_pos_register_device(uuid,text,text) from public, anon;
