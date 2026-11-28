@@ -148,3 +148,27 @@ multiple devices create invoices offline.
 This helper is not yet wired into the production checkout. Existing invoice formats
 remain unchanged until receipt, search, export, and workshop flows are regression-tested.
 The server's unique invoice constraint remains the final collision guard.
+
+
+## Phase 6 — device revocation hardening (staged; not deployed)
+
+A security review found that ordinary authenticated users had direct UPDATE access
+on their own device rows, and the earlier registration RPC could reactivate an
+existing device key. That would weaken Admin device revocation. The hardening migration:
+
+- removes direct authenticated UPDATE permission and the ordinary-user UPDATE policy
+  on `ajm_devices`;
+- changes `ajm_register_device` to SECURITY DEFINER with an empty search_path;
+- allows an active owner to refresh only device metadata;
+- rejects an existing inactive device with `AJM_DEVICE_REVOKED_BY_ADMIN` instead
+  of reactivating it;
+- preserves all device rows and operation history.
+
+Files:
+- `supabase/migrations/20261128_005_device_revocation_hardening.sql`
+- `supabase/diagnostics/verify_device_revocation_hardening.sql`
+
+This is still staged on the development branch. It has not been run against Supabase.
+Run the read-only verification after applying it in a staging project. Production
+migration and end-to-end testing remain blocked until the complete sale side effects
+(stock logs, cashflows, work orders, debt/DP, commissions) are handled atomically.
