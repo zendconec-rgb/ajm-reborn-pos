@@ -5,31 +5,37 @@
 
 begin;
 
+-- SECURITY DEFINER helper avoids recursive RLS policy evaluation on ajm_user_roles.
+create or replace function public.ajm_is_active_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select exists (
+    select 1
+    from public.ajm_user_roles r
+    where r.user_id = auth.uid()
+      and r.app_role = 'Admin'
+      and r.is_active = true
+  );
+$function$;
+
+revoke all on function public.ajm_is_active_admin() from public;
+grant execute on function public.ajm_is_active_admin() to authenticated;
+
 -- Admin can view all role mappings; users can still view their own role.
 drop policy if exists "AJM admins read all roles" on public.ajm_user_roles;
 create policy "AJM admins read all roles"
   on public.ajm_user_roles for select to authenticated
-  using (
-    exists (
-      select 1 from public.ajm_user_roles me
-      where me.user_id = (select auth.uid())
-        and me.app_role = 'Admin'
-        and me.is_active = true
-    )
-  );
+  using (public.ajm_is_active_admin());
 
 -- Admin can view all posted sales; cashiers retain own-sale visibility.
 drop policy if exists "AJM admins read all sales ledger" on public.ajm_sales_ledger;
 create policy "AJM admins read all sales ledger"
   on public.ajm_sales_ledger for select to authenticated
-  using (
-    exists (
-      select 1 from public.ajm_user_roles me
-      where me.user_id = (select auth.uid())
-        and me.app_role = 'Admin'
-        and me.is_active = true
-    )
-  );
+  using (public.ajm_is_active_admin());
 
 create or replace function public.ajm_admin_set_user_role(
   p_target_user_id uuid,
