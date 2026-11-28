@@ -4979,18 +4979,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         });
 
         function initApp() {
-            // Migrasi satu kali untuk memulai katalog dan riwayat transaksi dari kondisi kosong.
-            // Marker mencegah data baru yang dimasukkan pengguna terhapus pada pembukaan berikutnya.
-            const EMPTY_STARTUP_MIGRATION = 'ajm_reborn_empty_products_transactions_20261128_v1';
-            try {
-                if (localStorage.getItem(EMPTY_STARTUP_MIGRATION) !== '1') {
-                    [DB_KEYS.PRODUCTS, DB_KEYS.TRANSACTIONS, DB_KEYS.WORK_ORDERS, DB_KEYS.STOCK_LOGS]
-                        .forEach(key => localStorage.removeItem(key));
-                    localStorage.setItem(EMPTY_STARTUP_MIGRATION, '1');
-                }
-            } catch (migrationError) {
-                console.warn('Migrasi pengosongan data awal tidak dapat diselesaikan:', migrationError);
-            }
+            // Startup harus non-destruktif: jangan pernah menghapus katalog, transaksi,
+            // work order, atau log stok pengguna saat aplikasi diperbarui/dibuka.
             // Pulihkan sesi login dari localStorage agar refresh/perubahan mode tampilan
             // tidak mengeluarkan pengguna. Sesi hanya dihapus melalui tombol Logout.
             // Keep the POS usable even if one legacy/localStorage entry is malformed.            // Do not clear or overwrite stored records: preserve every collection that loaded.
