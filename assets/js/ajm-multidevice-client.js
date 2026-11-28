@@ -426,6 +426,25 @@
     return { operationId, status: 'pending' };
   }
 
+  // Read the authoritative snapshot after server-side business RPCs.
+  // This is read-only: it never writes a local snapshot back to Supabase.
+  async function fetchAuthoritativeSnapshot() {
+    if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!sessionData || !sessionData.session) throw new Error('Login Supabase diperlukan untuk membaca data resmi.');
+    const { data, error } = await supabase
+      .from('ajm_pos_database')
+      .select('payload,revision,updated_at')
+      .eq('id', 'main')
+      .single();
+    if (error) throw error;
+    if (!data || !data.payload || !Array.isArray(data.payload.products) || !Array.isArray(data.payload.transactions)) {
+      throw new Error('Snapshot resmi server tidak valid; data lokal dipertahankan.');
+    }
+    return { payload: data.payload, revision: Number(data.revision) || 0, updatedAt: data.updated_at || null };
+  }
+
   async function getStatus() {
     const queue = await listOutbox();
     return {
@@ -453,6 +472,7 @@
     retryOperation,
     flushQueue,
     reconcileSubmitted,
+    fetchAuthoritativeSnapshot,
     getStatus,
     getDeviceKey
   });
