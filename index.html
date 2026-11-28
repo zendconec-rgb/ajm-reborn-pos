@@ -1976,6 +1976,260 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 }
 </style>
 
+
+<style id="ajm-payment-buttons-minimal-v3">
+/* Metode pembayaran: satu baris, pipih, ikon di kiri, gaya minimalis */
+#cart-panel button.pay-method-btn,
+#cart-panel .grid.grid-cols-3 > button.pay-method-btn {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
+    padding: 0 10px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;    white-space: nowrap !important;
+}
+#cart-panel button.pay-method-btn i,
+#cart-panel button.pay-method-btn svg {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    flex: 0 0 18px !important;
+}
+#cart-panel button.pay-method-btn span {
+    display: inline-block !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+@media (max-width: 640px) {
+    #cart-panel button.pay-method-btn,
+    #cart-panel .grid.grid-cols-3 > button.pay-method-btn {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        padding: 0 6px !important;
+        gap: 6px !important;
+        border-radius: 10px !important;
+        font-size: 11px !important;
+    }
+    #cart-panel button.pay-method-btn i,
+    #cart-panel button.pay-method-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+        min-width: 15px !important;
+        flex-basis: 15px !important;
+    }
+}
+</style>
+
+
+<style id="ajm-process-button-match-payment">
+/* Tombol proses transaksi disamakan tinggi, radius, dan tipografinya */
+#process-transaction-btn {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
+    padding: 0 12px !important;
+    border-radius: 12px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+}
+#process-transaction-btn i,
+#process-transaction-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    flex: 0 0 18px !important;
+}
+#process-transaction-btn span {
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+@media (max-width: 640px) {
+    #process-transaction-btn {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        padding: 0 8px !important;
+        gap: 6px !important;
+        border-radius: 10px !important;
+        font-size: 11px !important;
+    }
+    #process-transaction-btn i,
+    #process-transaction-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+        min-width: 15px !important;
+        flex-basis: 15px !important;
+    }
+}
+</style>
+
+
+<style id="ajm-process-button-match-tunai">
+/* Tombol proses: samakan dimensi dengan satu tombol metode pembayaran */
+.cart-action-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+}
+#process-transaction-btn {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-self: flex-start !important;
+    width: calc((100% - 16px) / 3) !important;
+    max-width: calc((100% - 16px) / 3) !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+}
+#process-transaction-btn svg,
+#process-transaction-btn i {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    flex: 0 0 16px !important;
+}
+#process-transaction-btn span {
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    font-size: inherit !important;
+}
+@media (max-width: 480px) {
+    #process-transaction-btn {
+        width: calc((100% - 10px) / 3) !important;
+        max-width: calc((100% - 10px) / 3) !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        padding: 0 5px !important;
+        gap: 4px !important;
+        border-radius: 9px !important;
+        font-size: 10px !important;
+    }
+    #process-transaction-btn svg,
+    #process-transaction-btn i {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        flex-basis: 14px !important;
+    }
+}
+</style>
+
+
+<style id="ajm-process-button-inline-helper">
+/* Tombol tetap selebar tombol Tunai; keterangan berada di sisi kanan */
+.cart-action-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+#process-transaction-btn {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    flex: 0 0 calc((100% - 24px) / 3) !important;
+    width: calc((100% - 24px) / 3) !important;
+    max-width: calc((100% - 24px) / 3) !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    align-self: center !important;
+    border-radius: 12px !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+}
+#process-transaction-btn svg,
+#process-transaction-btn i {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    flex: 0 0 16px !important;
+}
+#process-transaction-btn span {
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    font-size: inherit !important;
+}
+.cart-action-row p {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+}
+@media (max-width: 480px) {
+    .cart-action-row { gap: 8px !important; }
+    #process-transaction-btn {
+        flex-basis: calc((100% - 16px) / 3) !important;
+        width: calc((100% - 16px) / 3) !important;
+        max-width: calc((100% - 16px) / 3) !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        padding: 0 4px !important;
+        gap: 4px !important;
+        border-radius: 10px !important;
+        font-size: 10px !important;
+    }
+    #process-transaction-btn svg,
+    #process-transaction-btn i {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        flex-basis: 14px !important;
+    }
+    .cart-action-row p {
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+    }
+}
+</style>
+
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -1996,7 +2250,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 </div>
             </div>
 
-            <form onsubmit="handleLoginSubmit(event)" class="p-5 space-y-3.5">                <div>
+            <form onsubmit="handleLoginSubmit(event)" class="p-5 space-y-3.5">
+                <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nama / Username Akun</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
@@ -2740,8 +2995,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <span id="rep-hpp" class="text-[10px] text-slate-400 block mt-1">Modal/HPP: Rp 0</span>
                             </div>
                             <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-2xl">
-                                <span class="text-[11px] text-amber-800 font-bold">Sisa Piutang / Kasbon</span>
-                                <p id="rep-receivable" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-0.5">Rp 0</p>
+                                <span class="text-[11px] text-amber-800 font-bold">Sisa Piutang / Kasbon</span>                                <p id="rep-receivable" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-0.5">Rp 0</p>
                                 <span id="rep-received-real" class="text-[10px] text-amber-700 block mt-1">Uang Masuk Riil: Rp 0</span>
                             </div>
                             <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl">
@@ -2995,6 +3249,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                             <p class="text-[10px] text-slate-500 mt-0.5">Koneksi port serial langsung (Chrome/Edge)</p>
                         </button>
                     </div>
+
                     <!-- Kontrol Koneksi Perangkat Khusus (Serial / Kamera) -->
                     <div id="scanner-device-action-bar" class="bg-slate-50 border border-slate-200/90 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                         <div>
@@ -3325,7 +3580,24 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <input type="checkbox" id="set-r-show-footer" onchange="saveGriyoReceiptSettings()" class="rounded text-indigo-600">
                                 <span>Footer / Garansi</span>
                             </label>
-                        </div>
+                        
+                            <label class="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-logo" onchange="saveReceiptSettings({preventDefault:()=>{}})" class="rounded text-indigo-600">
+                                <span>Logo Struk</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-mechanic" onchange="saveReceiptSettings({preventDefault:()=>{}})" class="rounded text-indigo-600">
+                                <span>Nama Mekanik</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-plate" onchange="saveReceiptSettings({preventDefault:()=>{}})" class="rounded text-indigo-600">
+                                <span>Plat & Tipe Motor</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="set-show-customer-name" onchange="saveReceiptSettings({preventDefault:()=>{}})" class="rounded text-indigo-600">
+                                <span>Nama Pelanggan</span>
+                            </label>
+</div>
                     </div>
 
                     <!-- Pengaturan konten dan tampilan struk dipusatkan di panel printer -->
@@ -3344,24 +3616,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Header Tambahan Struk</label>
                                 <input type="text" id="set-receipt-header" placeholder="Contoh: Spesialis Servis, Bore Up & Remap ECU" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:border-royal-500">
                             </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="set-show-logo" class="rounded text-royal-600">
-                                    <span>Tampilkan Logo di Struk</span>
-                                </label>
-                                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="set-show-mechanic" class="rounded text-royal-600">
-                                    <span>Tampilkan Nama Mekanik di Struk</span>
-                                </label>
-                                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="set-show-plate" class="rounded text-royal-600">
-                                    <span>Tampilkan Plat & Tipe Motor di Struk</span>
-                                </label>
-                                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="set-show-customer-name" class="rounded text-royal-600">
-                                    <span>Sertakan Nama Pelanggan di Struk Lengkap</span>
-                                </label>
-                            </div>
+                            
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Footer / Catatan Garansi Struk</label>
                                 <textarea id="set-receipt-footer" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500"></textarea>
@@ -3739,8 +3994,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                         <input type="number" id="pm-stock" required min="0" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Batas Stok Minimum</label>
-                        <input type="number" id="pm-min-stock" required min="0" value="5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500">
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Batas Stok Minimum</label>                        <input type="number" id="pm-min-stock" required min="0" value="5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500">
                     </div>
                 </div>
                 <div class="pt-2 flex gap-2">
@@ -3994,7 +4248,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div>
                     <h3 class="font-bold text-sm flex items-center gap-2">
                         <i data-lucide="receipt" class="w-4 h-4 text-amber-300"></i>
-                        <span>Pratinjau Langsung & Pengaturan Cetak Struk</span>                    </h3>
+                        <span>Pratinjau Langsung & Pengaturan Cetak Struk</span>
+                    </h3>
                     <p class="text-[11px] text-blue-100">Ubah pengaturan dan lihat hasil cetak struk secara langsung sebelum dicetak</p>
                 </div>
                 <button type="button" onclick="closeModal('griyo-receipt-preview-modal')" class="p-1 rounded-lg hover:bg-white/15">
@@ -4425,7 +4680,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             mechanicCommissionRate: 20,
             showMechanic: true,
             showPlate: true,
-            showCustomerNameOnReceipt: false,
+            showCustomerNameOnReceipt: true,
             receiptHeader: 'Spesialis Servis, Tune Up & Sparepart Motor',
             receiptFooter: 'Terima kasih telah servis di AJM Reborn.\nGaransi servis 7 hari dengan membawa nota.',
             // Pengaturan Konten & Tata Letak Struk (Gaya Griyo POS)
@@ -4484,23 +4739,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
         const DEFAULT_CATEGORIES = ['Oli', 'Ban', 'Sparepart', 'Kelistrikan', 'Jasa Servis'];
 
-        const DEFAULT_PRODUCTS = [
-            { id: 'p1', code: '899100100011', name: 'Oli AHM MPX2 0.8L Matic', category: 'Oli', cost: 42000, price: 55000, stock: 22, minStock: 5 },
-            { id: 'p2', code: '899100100028', name: 'Oli Motul Scooter LE 10W30 0.8L', category: 'Oli', cost: 68000, price: 88000, stock: 12, minStock: 4 },
-            { id: 'p3', code: '899100100035', name: 'Oli Gardan Yamalube 100ml', category: 'Oli', cost: 11000, price: 18000, stock: 25, minStock: 5 },
-            { id: 'p4', code: '899100200041', name: 'Ban Luar FDR Sport XR Evo 90/80-14', category: 'Ban', cost: 215000, price: 275000, stock: 4, minStock: 3 },
-            { id: 'p5', code: '899100200058', name: 'Ban Luar IRC NR73 80/90-14 Tubeless', category: 'Ban', cost: 175000, price: 225000, stock: 2, minStock: 3 },
-            { id: 'p6', code: '899100300064', name: 'Kampas Rem Depan Dispad Beat/Vario', category: 'Sparepart', cost: 26000, price: 45000, stock: 15, minStock: 5 },
-            { id: 'p7', code: '899100300071', name: 'V-Belt + Roller Kit NMAX / Aerox', category: 'Sparepart', cost: 135000, price: 185000, stock: 3, minStock: 4 },
-            { id: 'p8', code: '899100300088', name: 'Piston Kit OS 50 Jupiter Z / Vega', category: 'Sparepart', cost: 110000, price: 155000, stock: 4, minStock: 2 },
-            { id: 'p9', code: '899100400094', name: 'Spul Assy + Pulser Beat FI / Scoopy', category: 'Kelistrikan', cost: 165000, price: 225000, stock: 3, minStock: 2 },
-            { id: 'p10', code: '899100400100', name: 'Aki GS Astra GTZ5S Kering MF', category: 'Kelistrikan', cost: 185000, price: 245000, stock: 6, minStock: 3 },
-            { id: 'p11', code: '899100400117', name: 'Busi NGK Iridium CPR9EAIX-9', category: 'Kelistrikan', cost: 72000, price: 98000, stock: 8, minStock: 3 },
-            { id: 'p12', code: '899100500123', name: 'Jasa Servis Injeksi & CVT Lengkap', category: 'Jasa Servis', cost: 0, price: 65000, stock: 999, minStock: 0 },
-            { id: 'p13', code: '899100500130', name: 'Jasa Bore Up Harian & Porting Polish', category: 'Jasa Servis', cost: 0, price: 250000, stock: 999, minStock: 0 },
-            { id: 'p14', code: '899100500147', name: 'Jasa Remap ECU Standar (Honda/Yamaha)', category: 'Jasa Servis', cost: 0, price: 150000, stock: 999, minStock: 0 },
-            { id: 'p15', code: '899100500154', name: 'Jasa Ganti Oli / Kampas Rem', category: 'Jasa Servis', cost: 0, price: 15000, stock: 999, minStock: 0 }
-        ];
+        const DEFAULT_PRODUCTS = []; // Produk awal kosong; pengguna mengisi katalog sendiri.
 
         const DEFAULT_CUSTOMERS = [
             { id: 'c1', name: 'Mas Dimas', phone: '0857-1122-3344', plate: 'G 4821 XM', motor: 'Vario 150 LED' },
@@ -4520,6 +4759,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         let customers = [];
         let mechanics = [];
         let workOrders = [];
+        let selectedCartCustomerId = null; // ID pelanggan yang dipilih langsung dari pemilih kasir
         let transactions = [];
         let selectedHistoryInvoices = new Set();
         let stockLogs = [];
@@ -4739,15 +4979,26 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         });
 
         function initApp() {
+            // Migrasi satu kali untuk memulai katalog dan riwayat transaksi dari kondisi kosong.
+            // Marker mencegah data baru yang dimasukkan pengguna terhapus pada pembukaan berikutnya.
+            const EMPTY_STARTUP_MIGRATION = 'ajm_reborn_empty_products_transactions_20261128_v1';
+            try {
+                if (localStorage.getItem(EMPTY_STARTUP_MIGRATION) !== '1') {
+                    [DB_KEYS.PRODUCTS, DB_KEYS.TRANSACTIONS, DB_KEYS.WORK_ORDERS, DB_KEYS.STOCK_LOGS]
+                        .forEach(key => localStorage.removeItem(key));
+                    localStorage.setItem(EMPTY_STARTUP_MIGRATION, '1');
+                }
+            } catch (migrationError) {
+                console.warn('Migrasi pengosongan data awal tidak dapat diselesaikan:', migrationError);
+            }
             // Pulihkan sesi login dari localStorage agar refresh/perubahan mode tampilan
             // tidak mengeluarkan pengguna. Sesi hanya dihapus melalui tombol Logout.
-            // Keep the POS usable even if one legacy/localStorage entry is malformed.
-            // Do not clear or overwrite stored records: preserve every collection that loaded.
+            // Keep the POS usable even if one legacy/localStorage entry is malformed.            // Do not clear or overwrite stored records: preserve every collection that loaded.
             try {
                 loadAllData();
             } catch (storageError) {
                 console.error('AJM storage initialization recovered:', storageError);
-                if (!Array.isArray(products)) products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+                if (!Array.isArray(products)) products = [];
                 if (!Array.isArray(categories)) categories = [...DEFAULT_CATEGORIES];
                 if (!Array.isArray(customers)) customers = [];
                 if (!Array.isArray(mechanics)) mechanics = [];
@@ -4835,49 +5086,11 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             syncQueue = JSON.parse(localStorage.getItem(DB_KEYS.SYNC_QUEUE)) || [];
             driveMeta = Object.assign({ folderId: null, lastSyncAt: null, lastError: null, accessToken: null, tokenExpiry: 0 }, JSON.parse(localStorage.getItem(DB_KEYS.DRIVE_META)) || {});
 
-            workOrders = JSON.parse(localStorage.getItem(DB_KEYS.WORK_ORDERS)) || [
-                {
-                    id: 'wo1',
-                    plateMotor: 'G 6090 PQ - Aerox 155 Connected',
-                    complaint: 'Servis CVT + Remap ECU Harian',
-                    mechanic: 'Mas Agung (Kepala Mekanik)',
-                    status: 'Dikerjakan',
-                    createdAt: todayIso,
-                    items: [
-                        { id: 'p2', code: '899100100028', category: 'Oli', name: 'Oli Motul Scooter LE 10W30 0.8L', cost: 68000, price: 88000, qty: 1 },
-                        { id: 'p14', code: '899100500147', category: 'Jasa Servis', name: 'Jasa Remap ECU Standar (Honda/Yamaha)', cost: 0, price: 150000, qty: 1 }
-                    ]
-                }
-            ];
+            workOrders = JSON.parse(localStorage.getItem(DB_KEYS.WORK_ORDERS)) || [];
 
-            transactions = JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS)) || [
-                {
-                    invoice: 'INV-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-001',
-                    date: todayIso,
-                    plateMotor: 'G 4821 XM - Vario 150 LED',
-                    mechanic: 'Kang Dani',
-                    cashier: 'Admin',
-                    items: [
-                        { id: 'p1', code: '899100100011', category: 'Oli', name: 'Oli AHM MPX2 0.8L Matic', cost: 42000, price: 55000, qty: 1 },
-                        { id: 'p12', code: '899100500123', category: 'Jasa Servis', name: 'Jasa Servis Injeksi & CVT Lengkap', cost: 0, price: 65000, qty: 1 }
-                    ],
-                    subtotal: 120000,
-                    discount: 0,
-                    tax: 0,
-                    total: 120000,
-                    paymentMethod: 'Tunai',
-                    cashReceived: 150000,
-                    paidAmount: 120000,
-                    remainingDebt: 0,
-                    change: 30000,
-                    status: 'Lunas',
-                    driveSynced: false
-                }
-            ];
+            transactions = JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS)) || [];
 
-            stockLogs = JSON.parse(localStorage.getItem(DB_KEYS.STOCK_LOGS)) || [
-                { id: 'sl1', date: todayIso, productName: 'Oli AHM MPX2 0.8L Matic', type: 'Masuk', qty: 10, note: 'Restock Distributor Pemalang' }
-            ];
+            stockLogs = JSON.parse(localStorage.getItem(DB_KEYS.STOCK_LOGS)) || [];
 
             cashflows = JSON.parse(localStorage.getItem(DB_KEYS.CASHFLOWS)) || [
                 { id: 'cf1', date: todayIso, type: 'Keluar', amount: 25000, note: 'Beli bensin pertalite untuk cuci part & makan siang' }
@@ -4993,7 +5206,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 // Lepaskan hanya data sementara lalu ulangi satu kali; riwayat transaksi
                 // dan data master tidak pernah dihapus otomatis.
                 releaseOptionalSpace();
-                try {                    writeCriticalAtomically();
+                try {
+                    writeCriticalAtomically();
                 } catch (retryError) {
                     console.error('Penyimpanan data utama gagal:', retryError || firstError);
                     throw new Error('Ruang penyimpanan browser penuh atau dibatasi. Transaksi tidak berhasil disimpan. Data lama dipertahankan sejauh memungkinkan. Ekspor cadangan dari menu Pengaturan, kosongkan ruang browser, lalu coba lagi.');
@@ -5778,8 +5992,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
                     showToast('Printer Bluetooth dinonaktifkan.');
                 } catch (err) { showToast('Gagal menonaktifkan Bluetooth: ' + (err?.message || err), 'error'); }
-                return;
-            }
+                return;            }
             settings.printerConnectionType = 'bluetooth';
             saveAllData();
             await connectBluetoothPrinter();
@@ -5992,7 +6205,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 setupQZPrinterStatusListener();
                 renderPrinterSettingsUI();
                 updateHardwareBadgesUI();
-                return true;            } catch (err) {
+                return true;
+            } catch (err) {
                 qzTrayConnected = false;
                 qzPrinterHardwareOnline = false;
                 renderPrinterSettingsUI();
@@ -6620,6 +6834,126 @@ img { max-width:100%; height:auto; }
   #app-topbar-actions button#header-bluetooth-status i,
   #app-topbar-actions button#header-usb-status i{width:14px!important;height:14px!important}
 }
+
+        /* AJM Reborn POS — tombol pembayaran ringkas dan tombol proses lebih tegas */
+        #cart-panel .pay-method-btn {
+            min-height: 48px !important;
+            height: 48px !important;
+            padding: 8px 12px !important;
+            border-radius: 13px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 9px !important;
+            white-space: nowrap !important;
+            font-size: 13px !important;
+            line-height: 1.15 !important;
+        }
+        #cart-panel .pay-method-btn svg {
+            width: 19px !important;
+            height: 19px !important;
+            flex: 0 0 19px !important;
+        }
+        #cart-panel .pay-method-btn span { line-height: 1.1 !important; }
+        .cart-action-row {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            padding: 12px 14px calc(12px + env(safe-area-inset-bottom)) !important;
+        }
+        #process-transaction-btn {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 56px !important;
+            min-height: 56px !important;
+            padding: 0 22px !important;
+            margin: 0 !important;
+            border-radius: 15px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            font-size: 17px !important;
+            font-weight: 800 !important;
+            letter-spacing: .01em !important;
+            box-shadow: 0 7px 15px rgba(5,150,105,.22) !important;
+        }
+        #process-transaction-btn svg {
+            width: 25px !important;
+            height: 25px !important;
+            flex: 0 0 25px !important;
+        }
+        .cart-action-row p {
+            text-align: center !important;
+            margin: 0 !important;
+            flex: none !important;
+            font-size: 10px !important;
+        }
+        @media (max-width: 480px) {
+            #cart-panel .pay-method-btn {
+                min-height: 44px !important;
+                height: 44px !important;
+                padding: 7px 6px !important;
+                gap: 6px !important;
+                font-size: 12px !important;
+            }
+            #cart-panel .pay-method-btn svg {
+                width: 17px !important;
+                height: 17px !important;
+                flex-basis: 17px !important;
+            }
+            #process-transaction-btn {
+                height: 52px !important;
+                min-height: 52px !important;
+                font-size: 15px !important;
+                padding: 0 14px !important;
+            }
+        }
+
+
+        /* Final compact payment-method buttons */
+        #cart-panel .pay-method-btn {
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: 38px !important;
+            padding: 5px 8px !important;
+            border-radius: 10px !important;
+            gap: 7px !important;
+            font-size: 12px !important;
+            line-height: 1 !important;
+            flex-direction: row !important;
+        }
+        #cart-panel .pay-method-btn svg,
+        #cart-panel .pay-method-btn i {
+            width: 16px !important;
+            height: 16px !important;
+            flex: 0 0 16px !important;
+        }
+        #cart-panel .pay-method-btn span {
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+        @media (max-width: 480px) {
+            #cart-panel .pay-method-btn {
+                height: 34px !important;
+                min-height: 34px !important;
+                max-height: 34px !important;
+                padding: 4px 5px !important;
+                gap: 5px !important;
+                font-size: 11px !important;
+            }
+            #cart-panel .pay-method-btn svg,
+            #cart-panel .pay-method-btn i {
+                width: 14px !important;
+                height: 14px !important;
+                flex-basis: 14px !important;
+            }
+        }
+
 </style>
 
 </head>
@@ -6657,8 +6991,7 @@ window.addEventListener('afterprint', function () {
             } catch (error) {
                 console.error('Dialog cetak gagal:', error);
                 showToast('Browser tidak dapat membuka dialog cetak. Izinkan pop-up dan coba lagi.', 'error');
-            }
-            if (btn) btn.disabled = false;
+            }            if (btn) btn.disabled = false;
             if (label) label.textContent = 'Cetak Struk';
         }
 
@@ -6991,7 +7324,8 @@ window.addEventListener('afterprint', function () {
 
             if (!newUname || !newPass) {
                 showToast('Nama akun dan password tidak boleh kosong!', 'error');
-                return;            }
+                return;
+            }
 
             const duplicate = users.find(u => u.id !== currentSession.userId && u.username.toLowerCase() === newUname.toLowerCase());
             if (duplicate) {
@@ -7656,8 +7990,7 @@ window.addEventListener('afterprint', function () {
             const targetEl = document.getElementById(targetViewId);
             targetEl.classList.remove('hidden');
             if (targetViewId !== 'view-pengaturan') {
-                targetEl.classList.add('flex');
-            }
+                targetEl.classList.add('flex');            }
 
             document.getElementById('header-subtitle').textContent = subtitle;
 
@@ -7990,7 +8323,8 @@ window.addEventListener('afterprint', function () {
                 }
                 cart.push({
                     id: product.id,
-                    code: product.code,                    category: product.category,
+                    code: product.code,
+                    category: product.category,
                     name: product.name,
                     supplierId: product.supplierId || (Array.isArray(product.supplierIds) ? product.supplierIds[0] : '') || '',
                     supplierName: typeof getProductSupplierName === 'function' ? getProductSupplierName(product) : '',
@@ -8474,7 +8808,9 @@ window.addEventListener('afterprint', function () {
             const change = Math.max(0, cashReceived - grandTotal);
             const plateMotor = (plateField?.value || '').trim() || 'Umum / Tanpa Plat';
             const normalizedCheckoutPlate = normalizePlateKey(plateMotor);
-            const checkoutCustomer = (Array.isArray(customers) ? customers : []).find(c => {
+            const checkoutCustomer = (Array.isArray(customers) ? customers : []).find(c =>
+                selectedCartCustomerId !== null && String(c?.id) === String(selectedCartCustomerId)
+            ) || (Array.isArray(customers) ? customers : []).find(c => {
                 const registeredPlate = normalizePlateKey(c?.plate || '');
                 return registeredPlate && (normalizedCheckoutPlate.startsWith(registeredPlate) || extractPlatePrefix(plateMotor) === registeredPlate);
             }) || null;
@@ -8515,6 +8851,7 @@ window.addEventListener('afterprint', function () {
                 if (oldWoStatus) oldWoStatus.status = 'Selesai';
                 transactions.unshift(newTrx);
                 saveAllData();
+                selectedCartCustomerId = null;
             } catch (err) {
                 transactions = transactions.filter(t => t.invoice !== newTrx.invoice);
                 oldStocks.forEach(st => { const pr=products.find(p=>p.id===st.id); if(pr) pr.stock=st.stock; });
@@ -8652,8 +8989,7 @@ window.addEventListener('afterprint', function () {
         function updateWoStatus(id, status) {
             const wo = workOrders.find(w => w.id === id);
             if (wo) {
-                wo.status = status;
-                saveAllData();
+                wo.status = status;                saveAllData();
                 renderWorkOrders();
                 showToast(`Status diubah menjadi ${status}`);
             }
@@ -8989,7 +9325,8 @@ window.addEventListener('afterprint', function () {
                     });
 
                     saveAllData();
-                    renderTransactionHistory();                    renderCustomerReceivablesReport();
+                    renderTransactionHistory();
+                    renderCustomerReceivablesReport();
                     renderFinancialReport();
                     showToast(`Seluruh piutang (${formatRupiah(totalToSettle)}) berhasil dilunasi!`);
                 }
@@ -9647,11 +9984,11 @@ window.addEventListener('afterprint', function () {
         }
 
         function applyCustomerToCart(id) {
-            const c = customers.find(item => item.id === id);
+            const c = customers.find(item => String(item.id) === String(id));
             if (!c) return;
+            selectedCartCustomerId = c.id;
             document.getElementById('cart-plate-motor').value = `${c.plate} - ${c.motor}`;
-            navigateTo('kasir');
-            updateCartServiceHistoryHint();
+            navigateTo('kasir');            updateCartServiceHistoryHint();
             showToast(`Motor ${c.plate} dipilih`);
         }
 
@@ -9989,6 +10326,7 @@ window.addEventListener('afterprint', function () {
 
             const dupMode = document.getElementById('csv-duplicate-mode').value;
             parsedCsvPreviewRows = [];
+
             let validCount = 0;
             let warnCount = 0;
             let errorCount = 0;
@@ -10649,8 +10987,7 @@ window.addEventListener('afterprint', function () {
 
             const listEl = document.getElementById('customer-receivables-list');
             if (filteredGroups.length === 0) {
-                listEl.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400 text-xs">
+                listEl.innerHTML = `                    <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400 text-xs">
                         <p class="font-bold text-slate-600 text-sm">Tidak ada data piutang pada filter ini</p>
                         <p class="mt-1">Semua tagihan pelanggan yang dipilih sudah lunas atau belum ada transaksi piutang.</p>
                     </div>
@@ -10987,6 +11324,7 @@ window.addEventListener('afterprint', function () {
             const every = buckets.length>8 ? 2 : 1;
             buckets.forEach((b,i)=>{if(i%every===0 || i===buckets.length-1) ctx.fillText(b.label,points[i].x,height-13);});
         }
+
         function renderReportCharts(list) {
             latestReportChartTransactions = Array.isArray(list) ? list.slice() : [];
             const buckets = getReportChartBuckets(latestReportChartTransactions);
@@ -11648,8 +11986,7 @@ window.addEventListener('afterprint', function () {
 
             if (storeNameEl) storeNameEl.textContent = settings.storeName || 'AJM Reborn';
             if (storeAddrEl) storeAddrEl.textContent = settings.storeAddress || 'Pemalang, Jawa Tengah';
-            if (cashierEl) cashierEl.textContent = getActiveCashierDisplay();
-            if (roleEl) roleEl.textContent = currentSession?.role || 'Admin';
+            if (cashierEl) cashierEl.textContent = getActiveCashierDisplay();            if (roleEl) roleEl.textContent = currentSession?.role || 'Admin';
 
             if (shiftPill) {
                 if (settings.shiftOpen) {
@@ -11685,7 +12022,7 @@ window.addEventListener('afterprint', function () {
             document.getElementById('set-show-mechanic').checked = settings.showMechanic !== false;
             document.getElementById('set-show-plate').checked = settings.showPlate !== false;
             const customerReceiptToggle = document.getElementById('set-show-customer-name');
-            if (customerReceiptToggle) customerReceiptToggle.checked = settings.showCustomerNameOnReceipt === true;
+            if (customerReceiptToggle) customerReceiptToggle.checked = settings.showCustomerNameOnReceipt !== false;
             document.getElementById('set-connection-mode').value = settings.connectionMode || 'auto';
             document.getElementById('set-google-client-id').value = settings.googleClientId || '';
             applyAppearanceSettings(); applyPrintLayoutSettings();
@@ -11986,7 +12323,8 @@ window.addEventListener('afterprint', function () {
             if (!container) return;
             const toast = document.createElement('div');
             const bgClass = type === 'error'
-                ? 'bg-rose-600 text-white'                : type === 'warning'
+                ? 'bg-rose-600 text-white'
+                : type === 'warning'
                     ? 'bg-amber-500 text-slate-950'
                     : 'bg-slate-900 text-white';
 
