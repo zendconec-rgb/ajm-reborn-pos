@@ -84,6 +84,10 @@ declare
   v_paid numeric;
   v_remaining numeric;
   v_cash_received numeric;
+  v_work_orders jsonb;
+  v_work_order jsonb;
+  v_work_order_index bigint;
+  v_work_order_id text;
 begin
   if v_user_id is null then
     return query select 'unauthorized', null::text, null::bigint, 'Login Supabase diperlukan.', null::jsonb;
@@ -295,6 +299,50 @@ begin
     end if;
   end loop;
 
+  -- Optional work-order completion is part of the same locked snapshot update.
+  -- Legacy transactions without workOrderId remain fully compatible.
+  v_work_order_id := nullif(btrim(p_transaction->>'workOrderId'), '');
+  v_work_orders := coalesce(v_payload->'workOrders', '[]'::jsonb);
+  if v_work_order_id is not null then
+    if jsonb_typeof(v_work_orders) <> 'array' then
+      return query select 'invalid_work_order_history', v_invoice, v_revision,
+        'Format data work order pada snapshot tidak valid.', null::jsonb;
+      return;
+    end if;
+
+    select w.value, w.ordinality - 1
+      into v_work_order, v_work_order_index
+    from jsonb_array_elements(v_work_orders) with ordinality as w(value, ordinality)
+    where w.value->>'id' = v_work_order_id
+    limit 1;
+
+    if not found then
+      return query select 'work_order_not_found', v_invoice, v_revision,
+        'Work order yang terhubung dengan transaksi tidak ditemukan.', null::jsonb;
+      return;
+    end if;
+
+    if coalesce(v_work_order->>'status', '') not in ('Menunggu', 'Dikerjakan') then
+      return query select 'work_order_conflict', v_invoice, v_revision,
+        'Work order sudah selesai atau statusnya berubah pada perangkat lain.', null::jsonb;
+      return;
+    end if;
+
+    v_work_order := v_work_order || jsonb_build_object(
+      'status', 'Selesai',
+      'completedAt', clock_timestamp(),
+      'completedBy', v_user_id,
+      'completedInvoice', v_invoice
+    );
+    v_work_orders := jsonb_set(
+      v_work_orders,
+      array[v_work_order_index::text],
+      v_work_order,
+      false
+    );
+    v_payload := jsonb_set(v_payload, '{workOrders}', v_work_orders, true);
+  end if;
+
   v_new_transaction := p_transaction || jsonb_build_object(
     'serverPostedAt', clock_timestamp(),
     'serverPostedBy', v_user_id,
@@ -327,7 +375,7 @@ begin
     (p_operation_id, v_invoice, v_user_id, p_device_key, v_new_transaction, v_new_revision);
 
   return query select 'posted', v_invoice, v_new_revision,
-    'Transaksi dan stok berhasil dicatat pada snapshot server.', v_new_transaction;
+    'Transaksi, stok, dan work order berhasil dicatat secara atomik pada snapshot server.', v_new_transaction;
 end;
 $function$;
 
@@ -341,6 +389,8 @@ commit;
 -- values ('AUTH_USER_UUID', 'Admin')
 -- on conflict (user_id) do update set app_role=excluded.app_role, is_active=true, updated_at=now();
 --
--- LIMITATION: this phase changes products.stock and appends transactions only.
--- It does not yet post stockLogs, cashflows, workOrders, debtPayments, or commissions.
--- Do not enable production checkout until those effects are included and tested.
+-- SCOPE: this RPC atomically updates products.stock, appends the transaction, and
+-- completes an optional matching workOrderId in the same locked snapshot. It preserves
+-- existing debtPayments, mechanicCommissionRate, customer/receipt fields, and does not
+-- create cashflows or stockLogs (the legacy checkout does not create those records).
+-- This migration remains staged: test on a non-production Supabase project first.
