@@ -5240,12 +5240,17 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 } else {
                     window.ajmMultiDeviceModuleReady = false;
                 }
-                ajmSupabase.auth.getSession().then(({data, error}) => {
+                ajmSupabase.auth.getSession().then(async ({data, error}) => {
                     if (error) throw error;
                     if (data.session) {
                         setAjmCloudStatus('Akun cloud aktif', 'success');
-                        pullAjmSupabaseNow(false);
-                        subscribeAjmCloudChanges();
+                        if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) {
+                            if (currentSession) await prepareAjmMultiDeviceOperator(users.find(u => String(u.id) === String(currentSession.userId)));
+                            else setAjmCloudStatus('Login kasir untuk mengaitkan operator', 'warning');
+                        } else {
+                            pullAjmSupabaseNow(false);
+                            subscribeAjmCloudChanges();
+                        }
                     } else setAjmCloudStatus('Belum terhubung', 'warning');
                 }).catch(err => { console.warn('Supabase session:', err); setAjmCloudStatus('Perlu login cloud', 'warning'); });
             } catch (err) { console.error(err); setAjmCloudStatus('Gagal inisialisasi', 'error'); }
@@ -5341,10 +5346,15 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 if(error) throw error;
                 document.getElementById('supabase-cloud-password').value='';
                 setAjmCloudStatus('Terhubung', 'success');
-                await pullAjmSupabaseNow(false);
-                subscribeAjmCloudChanges();
-                if (currentSession) await prepareAjmMultiDeviceOperator(users.find(u => String(u.id) === String(currentSession.userId)));
-                showToast('Akun cloud terhubung dan data berhasil diperiksa.');
+                if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) {
+                    if (currentSession) await prepareAjmMultiDeviceOperator(users.find(u => String(u.id) === String(currentSession.userId)));
+                    else setAjmCloudStatus('Login kasir untuk mengaitkan operator', 'warning');
+                    showToast('Akun cloud terhubung. Jalur snapshot lama tidak dijalankan pada mode multi-perangkat.');
+                } else {
+                    await pullAjmSupabaseNow(false);
+                    subscribeAjmCloudChanges();
+                    showToast('Akun cloud terhubung dan data berhasil diperiksa.');
+                }
             }catch(err){setAjmCloudStatus('Login cloud gagal','error');showToast('Login Supabase gagal: '+(err.message||'Periksa email/password dan akun Auth.'),'error');}
         }
         async function disconnectAjmSupabase(){
@@ -5389,10 +5399,12 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
         }
         function scheduleAjmCloudPush(){
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return false;
             if(ajmCloudPushTimer) clearTimeout(ajmCloudPushTimer);
             ajmCloudPushTimer=setTimeout(()=>pushAjmCloudSnapshot(false),1800);
         }
         async function pushAjmCloudSnapshot(initial=false){
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return false;
             if(!ajmSupabase || ajmCloudApplying || !navigator.onLine) return false;
             const {data:{session}}=await ajmSupabase.auth.getSession(); if(!session) return false;
             try{
@@ -5411,6 +5423,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
         }
         function subscribeAjmCloudChanges(){
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return;
             if(!ajmSupabase) return;
             if(ajmCloudChannel) ajmSupabase.removeChannel(ajmCloudChannel);
             ajmCloudChannel=ajmSupabase.channel('ajm-pos-live-sync').on('postgres_changes',{event:'UPDATE',schema:'public',table:'ajm_pos_database',filter:'id=eq.main'},async(payload)=>{
@@ -5426,7 +5439,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 catch(err){console.error(err);setAjmCloudStatus('Gagal menerapkan data','error');}
             }).subscribe();
         }
-        window.addEventListener('online',()=>{if(ajmSupabase)pushAjmCloudSnapshot(false);});
+        window.addEventListener('online',()=>{if(ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true)pushAjmCloudSnapshot(false);});
 
         // ==========================================
         // 2B. MODUL PERANGKAT SCANNER BARCODE
