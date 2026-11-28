@@ -160,6 +160,22 @@
 
   // Queue a completed AJM sale for the atomic server-side processor.
   // The transaction object retains the existing AJM invoice/items/customer/receipt fields.
+  // Collision-resistant invoice suffix for devices that create sales while offline.
+  // Keep the familiar INV-YYYYMMDD prefix while avoiding local transaction-count sequences.
+  async function createOfflineInvoice(date) {
+    const d = date instanceof Date ? date : new Date(date || Date.now());
+    if (Number.isNaN(d.getTime())) throw new Error('Tanggal invoice tidak valid.');
+    const deviceKey = await getDeviceKey();
+    const devicePart = String(deviceKey).replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase().padEnd(6, '0');
+    const randomPart = (global.crypto && global.crypto.randomUUID)
+      ? global.crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
+      : Math.random().toString(36).slice(2, 10).toUpperCase().padEnd(8, '0');
+    const datePart = d.getFullYear()
+      + String(d.getMonth() + 1).padStart(2, '0')
+      + String(d.getDate()).padStart(2, '0');
+    return 'INV-' + datePart + '-' + devicePart + '-' + randomPart;
+  }
+
   async function queueSale(transaction) {
     if (!transaction || typeof transaction !== 'object' || Array.isArray(transaction)) {
       throw new Error('Data transaksi AJM tidak valid.');
