@@ -39,6 +39,10 @@ for (const [name, source, tokens] of [
 ]) {
   for (const token of tokens) assert.ok(source.includes(token), `${name} migration missing: ${token}`);
 }
+assert.ok(html.includes('assets/js/ajm-multidevice-client.js'),
+  'Multi-device client must be loaded by the application');
+assert.ok(html.includes('window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase'),
+  'Multi-device client must receive the initialized Supabase client');
 assert.ok(client.includes('async function prepareSession(localUser)'),
   'Client must expose ordered local-identity/device preparation');
 assert.ok(client.includes('const identity = await linkLocalIdentity(localUser)'));
