@@ -344,3 +344,26 @@ also remain release blockers.
 
 These changes are source-level only. They have not been executed by PostgreSQL and
 must pass the staging functional tests before any production migration.
+
+
+## Phase 11 — atomic work-order completion in sale posting
+
+The staged `ajm_process_sale` function now accepts the optional
+`workOrderId` already included in newly created checkout transaction objects.
+When present, the server:
+
+- locks the existing AJM snapshot row before reading the work-order array;
+- verifies the referenced work order exists and is still `Menunggu` or
+  `Dikerjakan`;
+- returns `work_order_not_found` or `work_order_conflict` without posting
+  the sale if the reference is invalid or the work order has already changed;
+- marks the work order `Selesai` and records completion time, server user ID,
+  and invoice in the same snapshot update as stock decrement and transaction
+  insertion;
+- keeps old transactions compatible when `workOrderId` is absent or null.
+
+The checkout transaction now carries `workOrderId` for new local sales.
+This field addition does not enable cloud posting: the outbox module is still
+not wired into checkout, and the old local checkout remains active. Staging
+tests must verify valid work-order sale, missing ID, already-completed work
+order, idempotent replay, and rollback on stock conflict before enabling it.
