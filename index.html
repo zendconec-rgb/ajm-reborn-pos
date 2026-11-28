@@ -8778,6 +8778,34 @@ window.addEventListener('afterprint', function () {
                 showToast('Keranjang masih kosong!', 'error');
                 return;
             }
+
+            // Validasi stok lokal sebelum menghitung pembayaran. Agregasikan baris
+            // SKU yang sama agar duplikasi baris tidak melewati pemeriksaan stok.
+            const requiredStock = new Map();
+            for (const line of cart) {
+                const qty = Number(line?.qty);
+                if (!Number.isFinite(qty) || qty <= 0) {
+                    showToast('Jumlah salah satu item tidak valid.', 'error');
+                    return;
+                }
+                const product = products.find(p => String(p.id) === String(line?.id));
+                if (!product || product.category === 'Jasa Servis') continue;
+                const key = String(product.id);
+                requiredStock.set(key, (requiredStock.get(key) || 0) + qty);
+            }
+            for (const [productId, requiredQty] of requiredStock) {
+                const product = products.find(p => String(p.id) === productId);
+                const available = Number(product?.stock);
+                if (!Number.isFinite(available) || available < requiredQty) {
+                    showToast(
+                        'Stok ' + (product?.name || productId) + ' tidak mencukupi. Tersedia: ' +
+                        (Number.isFinite(available) ? available : 0) + ', dibutuhkan: ' + requiredQty + '.',
+                        'error'
+                    );
+                    return;
+                }
+            }
+
             const { subtotal, discount, tax, grandTotal } = getCartTotals();
             if (!Number.isFinite(grandTotal) || grandTotal <= 0) {
                 showToast('Total transaksi tidak valid. Periksa item dan harga.', 'error');
@@ -8837,7 +8865,7 @@ window.addEventListener('afterprint', function () {
             try {
                 cart.forEach(ci => {
                     const pr = products.find(p => p.id === ci.id);
-                    if (pr && pr.category !== 'Jasa Servis') pr.stock = Math.max(0, Number(pr.stock || 0) - Number(ci.qty || 0));
+                    if (pr && pr.category !== 'Jasa Servis') pr.stock = Number(pr.stock || 0) - Number(ci.qty || 0);
                 });
                 if (oldWoStatus) oldWoStatus.status = 'Selesai';
                 transactions.unshift(newTrx);
