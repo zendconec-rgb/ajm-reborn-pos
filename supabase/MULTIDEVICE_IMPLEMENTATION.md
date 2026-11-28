@@ -49,3 +49,31 @@ that a sale has been posted to the business ledger.
 Only apply the SQL migration after taking a Supabase backup and reviewing it. The
 migration is additive and intentionally leaves `ajm_pos_database` untouched, but any
 production schema change should still be tested in a staging project first.
+
+## Phase 2 — atomic sale posting (staged; not deployed)
+
+- `supabase/migrations/20261128_002_atomic_sale_processor.sql` adds
+  `ajm_user_roles`, `ajm_sales_ledger`, and the `ajm_process_sale` RPC.
+- The RPC checks authenticated user role and registered device, locks the legacy
+  `ajm_pos_database` row, validates item quantities and available stock, decrements
+  stock and appends the sale to the existing JSON transaction history in one database
+  transaction, and records an operation UUID + unique invoice for idempotency.
+- Insufficient stock is returned as `stock_conflict`; the server does not clamp stock
+  to zero or silently discard the sale.
+- Both Admin and Kasir are currently allowed to submit a sale. Other privileged
+  operations (settings, user management, stock adjustments) are not exposed by this RPC.
+- Auth user IDs must be explicitly mapped in `ajm_user_roles` by a trusted project
+  administrator. No role is inferred from the local-only AJM user list.
+
+The IndexedDB client now has a `queueSale(transaction)` helper and dispatches
+`sale.create` queue items to `ajm_process_sale`. This is still a development module:
+it is not loaded by `index.html`, and no existing checkout handler has been modified.
+
+### Known validation boundary
+
+The RPC validates product existence, positive quantities, and stock availability.
+Before production enablement, the next hardening pass must validate price/discount/tax
+rules against the intended Admin/Kasir permissions, reconcile custom cart price edits,
+and test all existing sale variants (service jobs, debt/DP, cash, transfer, e-wallet,
+work-order completion, and receipts). The current RPC preserves the supplied transaction
+JSON and should not yet be treated as a production-ready financial ledger.
