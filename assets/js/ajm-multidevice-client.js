@@ -139,6 +139,18 @@
     return { operationId, queued: true };
   }
 
+  // Queue a completed AJM sale for the atomic server-side processor.
+  // The transaction object retains the existing AJM invoice/items/customer/receipt fields.
+  async function queueSale(transaction) {
+    if (!transaction || typeof transaction !== 'object' || Array.isArray(transaction)) {
+      throw new Error('Data transaksi AJM tidak valid.');
+    }
+    if (!transaction.invoice || !Array.isArray(transaction.items) || transaction.items.length === 0) {
+      throw new Error('Invoice dan item transaksi wajib tersedia.');
+    }
+    return enqueueOperation('sale.create', transaction);
+  }
+
   async function listOutbox() {
     const db = await openDb();
     try {
@@ -191,15 +203,43 @@
       let sent = 0;
       for (const item of queue) {
         try {
-          const { data, error } = await supabase.rpc('ajm_submit_sync_operation', {
-            p_operation_id: item.operation_id,
-            p_device_key: item.device_key,
-            p_operation_type: item.operation_type,
-            p_payload: item.payload,
-            p_client_created_at: item.client_created_at
-          });
+          let data;
+          let error;
+          if (item.operation_type === 'sale.create') {
+            const response = await supabase.rpc('ajm_process_sale', {
+              p_operation_id: item.operation_id,
+              p_device_key: item.device_key,
+              p_transaction: item.payload
+            });
+            data = response.data;
+            error = response.error;
+          } else {
+            const response = await supabase.rpc('ajm_submit_sync_operation', {
+              p_operation_id: item.operation_id,
+              p_device_key: item.device_key,
+              p_operation_type: item.operation_type,
+              p_payload: item.payload,
+              p_client_created_at: item.client_created_at
+            });
+            data = response.data;
+            error = response.error;
+          }
           if (error) throw error;
           if (!data || !data.length) throw new Error('Server tidak mengonfirmasi operasi; item tetap disimpan di antrean.');
+          if (item.operation_type === 'sale.create') {
+            const result = data[0];
+            if (result.result_status === 'posted' || result.result_status === 'already_posted') {
+              await removeOutbox(item.operation_id);
+              sent++;
+              continue;
+            }
+            item.status = result.result_status === 'stock_conflict' || result.result_status === 'duplicate_invoice'
+              ? 'conflict' : 'blocked';
+            item.last_error = result.result_message || result.result_status || 'Transaksi belum diproses server.';
+            item.last_attempt_at = new Date().toISOString();
+            await updateOutbox(item);
+            break;
+          }
           await removeOutbox(item.operation_id);
           sent++;
         } catch (error) {
@@ -216,10 +256,20 @@
       return {
         sent,
         pending: remaining.filter(item => item.status === 'pending').length,
-        blocked: remaining.filter(item => item.status === 'blocked').length
+        blocked: remaining.filter(item => item.status === 'blocked').length,\n        conflicts: remaining.filter(item => item.status === 'conflict').length
       };
     })().finally(() => { flushPromise = null; });
     return flushPromise;
+  }
+
+  async function retryOperation(operationId) {
+    const queue = await listOutbox();
+    const item = queue.find(entry => entry.operation_id === operationId);
+    if (!item) throw new Error('Operasi tidak ditemukan di antrean.');
+    item.status = 'pending';
+    item.last_error = null;
+    await updateOutbox(item);
+    return { operationId, status: 'pending' };
   }
 
   async function getStatus() {
@@ -227,7 +277,7 @@
     return {
       deviceKey: await getDeviceKey(),
       queued: queue.length,
-      blocked: queue.filter(item => item.status === 'blocked').length,
+      blocked: queue.filter(item => item.status === 'blocked').length,\n      conflicts: queue.filter(item => item.status === 'conflict').length,
       pending: queue.filter(item => item.status === 'pending').length,
       operations: queue.map(({ operation_id, operation_type, status, attempts, last_error, created_at }) => ({
         operation_id, operation_type, status, attempts, last_error, created_at
