@@ -69,8 +69,9 @@ assert.ok(html.includes('async function retryAjmMultiDeviceOperation(operationId
   'Conflict retry must require explicit operator confirmation');
 assert.ok(html.includes('Operasi ini mengalami konflik atau ditolak. Coba kirim ulang dengan data yang sama?'),
   'Retry UI must warn the operator before resubmitting unchanged data');
-assert.ok(html.includes('row.replaceChildren()'),
-  'Queue rendering must avoid injecting untrusted operation messages as HTML');
+assert.ok(html.includes("title.textContent = operation.operation_type + ' • ' + operation.status;") &&
+  html.includes('detail.textContent = (operation.last_error || operation.operation_id)'),
+  'Queue rendering must assign untrusted operation messages through textContent');
 assert.ok(html.includes('async function flushAjmMultiDeviceQueue()'),
   'Application must expose a guarded outbox delivery flow');
 assert.ok(html.includes("window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true && currentSession)flushAjmMultiDeviceQueue()"),
