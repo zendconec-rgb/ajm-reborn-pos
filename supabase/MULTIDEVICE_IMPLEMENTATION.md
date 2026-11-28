@@ -316,3 +316,31 @@ operational row counts.
 been executed against PostgreSQL/Supabase in this work session, and no browser,
 three-device, offline, accounting or printer test has been run. The new audit
 must be run against a staging project after migrations 001-007 are applied.
+
+
+## Phase 10 — sale arithmetic and idempotency hardening
+
+The staged sale RPC now performs additional server-side checks before changing stock:
+- each item must have a non-negative numeric unit price and positive numeric quantity;
+- the server recomputes the subtotal from the submitted cart lines;
+- discount cannot exceed subtotal;
+- total must equal subtotal minus discount plus tax;
+- paid amount plus remaining debt must equal total;
+- negative payment fields and malformed numeric values are rejected;
+- malformed numeric values are guarded before casts;
+- replaying an operation UUID with a different invoice returns
+  `operation_id_conflict` rather than looking like a successful replay.
+
+This deliberately validates the arithmetic contract without forcing line prices to
+match the current catalogue price: the AJM cart supports operator-edited line prices.
+A separate authorization policy for price overrides is still required before release.
+
+**Not yet included:** the current checkout does not persist `workOrderId` in its
+transaction object. The sale RPC therefore still cannot safely complete a work order
+atomically with the sale. The existing standalone work-order completion RPC remains
+available only as a staged primitive and must not be called as a substitute for an
+atomic checkout. Refund/cancellation reversal and a complete conflict-resolution UI
+also remain release blockers.
+
+These changes are source-level only. They have not been executed by PostgreSQL and
+must pass the staging functional tests before any production migration.
