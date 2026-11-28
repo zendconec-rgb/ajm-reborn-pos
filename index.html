@@ -5362,6 +5362,10 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             ajmCloudChannel=null; ajmCloudRevision=0; setAjmCloudStatus('Belum terhubung','warning'); showToast('Koneksi database cloud diputus. Data lokal tetap ada.');
         }
         async function pullAjmSupabaseNow(showMessage=true){
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) {
+                if (showMessage) showToast('Pengambilan snapshot lama dinonaktifkan pada mode multi-perangkat.', 'warning');
+                return false;
+            }
             if(!ajmSupabase){if(showMessage)showToast('Supabase belum siap.','error');return false;}
             const {data:{session}}=await ajmSupabase.auth.getSession();
             if(!session){if(showMessage)showToast('Hubungkan akun Supabase terlebih dahulu.','warning');return false;}
@@ -5427,6 +5431,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             if(!ajmSupabase) return;
             if(ajmCloudChannel) ajmSupabase.removeChannel(ajmCloudChannel);
             ajmCloudChannel=ajmSupabase.channel('ajm-pos-live-sync').on('postgres_changes',{event:'UPDATE',schema:'public',table:'ajm_pos_database',filter:'id=eq.main'},async(payload)=>{
+                if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return;
                 const row=payload.new; if(!row || Number(row.revision)<=ajmCloudRevision) return;
                 if(ajmCloudPushTimer) clearTimeout(ajmCloudPushTimer);
                 const local=makeAjmCloudPayload();
