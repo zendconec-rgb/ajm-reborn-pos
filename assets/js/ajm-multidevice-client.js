@@ -364,7 +364,7 @@
               sent++;
               continue;
             }
-            item.status = ['stock_conflict','duplicate_invoice','amount_exceeds_debt','duplicate_payment_id'].includes(result.result_status)
+            item.status = ['stock_conflict','duplicate_invoice','amount_exceeds_debt','duplicate_payment_id','work_order_conflict','work_order_not_found'].includes(result.result_status)
               ? 'conflict' : 'blocked';
             item.last_error = result.result_message || result.result_status || 'Operasi belum diproses server.';
             item.last_attempt_at = new Date().toISOString();
