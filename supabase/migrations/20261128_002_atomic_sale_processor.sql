@@ -139,7 +139,10 @@ begin
     where jsonb_typeof(item.value) <> 'object'
        or coalesce(item.value->>'id', '') = ''
        or case
-            when coalesce(item.value->>'qty', '') ~ '^[0-9]+([.][0-9]+)?
+            when coalesce(item.value->>'qty', '') ~ '^[0-9]+([.][0-9]+)?$'
+              then (item.value->>'qty')::numeric <= 0
+            else true
+          end
   ) then
     return query select 'invalid_item', v_invoice, null::bigint,
       'Item transaksi memiliki ID atau jumlah yang tidak valid.', null::jsonb;
@@ -225,154 +228,6 @@ begin
     elsif v_existing.invoice <> v_invoice then
       return query select 'operation_id_conflict', v_existing.invoice, null::bigint,
         'ID operasi sudah terikat pada invoice lain.', null::jsonb;
-    else
-      return query select 'already_posted', v_existing.invoice, v_existing.posted_revision,
-        'Transaksi ini sudah pernah diproses; tidak ada pengurangan stok ulang.',
-        v_existing.transaction_data;
-    end if;
-    return;
-  end if;
-
-  if exists (select 1 from public.ajm_sales_ledger l where l.invoice = v_invoice) then
-    return query select 'duplicate_invoice', v_invoice, v_revision,
-      'Nomor invoice sudah digunakan transaksi lain. Buat invoice baru sebelum mengirim ulang.', null::jsonb;
-    return;
-  end if;
-
-  v_products := coalesce(v_payload->'products', '[]'::jsonb);
-  if jsonb_typeof(v_products) <> 'array' then
-    return query select 'invalid_catalog', v_invoice, v_revision,
-      'Format katalog produk pada snapshot tidak valid.', null::jsonb;
-    return;
-  end if;
-
-  -- Aggregate repeated cart lines so the same SKU cannot evade stock validation.
-  for v_item in
-    select item.value->>'id' as product_id,
-           sum((item.value->>'qty')::numeric) as required_qty
-    from jsonb_array_elements(p_transaction->'items') as item(value)
-    group by item.value->>'id'
-  loop
-    select p.value, p.ordinality - 1
-      into v_product, v_product_index
-    from jsonb_array_elements(v_products) with ordinality as p(value, ordinality)
-    where p.value->>'id' = v_item.product_id
-    limit 1;
-
-    if not found then
-      return query select 'product_not_found', v_invoice, v_revision,
-        'Produk ' || v_item.product_id || ' tidak ditemukan di katalog server.', null::jsonb;
-      return;
-    end if;
-
-    v_category := coalesce(v_product->>'category', '');
-    if v_category <> 'Jasa Servis' then
-      begin
-        v_stock := coalesce(nullif(v_product->>'stock', '')::numeric, 0);
-      exception when others then
-        return query select 'invalid_stock_value', v_invoice, v_revision,
-          'Nilai stok produk ' || v_item.product_id || ' tidak valid.', null::jsonb;
-        return;
-      end;
-
-      if v_stock < v_item.required_qty then
-        return query select 'stock_conflict', v_invoice, v_revision,
-          'Stok tidak mencukupi untuk produk ' || coalesce(v_product->>'name', v_item.product_id)
-            || '. Stok server: ' || v_stock::text
-            || ', kebutuhan: ' || v_item.required_qty::text || '.', null::jsonb;
-        return;
-      end if;
-
-      v_products := jsonb_set(
-        v_products,
-        array[v_product_index::text, 'stock'],
-        to_jsonb(v_stock - v_item.required_qty),
-        true
-      );
-    end if;
-  end loop;
-
-  v_new_transaction := p_transaction || jsonb_build_object(
-    'serverPostedAt', clock_timestamp(),
-    'serverPostedBy', v_user_id,
-    'syncStatus', 'posted'
-  );
-
-  v_transactions := coalesce(v_payload->'transactions', '[]'::jsonb);
-  if jsonb_typeof(v_transactions) <> 'array' then
-    return query select 'invalid_transaction_history', v_invoice, v_revision,
-      'Format riwayat transaksi pada snapshot tidak valid.', null::jsonb;
-    return;
-  end if;
-
-  v_payload := jsonb_set(v_payload, '{products}', v_products, true);
-  v_payload := jsonb_set(v_payload, '{transactions}',
-    jsonb_build_array(v_new_transaction) || v_transactions, true);
-
-  v_new_revision := coalesce(v_revision, 0) + 1;
-
-  update public.ajm_pos_database
-  set payload = v_payload,
-      revision = v_new_revision,
-      updated_at = now(),
-      updated_by = v_user_id
-  where id = 'main';
-
-  insert into public.ajm_sales_ledger
-    (operation_id, invoice, user_id, device_key, transaction_data, posted_revision)
-  values
-    (p_operation_id, v_invoice, v_user_id, p_device_key, v_new_transaction, v_new_revision);
-
-  return query select 'posted', v_invoice, v_new_revision,
-    'Transaksi dan stok berhasil dicatat pada snapshot server.', v_new_transaction;
-end;
-$function$;
-
-revoke all on function public.ajm_process_sale(uuid, text, jsonb) from public;
-grant execute on function public.ajm_process_sale(uuid, text, jsonb) to authenticated;
-
-commit;
-
--- Bootstrap role mappings separately as project owner; use actual auth.users.id UUIDs.
--- insert into public.ajm_user_roles(user_id, app_role)
--- values ('AUTH_USER_UUID', 'Admin')
--- on conflict (user_id) do update set app_role=excluded.app_role, is_active=true, updated_at=now();
---
--- LIMITATION: this phase changes products.stock and appends transactions only.
--- It does not yet post stockLogs, cashflows, workOrders, debtPayments, or commissions.
--- Do not enable production checkout until those effects are included and tested.
-
-              then (item.value->>'qty')::numeric <= 0
-            else true
-          end
-  ) then
-    return query select 'invalid_item', v_invoice, null::bigint,
-      'Item transaksi memiliki ID atau jumlah yang tidak valid.', null::jsonb;
-    return;
-  end if;
-
-  -- Lock the legacy snapshot before checking idempotency. This serializes all
-  -- sale calls and prevents concurrent duplicate operation IDs from racing.
-  select d.payload, d.revision
-    into v_payload, v_revision
-  from public.ajm_pos_database d
-  where d.id = 'main'
-  for update;
-
-  if not found or v_payload is null then
-    return query select 'database_not_initialized', v_invoice, null::bigint,
-      'Snapshot utama AJM tidak ditemukan.', null::jsonb;
-    return;
-  end if;
-
-  select l.* into v_existing
-  from public.ajm_sales_ledger l
-  where l.operation_id = p_operation_id;
-
-  if found then
-    if v_existing.user_id <> v_user_id or v_existing.device_key <> p_device_key then
-      return query select 'unauthorized', v_existing.invoice, null::bigint,
-        'ID operasi ini sudah digunakan akun atau perangkat lain.', null::jsonb;
     else
       return query select 'already_posted', v_existing.invoice, v_existing.posted_revision,
         'Transaksi ini sudah pernah diproses; tidak ada pengurangan stok ulang.',
