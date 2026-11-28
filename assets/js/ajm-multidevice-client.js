@@ -291,7 +291,8 @@
       return {
         sent,
         pending: remaining.filter(item => item.status === 'pending').length,
-        blocked: remaining.filter(item => item.status === 'blocked').length,\n        conflicts: remaining.filter(item => item.status === 'conflict').length
+        blocked: remaining.filter(item => item.status === 'blocked').length,
+        conflicts: remaining.filter(item => item.status === 'conflict').length
       };
     })().finally(() => { flushPromise = null; });
     return flushPromise;
@@ -312,7 +313,8 @@
     return {
       deviceKey: await getDeviceKey(),
       queued: queue.length,
-      blocked: queue.filter(item => item.status === 'blocked').length,\n      conflicts: queue.filter(item => item.status === 'conflict').length,
+      blocked: queue.filter(item => item.status === 'blocked').length,
+      conflicts: queue.filter(item => item.status === 'conflict').length,
       pending: queue.filter(item => item.status === 'pending').length,
       operations: queue.map(({ operation_id, operation_type, status, attempts, last_error, created_at }) => ({
         operation_id, operation_type, status, attempts, last_error, created_at
@@ -324,6 +326,9 @@
     configure,
     registerDevice,
     enqueueOperation,
+    queueSale,
+    createOfflineInvoice,
+    retryOperation,
     flushQueue,
     getStatus,
     getDeviceKey
