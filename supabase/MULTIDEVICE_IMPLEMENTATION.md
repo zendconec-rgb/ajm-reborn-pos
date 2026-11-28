@@ -241,3 +241,30 @@ does not execute debt payments, work-order transitions, or other business effect
 Only a dedicated processor may safely mark such an operation `processed` and allow
 the client to remove it. A submitted item currently requires a later processor/status
 reconciliation path; it is intentionally not auto-resubmitted on every flush.
+
+
+## Phase 9 — atomic work-order completion and client dispatch
+
+Added `supabase/migrations/20261128_007_atomic_work_order_completion.sql`
+and the read-only verifier
+`supabase/diagnostics/verify_atomic_work_order_completion.sql`.
+
+The `ajm_complete_work_order` RPC checks the authenticated Admin/Kasir role,
+active device, existing work-order ID and allowed current status. It locks the
+shared snapshot, changes only the matching work order to `Selesai`, records
+completion metadata, increments the snapshot revision, and stores the operation
+UUID in the business-operation ledger for safe retries.
+
+The IndexedDB client now exports `queueDebtPayment()` and
+`queueWorkOrderCompletion()`, and routes those operation types to their
+dedicated server RPCs. It removes a queued item only after an explicit successful
+business result. Conflicts and validation failures remain visible in the local
+outbox.
+
+**Important integration boundary:** these queue APIs are now available in the
+client module, but the production checkout and debt-payment form in `index.html`
+are deliberately not wired to them. In particular, checkout currently completes
+a work order locally before server confirmation, and the sale transaction does
+not persist `workOrderId`. The app must not be considered multi-device-ready
+until the UI uses these APIs with rollback/reconciliation behavior and the sale
+RPC handles transaction + work-order completion atomically.
