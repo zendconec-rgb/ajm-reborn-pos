@@ -39,6 +39,10 @@ for (const [name, source, tokens] of [
 ]) {
   for (const token of tokens) assert.ok(source.includes(token), `${name} migration missing: ${token}`);
 }
+assert.ok(client.includes('async function prepareSession(localUser)'),
+  'Client must expose ordered local-identity/device preparation');
+assert.ok(client.includes('const identity = await linkLocalIdentity(localUser)'));
+assert.ok(client.includes('const device = await registerDevice()'));
 assert.ok(client.includes("item.operation_type === 'sale.create'"));
 assert.ok(client.includes("item.operation_type === 'debt.payment'"));
 assert.ok(client.includes("item.operation_type === 'workorder.complete'"));
