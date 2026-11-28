@@ -5259,6 +5259,46 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         // Enable only through an intentional release change after the legacy snapshot path is gated.
         window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true;
 
+        async function refreshAjmMultiDeviceAuthoritativeSnapshot() {
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true || !window.AJM_MULTI_DEVICE) return false;
+            try {
+                const queueStatus = await window.AJM_MULTI_DEVICE.getStatus();
+                if (queueStatus.queued > 0) {
+                    setAjmCloudStatus('Ada operasi menunggu penyelesaian', 'warning');
+                    return false;
+                }
+                const snapshot = await window.AJM_MULTI_DEVICE.fetchAuthoritativeSnapshot();
+                ajmCloudRevision = snapshot.revision;
+                applyAjmCloudPayload(snapshot.payload);
+                setAjmCloudStatus('Data resmi server diperbarui', 'success');
+                return true;
+            } catch (err) {
+                console.error('AJM authoritative snapshot refresh:', err);
+                setAjmCloudStatus('Pembaruan data server gagal', 'error');
+                return false;
+            }
+        }
+
+        async function flushAjmMultiDeviceQueue() {
+            if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true || !window.AJM_MULTI_DEVICE) {
+                return { enabled: false };
+            }
+            if (!currentSession || !ajmSupabase) return { ready: false };
+            try {
+                const { data: authData, error: authError } = await ajmSupabase.auth.getSession();
+                if (authError) throw authError;
+                if (!authData?.session) return { ready: false, needsCloudLogin: true };
+                const result = await window.AJM_MULTI_DEVICE.flushQueue();
+                const refreshed = result.sent > 0 ? await refreshAjmMultiDeviceAuthoritativeSnapshot() : false;
+                return { ...result, refreshed };
+            } catch (err) {
+                console.error('AJM multi-device queue:', err);
+                setAjmCloudStatus('Antrean sinkronisasi perlu diperiksa', 'warning');
+                return { error: err.message || String(err) };
+            }
+        }
+        window.ajmFlushMultiDeviceQueue = flushAjmMultiDeviceQueue;
+
         async function prepareAjmMultiDeviceOperator(localUser) {
             if (!window.AJM_MULTI_DEVICE_RELEASE_ENABLED) return { enabled: false };
             if (!ajmSupabase || !window.ajmMultiDeviceModuleReady || !window.AJM_MULTI_DEVICE) {
@@ -5274,7 +5314,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             try {
                 const prepared = await window.AJM_MULTI_DEVICE.prepareSession(localUser);
                 setAjmCloudStatus('Operator & perangkat terdaftar', 'success');
-                return { enabled: true, ready: true, prepared };
+                const queueResult = await flushAjmMultiDeviceQueue();
+                return { enabled: true, ready: true, prepared, queueResult };
             } catch (err) {
                 console.error('AJM operator/device linking:', err);
                 setAjmCloudStatus('Akun/perangkat belum terdaftar', 'warning');
