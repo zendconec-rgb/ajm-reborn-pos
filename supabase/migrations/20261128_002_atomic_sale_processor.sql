@@ -170,6 +170,134 @@ begin
     return;
   end if;
 
+  -- Reject malformed item identifiers/quantities before numeric casts.
+  if exists (
+    select 1
+    from jsonb_array_elements(p_transaction->'items') as item(value)
+    where coalesce(item.value->>'id', '') = ''
+       or case
+            when coalesce(item.value->>'qty', '') ~ '^[0-9]+([.][0-9]+)?
+    select
+      item.value->>'id' as product_id,
+      sum((item.value->>'qty')::numeric) as required_qty
+    from jsonb_array_elements(p_transaction->'items') as item(value)
+    group by item.value->>'id'
+  loop
+    if v_item.product_id is null or v_item.product_id = ''
+       or v_item.required_qty is null or v_item.required_qty <= 0 then
+      return query select 'invalid_item', v_invoice, v_revision,
+        'Item transaksi memiliki ID atau jumlah yang tidak valid.', null::jsonb;
+      return;
+    end if;
+
+    select p.value, p.ordinality - 1
+      into v_product, v_product_index
+    from jsonb_array_elements(v_products) with ordinality as p(value, ordinality)
+    where p.value->>'id' = v_item.product_id
+    limit 1;
+
+    if not found then
+      return query select 'product_not_found', v_invoice, v_revision,
+        'Produk ' || v_item.product_id || ' tidak ditemukan di katalog server.', null::jsonb;
+      return;
+    end if;
+
+    v_category := coalesce(v_product->>'category', '');
+    if v_category <> 'Jasa Servis' then
+      begin
+        v_stock := coalesce(nullif(v_product->>'stock', '')::numeric, 0);
+      exception when others then
+        return query select 'invalid_stock_value', v_invoice, v_revision,
+          'Nilai stok produk ' || v_item.product_id || ' tidak valid.', null::jsonb;
+        return;
+      end;
+
+      if v_stock < v_item.required_qty then
+        return query select 'stock_conflict', v_invoice, v_revision,
+          'Stok tidak mencukupi untuk produk ' || coalesce(v_product->>'name', v_item.product_id)
+            || '. Stok server: ' || v_stock::text
+            || ', kebutuhan: ' || v_item.required_qty::text || '.', null::jsonb;
+        return;
+      end if;
+
+      v_products := jsonb_set(
+        v_products,
+        array[v_product_index::text, 'stock'],
+        to_jsonb(v_stock - v_item.required_qty),
+        true
+      );
+    end if;
+  end loop;
+
+  -- The server assigns the authoritative posting timestamp.
+  v_new_transaction := p_transaction || jsonb_build_object(
+    'serverPostedAt', clock_timestamp(),
+    'serverPostedBy', v_user_id,
+    'syncStatus', 'posted'
+  );
+
+  v_transactions := coalesce(v_payload->'transactions', '[]'::jsonb);
+  if jsonb_typeof(v_transactions) <> 'array' then
+    return query select 'invalid_transaction_history', v_invoice, v_revision,
+      'Format riwayat transaksi pada snapshot tidak valid.', null::jsonb;
+    return;
+  end if;
+
+  v_payload := jsonb_set(v_payload, '{products}', v_products, true);
+  v_payload := jsonb_set(v_payload, '{transactions}', jsonb_build_array(v_new_transaction) || v_transactions, true);
+  v_new_revision := v_revision + 1;
+
+  update public.ajm_pos_database
+  set payload = v_payload,
+      revision = v_new_revision,
+      updated_at = now(),
+      updated_by = v_user_id
+  where id = 'main';
+
+  insert into public.ajm_sales_ledger
+    (operation_id, invoice, user_id, device_key, transaction_data, posted_revision)
+  values
+    (p_operation_id, v_invoice, v_user_id, p_device_key, v_new_transaction, v_new_revision);
+
+  return query select 'posted', v_invoice, v_new_revision,
+    'Transaksi berhasil diproses dan stok server diperbarui.', v_new_transaction;
+
+exception
+  when unique_violation then
+    -- Handles a concurrent replay/duplicate invoice even if a caller races.
+    return query select 'duplicate_or_replayed', v_invoice, null::bigint,
+      'Invoice atau ID operasi sudah pernah digunakan. Periksa riwayat sebelum mencoba lagi.', null::jsonb;
+end;
+$function$;
+
+revoke all on function public.ajm_process_sale(uuid, text, jsonb) from public;
+grant execute on function public.ajm_process_sale(uuid, text, jsonb) to authenticated;
+
+commit;
+
+-- ADMIN SETUP (run separately, replacing UUID with the real Supabase Auth user UUID):
+-- insert into public.ajm_user_roles(user_id, app_role)
+-- values ('00000000-0000-0000-0000-000000000000', 'Admin')
+-- on conflict (user_id) do update set app_role = excluded.app_role, is_active = true, updated_at = now();
+--
+-- KASIR SETUP:
+-- insert into public.ajm_user_roles(user_id, app_role)
+-- values ('00000000-0000-0000-0000-000000000000', 'Kasir')
+-- on conflict (user_id) do update set app_role = excluded.app_role, is_active = true, updated_at = now();
+--
+-- NOTE: this phase serializes against the legacy JSON snapshot row. It deliberately
+-- rejects insufficient stock rather than clamping stock to zero. A conflict must
+-- be shown to the cashier/admin and resolved; never silently discard the offline sale.
+
+              then (item.value->>'qty')::numeric <= 0
+            else true
+          end
+  ) then
+    return query select 'invalid_item', v_invoice, v_revision,
+      'Item transaksi memiliki ID atau jumlah yang tidak valid.', null::jsonb;
+    return;
+  end if;
+
   -- Validate quantities and aggregate repeated lines for the same product.
   for v_item in
     select
