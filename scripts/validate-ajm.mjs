@@ -63,6 +63,14 @@ assert.ok(html.includes('async function refreshAjmMultiDeviceAuthoritativeSnapsh
   'Application must reconcile local state from the authoritative server snapshot');
 assert.ok(html.includes('if (queueStatus.queued > 0)'),
   'Snapshot refresh must not overwrite local state while unresolved outbox operations remain');
+assert.ok(html.includes('function renderAjmMultiDeviceQueueStatus(status)'),
+  'Settings UI must render pending, submitted, conflict, and blocked operations');
+assert.ok(html.includes('async function retryAjmMultiDeviceOperation(operationId)'),
+  'Conflict retry must require explicit operator confirmation');
+assert.ok(html.includes('Operasi ini mengalami konflik atau ditolak. Coba kirim ulang dengan data yang sama?'),
+  'Retry UI must warn the operator before resubmitting unchanged data');
+assert.ok(html.includes('row.replaceChildren()'),
+  'Queue rendering must avoid injecting untrusted operation messages as HTML');
 assert.ok(html.includes('async function flushAjmMultiDeviceQueue()'),
   'Application must expose a guarded outbox delivery flow');
 assert.ok(html.includes("window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true && currentSession)flushAjmMultiDeviceQueue()"),
