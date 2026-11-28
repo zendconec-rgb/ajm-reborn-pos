@@ -46,7 +46,7 @@ assert.ok(html.includes('window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MU
 assert.ok(html.includes('prepareAjmMultiDeviceOperator(matched)'),
   'Local login should attempt operator linking only through the release gate');
 assert.ok(html.includes('await prepareAjmMultiDeviceOperator(users.find'),
-
+  'Cloud login should link the currently logged-in local operator');
 assert.ok(html.includes("if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return false;"),
   'Legacy snapshot writes must be blocked in multi-device mode');
 assert.ok(html.includes("Pengambilan snapshot lama dinonaktifkan pada mode multi-perangkat."),
@@ -54,7 +54,19 @@ assert.ok(html.includes("Pengambilan snapshot lama dinonaktifkan pada mode multi
 assert.ok(html.includes("if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return;"),
   'Legacy realtime subscriptions must be blocked in multi-device mode');
 assert.ok(html.includes("ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true"),
-  'Online reconnect must not trigger legacy snapshot writes in multi-device mode');  'Cloud login should link the currently logged-in local operator');
+  'Online reconnect must not trigger legacy snapshot writes in multi-device mode');
+assert.ok(client.includes('async function fetchAuthoritativeSnapshot()'),
+  'Client must expose a read-only authoritative server snapshot reader');
+assert.ok(client.includes(".select('payload,revision,updated_at')"),
+  'Authoritative snapshot reader must include payload and revision');
+assert.ok(html.includes('async function refreshAjmMultiDeviceAuthoritativeSnapshot()'),
+  'Application must reconcile local state from the authoritative server snapshot');
+assert.ok(html.includes('if (queueStatus.queued > 0)'),
+  'Snapshot refresh must not overwrite local state while unresolved outbox operations remain');
+assert.ok(html.includes('async function flushAjmMultiDeviceQueue()'),
+  'Application must expose a guarded outbox delivery flow');
+assert.ok(html.includes("window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true && currentSession)flushAjmMultiDeviceQueue()"),
+  'Multi-device outbox should retry when network connectivity returns');
 assert.ok(html.includes('window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase'),
   'Multi-device client must receive the initialized Supabase client');
 assert.ok(html.includes('.catch(err => {\n                            window.ajmMultiDeviceModuleReady = false;'),
