@@ -173,6 +173,9 @@ begin
     if v_existing.user_id <> v_user_id or v_existing.device_key <> p_device_key then
       return query select 'unauthorized', v_existing.invoice, null::bigint,
         'ID operasi ini sudah digunakan akun atau perangkat lain.', null::jsonb;
+    elsif v_existing.invoice <> v_invoice then
+      return query select 'operation_id_conflict', v_existing.invoice, null::bigint,
+        'ID operasi sudah terikat pada invoice lain.', null::jsonb;
     else
       return query select 'already_posted', v_existing.invoice, v_existing.posted_revision,
         'Transaksi ini sudah pernah diproses; tidak ada pengurangan stok ulang.',
