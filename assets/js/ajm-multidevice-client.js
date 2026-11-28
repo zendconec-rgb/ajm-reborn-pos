@@ -275,8 +275,20 @@
             await updateOutbox(item);
             break;
           }
-          await removeOutbox(item.operation_id);
-          sent++;
+          // The generic RPC only persists an inbox row with status "pending";
+          // it does NOT execute the business operation. Keep the durable item until
+          // a dedicated server processor confirms completion. Never report inbox
+          // acceptance as a completed sale/payment/work-order operation.
+          const inboxResult = Array.isArray(data) ? data[0] : data;
+          if (inboxResult && inboxResult.processing_status === 'processed') {
+            await removeOutbox(item.operation_id);
+            sent++;
+          } else {
+            item.status = 'submitted';
+            item.last_error = 'Diterima server dan menunggu pemrosesan. Data tetap disimpan di perangkat.';
+            item.server_received_at = inboxResult && inboxResult.received_at || new Date().toISOString();
+            await updateOutbox(item);
+          }
         } catch (error) {
           item.attempts = (item.attempts || 0) + 1;
           item.last_error = String(error && error.message || error).slice(0, 500);
@@ -291,6 +303,7 @@
       return {
         sent,
         pending: remaining.filter(item => item.status === 'pending').length,
+        submitted: remaining.filter(item => item.status === 'submitted').length,
         blocked: remaining.filter(item => item.status === 'blocked').length,
         conflicts: remaining.filter(item => item.status === 'conflict').length
       };
@@ -316,8 +329,9 @@
       blocked: queue.filter(item => item.status === 'blocked').length,
       conflicts: queue.filter(item => item.status === 'conflict').length,
       pending: queue.filter(item => item.status === 'pending').length,
-      operations: queue.map(({ operation_id, operation_type, status, attempts, last_error, created_at }) => ({
-        operation_id, operation_type, status, attempts, last_error, created_at
+      submitted: queue.filter(item => item.status === 'submitted').length,
+      operations: queue.map(({ operation_id, operation_type, status, attempts, last_error, created_at, server_received_at }) => ({
+        operation_id, operation_type, status, attempts, last_error, created_at, server_received_at
       }))
     };
   }
