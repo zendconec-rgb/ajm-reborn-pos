@@ -94,7 +94,7 @@ begin
      or v_invoice is null or length(v_invoice) > 120
      or v_payment_id is null or length(v_payment_id) > 120
      or p_amount is null or p_amount <= 0
-     or p_method is null or length(v_method) > 80
+     or v_method is null or length(v_method) > 80
      or v_cashier is null or length(v_cashier) > 120 then
     return query select 'invalid_request', v_invoice, null::bigint,
       'ID operasi, invoice, ID pembayaran, jumlah, metode, dan kasir wajib valid.', null::jsonb;
