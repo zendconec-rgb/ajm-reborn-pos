@@ -1,5 +1,8 @@
 -- AJM Reborn POS: secure device registry
 -- Apply this migration in Supabase SQL Editor before enabling the UI.
+-- Then grant server-verified admin access to the intended Supabase Auth user:
+-- update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb where email = 'ADMIN_EMAIL';
+-- Run the UPDATE only for the trusted administrator account. Never use user_metadata for this role.
 create table if not exists public.ajm_pos_devices (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -32,6 +35,7 @@ set search_path = '' as $$
 declare v_user uuid := auth.uid(); v_row public.ajm_pos_devices%rowtype; v_count integer; v_exists boolean := false;
 begin
   if v_user is null then raise exception 'AJM_DEVICE_AUTH_REQUIRED'; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_user::text, 0));
   select * into v_row from public.ajm_pos_devices
     where user_id=v_user and device_id=p_device_id for update;
   v_exists := found;
