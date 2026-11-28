@@ -5374,6 +5374,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 if (!authData?.session) return { ready: false, needsCloudLogin: true };
                 const result = await window.AJM_MULTI_DEVICE.flushQueue();
                 const refreshed = result.sent > 0 ? await refreshAjmMultiDeviceAuthoritativeSnapshot() : false;
+                await refreshAjmMultiDeviceQueueUI();
                 return { ...result, refreshed };
             } catch (err) {
                 console.error('AJM multi-device queue:', err);
@@ -5398,6 +5399,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             try {
                 const prepared = await window.AJM_MULTI_DEVICE.prepareSession(localUser);
                 setAjmCloudStatus('Operator & perangkat terdaftar', 'success');
+                await refreshAjmMultiDeviceQueueUI();
                 const queueResult = await flushAjmMultiDeviceQueue();
                 return { enabled: true, ready: true, prepared, queueResult };
             } catch (err) {
