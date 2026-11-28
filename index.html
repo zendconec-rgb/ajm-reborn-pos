@@ -3777,6 +3777,20 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                         <button type="button" onclick="disconnectAjmSupabase()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Putuskan</button>
                     </div>
                     <p id="supabase-cloud-detail" class="text-[11px] text-slate-500">Data tetap disimpan lokal sampai akun cloud berhasil dihubungkan.</p>
+                    <div id="ajm-multidevice-queue-panel" class="hidden border border-slate-200 rounded-xl p-3 space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div><p class="text-xs font-extrabold text-slate-800">Antrean Multi-Perangkat</p><p id="ajm-md-queue-summary" class="text-[11px] text-slate-500">Belum diperiksa</p></div>
+                            <button type="button" onclick="refreshAjmMultiDeviceQueueUI()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold">Perbarui</button>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div class="bg-amber-50 rounded-lg p-2"><strong id="ajm-md-pending" class="block text-sm text-amber-700">0</strong><span class="text-[10px] text-slate-500">Antre</span></div>
+                            <div class="bg-sky-50 rounded-lg p-2"><strong id="ajm-md-submitted" class="block text-sm text-sky-700">0</strong><span class="text-[10px] text-slate-500">Dikirim</span></div>
+                            <div class="bg-rose-50 rounded-lg p-2"><strong id="ajm-md-conflicts" class="block text-sm text-rose-700">0</strong><span class="text-[10px] text-slate-500">Konflik</span></div>
+                            <div class="bg-slate-100 rounded-lg p-2"><strong id="ajm-md-blocked" class="block text-sm text-slate-700">0</strong><span class="text-[10px] text-slate-500">Terblokir</span></div>
+                        </div>
+                        <div id="ajm-md-queue-list" class="space-y-2"></div>
+                        <p class="text-[10px] text-slate-500">Konflik tidak dihapus otomatis. Periksa penyebabnya sebelum mencoba ulang operasi.</p>
+                    </div>
                 </div>
 
                 <!-- Card Manajemen Akun Login -->
@@ -5258,6 +5272,76 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         // Multi-device release stays OFF until migrations and end-to-end checks are completed.
         // Enable only through an intentional release change after the legacy snapshot path is gated.
         window.AJM_MULTI_DEVICE_RELEASE_ENABLED = window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true;
+
+        function renderAjmMultiDeviceQueueStatus(status) {
+            const panel = document.getElementById('ajm-multidevice-queue-panel');
+            if (!panel || !status) return;
+            panel.classList.toggle('hidden', window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true);
+            const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = String(value ?? 0); };
+            set('ajm-md-pending', status.pending);
+            set('ajm-md-submitted', status.submitted);
+            set('ajm-md-conflicts', status.conflicts);
+            set('ajm-md-blocked', status.blocked);
+            set('ajm-md-queue-summary', status.queued ? status.queued + ' operasi belum selesai' : 'Semua antrean sudah bersih');
+            const list = document.getElementById('ajm-md-queue-list');
+            if (!list) return;
+            list.replaceChildren();
+            (status.operations || []).slice(0, 30).forEach(operation => {
+                const row = document.createElement('div');
+                row.className = 'flex items-start justify-between gap-2 border border-slate-100 rounded-lg p-2';
+                const info = document.createElement('div');
+                info.className = 'min-w-0';
+                const title = document.createElement('p');
+                title.className = 'text-[11px] font-bold text-slate-700';
+                title.textContent = operation.operation_type + ' • ' + operation.status;
+                const detail = document.createElement('p');
+                detail.className = 'text-[10px] text-slate-500 break-all';
+                detail.textContent = (operation.last_error || operation.operation_id) + (operation.attempts ? ' • percobaan ' + operation.attempts : '');
+                info.append(title, detail);
+                row.append(info);
+                if (['conflict','blocked'].includes(operation.status)) {
+                    const retry = document.createElement('button');
+                    retry.type = 'button';
+                    retry.className = 'shrink-0 px-2 py-1 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold';
+                    retry.textContent = 'Coba lagi';
+                    retry.addEventListener('click', () => retryAjmMultiDeviceOperation(operation.operation_id));
+                    row.append(retry);
+                }
+                list.append(row);
+            });
+            if (!status.operations || !status.operations.length) {
+                const empty = document.createElement('p');
+                empty.className = 'text-[11px] text-slate-400 text-center py-2';
+                empty.textContent = 'Belum ada operasi tertunda.';
+                list.append(empty);
+            }
+        }
+
+        async function refreshAjmMultiDeviceQueueUI() {
+            if (!window.AJM_MULTI_DEVICE || window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true) return false;
+            try {
+                const status = await window.AJM_MULTI_DEVICE.getStatus();
+                renderAjmMultiDeviceQueueStatus(status);
+                return status;
+            } catch (err) {
+                console.warn('AJM queue status:', err);
+                setAjmCloudStatus('Status antrean tidak dapat dibaca', 'warning');
+                return false;
+            }
+        }
+
+        async function retryAjmMultiDeviceOperation(operationId) {
+            if (!window.AJM_MULTI_DEVICE || !operationId) return;
+            const approved = confirm('Operasi ini mengalami konflik atau ditolak. Coba kirim ulang dengan data yang sama? Pastikan penyebab konflik sudah diperiksa.');
+            if (!approved) return;
+            try {
+                await window.AJM_MULTI_DEVICE.retryOperation(operationId);
+                await flushAjmMultiDeviceQueue();
+                await refreshAjmMultiDeviceQueueUI();
+            } catch (err) {
+                showToast('Gagal mengirim ulang operasi: ' + (err.message || err), 'error');
+            }
+        }
 
         async function refreshAjmMultiDeviceAuthoritativeSnapshot() {
             if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true || !window.AJM_MULTI_DEVICE) return false;
