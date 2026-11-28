@@ -121,7 +121,7 @@ sign-in and obtain a valid session before calling these RPCs.
   AJM account ID, but only when the server-side role matches the local role.
 - Every operator must have an individual Supabase Auth user and matching server role.
   Sharing one cloud Admin account across multiple local cashiers is not safe.
-- The module exposes `linkLocalIdentity(localUser)`; it is not called automatically
+- The module exposes `linkLocalIdentity(localUser)` and the ordered helper `prepareSession(localUser)`. The helper first links the authenticated local operator to the authoritative server role, then registers the current browser/device. Call it after local AJM login and successful Supabase Auth sign-in; it is not called automatically
   by the production HTML yet. The app must explicitly connect Supabase Auth, then
   call this method after local login and handle mismatch errors before enabling
   cloud transaction actions.
