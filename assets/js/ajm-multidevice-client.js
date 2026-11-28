@@ -91,6 +91,25 @@
     return { deviceKey: await getDeviceKey() };
   }
 
+  async function linkLocalIdentity(localUser) {
+    if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
+    if (!localUser || localUser.id == null || !localUser.username || !['Admin', 'Kasir'].includes(localUser.role)) {
+      throw new Error('Identitas akun lokal AJM tidak lengkap.');
+    }
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!sessionData || !sessionData.session) {
+      throw new Error('Akun Supabase Auth belum terhubung. Hubungkan akun cloud masing-masing operator terlebih dahulu.');
+    }
+    const { data, error } = await supabase.rpc('ajm_link_local_identity', {
+      p_local_user_id: String(localUser.id),
+      p_local_username: String(localUser.username),
+      p_local_role: String(localUser.role)
+    });
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  }
+
   async function registerDevice() {
     if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
