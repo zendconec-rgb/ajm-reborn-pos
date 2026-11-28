@@ -1889,6 +1889,93 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
   }
 }
 </style>
+
+<style id="ajm-header-device-capsule-3d">
+/* Tombol printer dibuat kapsul minimalis dengan dimensi seimbang terhadap jam dan Online. */
+#app-topbar-actions button#header-bluetooth-status,
+#app-topbar-actions button#header-usb-status{
+  box-sizing:border-box!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:52px!important;min-width:52px!important;max-width:52px!important;
+  height:34px!important;min-height:34px!important;max-height:34px!important;
+  flex:0 0 52px!important;padding:0!important;margin:0!important;
+  border:1px solid rgba(255,255,255,.72)!important;border-radius:999px!important;
+  background:linear-gradient(180deg,#ffd45a 0%,#ffb91f 48%,#e99a08 100%)!important;
+  color:#fff!important;
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.62),
+             inset 0 -2px 2px rgba(142,83,0,.22),
+             0 3px 0 rgba(153,99,7,.58),0 5px 9px rgba(4,25,67,.22)!important;
+  cursor:pointer!important;pointer-events:auto!important;opacity:1!important;
+  position:relative!important;z-index:20!important;
+  transition:transform .14s ease,filter .14s ease,box-shadow .14s ease!important;
+}
+#app-topbar-actions button#header-bluetooth-status:hover,
+#app-topbar-actions button#header-usb-status:hover{filter:brightness(1.045)!important}
+#app-topbar-actions button#header-bluetooth-status:active,
+#app-topbar-actions button#header-usb-status:active{
+  transform:translateY(2px)!important;
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.35),
+             inset 0 -1px 2px rgba(142,83,0,.2),
+             0 1px 0 rgba(153,99,7,.5),0 2px 4px rgba(4,25,67,.18)!important;
+}
+#app-topbar-actions button#header-bluetooth-status svg,
+#app-topbar-actions button#header-usb-status svg,
+#app-topbar-actions button#header-bluetooth-status i,
+#app-topbar-actions button#header-usb-status i{
+  display:block!important;width:18px!important;height:18px!important;
+  color:#fff!important;stroke:#fff!important;pointer-events:none!important;
+}
+#app-topbar-actions button#header-bluetooth-status.bg-emerald-500,
+#app-topbar-actions button#header-usb-status.bg-emerald-500{
+  background:linear-gradient(180deg,#55e5b0 0%,#10b981 52%,#07865f 100%)!important;
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.5),
+             inset 0 -2px 2px rgba(0,70,48,.22),
+             0 3px 0 rgba(4,112,78,.55),0 5px 9px rgba(4,25,67,.2)!important;
+}
+@media(max-width:480px){
+  #app-topbar-actions{gap:7px!important}
+  #app-topbar-actions button#header-bluetooth-status,
+  #app-topbar-actions button#header-usb-status{
+    width:44px!important;min-width:44px!important;max-width:44px!important;
+    height:30px!important;min-height:30px!important;max-height:30px!important;flex-basis:44px!important;
+  }
+  #app-topbar-actions button#header-bluetooth-status svg,
+  #app-topbar-actions button#header-usb-status svg,
+  #app-topbar-actions button#header-bluetooth-status i,
+  #app-topbar-actions button#header-usb-status i{width:16px!important;height:16px!important}
+}
+</style>
+
+
+<style id="ajm-header-device-capsule-compact-v2">
+/* Tombol printer diperkecil agar lebih seimbang dengan indikator Online dan jam. */
+#app-topbar-actions button#header-bluetooth-status,
+#app-topbar-actions button#header-usb-status{
+  width:40px!important;min-width:40px!important;max-width:40px!important;
+  height:28px!important;min-height:28px!important;max-height:28px!important;
+  flex:0 0 40px!important;border-radius:999px!important;
+}
+#app-topbar-actions button#header-bluetooth-status svg,
+#app-topbar-actions button#header-usb-status svg,
+#app-topbar-actions button#header-bluetooth-status i,
+#app-topbar-actions button#header-usb-status i{
+  width:15px!important;height:15px!important;
+}
+@media(max-width:480px){
+  #app-topbar-actions{gap:6px!important}
+  #app-topbar-actions button#header-bluetooth-status,
+  #app-topbar-actions button#header-usb-status{
+    width:36px!important;min-width:36px!important;max-width:36px!important;
+    height:26px!important;min-height:26px!important;max-height:26px!important;
+    flex-basis:36px!important;
+  }
+  #app-topbar-actions button#header-bluetooth-status svg,
+  #app-topbar-actions button#header-usb-status svg,
+  #app-topbar-actions button#header-bluetooth-status i,
+  #app-topbar-actions button#header-usb-status i{width:14px!important;height:14px!important}
+}
+</style>
+
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased select-none overflow-hidden h-screen flex flex-col" style="height:100dvh">
 
@@ -1909,8 +1996,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 </div>
             </div>
 
-            <form onsubmit="handleLoginSubmit(event)" class="p-5 space-y-3.5">
-                <div>
+            <form onsubmit="handleLoginSubmit(event)" class="p-5 space-y-3.5">                <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nama / Username Akun</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
@@ -1978,10 +2064,10 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <span id="header-clock">00:00:00</span>
                 </div>
                 <!-- Tombol cepat koneksi printer Bluetooth dan USB -->
-                <button type="button" id="header-bluetooth-status" onclick="connectBluetoothPrinter()" aria-label="Hubungkan printer Bluetooth" title="Hubungkan printer Bluetooth" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
+                <button type="button" id="header-bluetooth-status" onclick="toggleHeaderBluetoothPrinter()" aria-label="Aktifkan printer Bluetooth" title="Aktifkan printer Bluetooth" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
                     <i data-lucide="bluetooth" class="w-5 h-5 stroke-[2.5]"></i>
                 </button>
-                <button type="button" id="header-usb-status" onclick="connectUsbPrinter()" aria-label="Hubungkan printer USB" title="Hubungkan printer USB" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
+                <button type="button" id="header-usb-status" onclick="toggleHeaderUsbPrinter()" aria-label="Aktifkan printer USB" title="Aktifkan printer USB" class="ajm-device-status-indicator inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400 text-white shadow-md hover:bg-amber-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-white/70">
                     <i data-lucide="usb" class="w-5 h-5 stroke-[2.5]"></i>
                 </button>
             </div>
@@ -1996,7 +2082,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         <!-- Drawer Profile Header -->
         <div class="bg-gradient-to-br from-royal-800 via-royal-700 to-royal-600 p-4 text-white shrink-0">
             <div class="flex items-start justify-between mb-3">
-                <div id="drawer-brand-logo-wrap" class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-inner overflow-hidden">                    <i data-lucide="bike" class="w-6 h-6 text-amber-300"></i>
+                <div id="drawer-brand-logo-wrap" class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-inner overflow-hidden">
+                    <i data-lucide="bike" class="w-6 h-6 text-amber-300"></i>
                 </div>
                 <button onclick="toggleDrawer()" class="p-1.5 rounded-lg hover:bg-white/15 text-blue-100">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -2183,7 +2270,10 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 
                     <!-- Filter Kategori Horizontal Scroll -->
                     <div id="category-filters" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                        <!-- Diisi via JS -->
+                        <!-- Kategori utama -->
+                    </div>
+                    <div id="supplier-filters" class="hidden items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar">
+                        <!-- Subkategori supplier untuk kategori terpilih -->
                     </div>
                 </div>
 
@@ -2905,7 +2995,6 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                             <p class="text-[10px] text-slate-500 mt-0.5">Koneksi port serial langsung (Chrome/Edge)</p>
                         </button>
                     </div>
-
                     <!-- Kontrol Koneksi Perangkat Khusus (Serial / Kamera) -->
                     <div id="scanner-device-action-bar" class="bg-slate-50 border border-slate-200/90 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                         <div>
@@ -2995,7 +3084,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div id="card-printer-settings" class="settings-panel bg-white rounded-2xl border-2 border-sky-200/90 p-4 sm:p-5 shadow-xs space-y-4 hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center shrink-0">                                <i data-lucide="printer" class="w-5 h-5"></i>
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center shrink-0">
+                                <i data-lucide="printer" class="w-5 h-5"></i>
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-sm">Koneksi & Pengaturan Printer Thermal</h3>
@@ -3624,6 +3714,11 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                         <select id="pm-category" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-royal-500"></select>
                     </div>
                 </div>
+                <div id="pm-supplier-field">
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Supplier Produk (bisa pilih beberapa)</label>
+                    <div id="pm-supplier-options" class="space-y-2 max-h-36 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2"><p class="text-[10px] text-slate-400">Pilih kategori untuk melihat supplier.</p></div>
+                    <p class="text-[10px] text-indigo-600 mt-1 font-semibold">Setiap supplier akan dibuatkan SKU/produk terpisah dengan harga modal dan stok masing-masing. SKU tambahan dibuat otomatis.</p>
+                </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Sparepart / Jasa Servis</label>
                     <input type="text" id="pm-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500">
@@ -3669,6 +3764,27 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <input type="text" id="cm-name" required placeholder="Contoh: Aksesoris / Baut" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500">
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-royal-600 text-white font-bold rounded-xl text-xs">Simpan Kategori</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Supplier per Kategori Produk -->
+    <div id="category-supplier-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="px-5 py-3.5 bg-royal-600 text-white flex items-center justify-between">
+                <div><h3 id="category-supplier-modal-title" class="font-bold text-sm">Tambah Supplier</h3><p id="category-supplier-subtitle" class="text-[10px] text-blue-100 mt-0.5"></p></div>
+                <button type="button" onclick="closeModal('category-supplier-modal')" class="p-1 rounded-lg hover:bg-white/15"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="saveCategorySupplierForm(event)" class="p-4 space-y-3">
+                <input type="hidden" id="category-supplier-category"><input type="hidden" id="category-supplier-id">
+                <div><label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Supplier</label><input id="category-supplier-name" required maxlength="100" placeholder="Nama toko / distributor" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-royal-500"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Kontak</label><input id="category-supplier-contact" maxlength="80" placeholder="Nama sales / PIC" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-700 mb-1">No. HP / WhatsApp</label><input id="category-supplier-phone" maxlength="30" placeholder="08xxxxxxxxxx" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none"></div>
+                </div>
+                <div><label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat</label><textarea id="category-supplier-address" rows="2" maxlength="250" placeholder="Alamat supplier (opsional)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none resize-y"></textarea></div>
+                <div><label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan</label><input id="category-supplier-notes" maxlength="180" placeholder="Contoh: jadwal kirim / tempo pembayaran" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none"></div>
+                <div class="flex gap-2 pt-1"><button type="button" onclick="closeModal('category-supplier-modal')" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs">Batal</button><button type="submit" class="flex-1 py-2.5 bg-royal-600 text-white font-bold rounded-xl text-xs">Simpan Supplier</button></div>
             </form>
         </div>
     </div>
@@ -3878,8 +3994,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 <div>
                     <h3 class="font-bold text-sm flex items-center gap-2">
                         <i data-lucide="receipt" class="w-4 h-4 text-amber-300"></i>
-                        <span>Pratinjau Langsung & Pengaturan Cetak Struk</span>
-                    </h3>
+                        <span>Pratinjau Langsung & Pengaturan Cetak Struk</span>                    </h3>
                     <p class="text-[11px] text-blue-100">Ubah pengaturan dan lihat hasil cetak struk secara langsung sebelum dicetak</p>
                 </div>
                 <button type="button" onclick="closeModal('griyo-receipt-preview-modal')" class="p-1 rounded-lg hover:bg-white/15">
@@ -3994,7 +4109,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <p class="text-[11px] text-blue-100">Impor sparepart & jasa bengkel sekaligus dengan validasi & pratinjau data</p>
                 </div>
                 <button onclick="closeModal('csv-bulk-modal')" class="p-1 rounded-lg hover:bg-white/15">
-                    <i data-lucide="x" class="w-4 h-4"></i>                </button>
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
             </div>
 
             <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
@@ -4303,6 +4419,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             cashierName: 'Admin Bengkel',
             headerMarqueeText: '', headerMarqueeFont: 'Arial, sans-serif', headerMarqueeSize: 16, headerMarqueeColor: '#ffffff', headerMarqueeSpeed: 45,
             storeLogo: '',
+            categorySuppliers: [], // Daftar supplier yang dikelompokkan berdasarkan kategori produk
             showLogoOnReceipt: true,
             paperSize: '58mm',
             mechanicCommissionRate: 20,
@@ -4426,6 +4543,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         let barcodeLabelBatch = [];
         let activeWorkOrderId = null;
         let selectedPosCategory = 'Semua';
+        let selectedPosSupplier = 'Semua';
         let selectedPaymentMethod = 'Tunai';
         let selectedPaymentCategory = 'Tunai';
         let paymentInputTouched = false;
@@ -4875,8 +4993,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 // Lepaskan hanya data sementara lalu ulangi satu kali; riwayat transaksi
                 // dan data master tidak pernah dihapus otomatis.
                 releaseOptionalSpace();
-                try {
-                    writeCriticalAtomically();
+                try {                    writeCriticalAtomically();
                 } catch (retryError) {
                     console.error('Penyimpanan data utama gagal:', retryError || firstError);
                     throw new Error('Ruang penyimpanan browser penuh atau dibatasi. Transaksi tidak berhasil disimpan. Data lama dipertahankan sejauh memungkinkan. Ekspor cadangan dari menu Pengaturan, kosongkan ruang browser, lalu coba lagi.');
@@ -4993,7 +5110,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             const {data:{session}}=await ajmSupabase.auth.getSession();
             if(!session){if(showMessage)showToast('Hubungkan akun Supabase terlebih dahulu.','warning');return false;}
             try{
-                const {data,error}=await ajmSupabase.from('ajm_pos_database').select('payload,revision,updated_at').eq('id','main').single();                if(error) throw error;
+                const {data,error}=await ajmSupabase.from('ajm_pos_database').select('payload,revision,updated_at').eq('id','main').single();
+                if(error) throw error;
                 ajmCloudRevision=Number(data.revision)||0;
                 const payload=data.payload;
                 if(payload && Array.isArray(payload.products) && Array.isArray(payload.transactions)){
@@ -5642,6 +5760,60 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
             }
         }
 
+        // Tombol kapsul header bekerja sebagai sakelar: tekan untuk aktif/nonaktif.
+        function isHeaderBluetoothConnected() {
+            return Boolean((btPrinterDevice && btPrinterDevice.gatt && btPrinterDevice.gatt.connected) || (sppPrinterPort && sppPrinterPort.writable));
+        }
+        function isHeaderUsbConnected() {
+            return Boolean((isWindowsDesktopForQZ() && qzTrayConnected && qzPrinterName && qzPrinterHardwareOnline) || (usbPrinterDevice && usbPrinterDevice.opened));
+        }
+        async function toggleHeaderBluetoothPrinter() {
+            if (isHeaderBluetoothConnected()) {
+                try {
+                    if (btPrinterDevice?.gatt?.connected) btPrinterDevice.gatt.disconnect();
+                    btPrinterDevice = null;
+                    btPrinterCharacteristic = null;
+                    if (sppPrinterPort) { try { await sppPrinterPort.close(); } catch (e) {} sppPrinterPort = null; }
+                    if (settings.printerConnectionType === 'bluetooth') settings.printerConnectionType = 'browser';
+                    saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                    showToast('Printer Bluetooth dinonaktifkan.');
+                } catch (err) { showToast('Gagal menonaktifkan Bluetooth: ' + (err?.message || err), 'error'); }
+                return;
+            }
+            settings.printerConnectionType = 'bluetooth';
+            saveAllData();
+            await connectBluetoothPrinter();
+            renderPrinterSettingsUI(); updateHardwareBadgesUI();
+        }
+        async function toggleHeaderUsbPrinter() {
+            if (isHeaderUsbConnected()) {
+                try {
+                    usbAutoReconnectEnabled = false;
+                    try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (e) {}
+                    if (isWindowsDesktopForQZ()) {
+                        // Cegah pemantau QZ mengaktifkan kembali printer setelah dimatikan manual.
+                        window.ajmQZManualDisabled = true;
+                        if (qz.websocket && qz.websocket.isActive && qz.websocket.isActive()) {
+                            try { await qz.websocket.disconnect(); } catch (e) {}
+                        }
+                        qzTrayConnected = false; qzPrinterHardwareOnline = false;
+                    } else if (usbPrinterDevice) {
+                        try { if (usbPrinterDevice.opened) await usbPrinterDevice.close(); } catch (e) {}
+                        usbPrinterDevice = null; usbPrinterEndpoint = null; usbPrinterInterface = null;
+                    }
+                    if (settings.printerConnectionType === 'usb') settings.printerConnectionType = 'browser';
+                    saveAllData(); renderPrinterSettingsUI(); updateHardwareBadgesUI();
+                    showToast('Printer USB dinonaktifkan.');
+                } catch (err) { showToast('Gagal menonaktifkan USB: ' + (err?.message || err), 'error'); }
+                return;
+            }
+            window.ajmQZManualDisabled = false;
+            settings.printerConnectionType = 'usb';
+            saveAllData();
+            await connectUsbPrinter();
+            renderPrinterSettingsUI(); updateHardwareBadgesUI();
+        }
+
         async function connectBluetoothPrinter() {
             // Windows Classic SPP uses a virtual COM port, not Web Bluetooth BLE.
             if (isWindowsDesktopForQZ()) {
@@ -5804,7 +5976,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         }
 
         async function autoConnectSavedQZPrinter() {
-            if (!isWindowsDesktopForQZ() || !qzPrinterName || qzAutoConnectBusy) return false;
+            if (!isWindowsDesktopForQZ() || !qzPrinterName || qzAutoConnectBusy || window.ajmQZManualDisabled) return false;
             qzAutoConnectBusy = true;
             try {
                 await ensureQZTrayConnection();
@@ -5820,8 +5992,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 setupQZPrinterStatusListener();
                 renderPrinterSettingsUI();
                 updateHardwareBadgesUI();
-                return true;
-            } catch (err) {
+                return true;            } catch (err) {
                 qzTrayConnected = false;
                 qzPrinterHardwareOnline = false;
                 renderPrinterSettingsUI();
@@ -5992,7 +6163,8 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                         // WebUSB membutuhkan interface yang dapat diakses melalui WinUSB.
                         // Jangan mengulang auto-reconnect terus-menerus pada kegagalan driver.
                         usbAutoReconnectEnabled = false;
-                        try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (storageError) {}                        console.error('Diagnostik WebUSB Windows:', {
+                        try { localStorage.removeItem('ajm_usb_auto_reconnect'); } catch (storageError) {}
+                        console.error('Diagnostik WebUSB Windows:', {
                             productName: device?.productName || '',
                             vendorId: device?.vendorId,
                             productId: device?.productId,
@@ -6420,6 +6592,36 @@ img { max-width:100%; height:auto; }
 @media print { html,body { width:${paperWidth}; } #paper { width:${paperWidth}; } }
 
 </style>
+
+<style id="ajm-header-device-capsule-compact-v2">
+/* Tombol printer diperkecil agar lebih seimbang dengan indikator Online dan jam. */
+#app-topbar-actions button#header-bluetooth-status,
+#app-topbar-actions button#header-usb-status{
+  width:40px!important;min-width:40px!important;max-width:40px!important;
+  height:28px!important;min-height:28px!important;max-height:28px!important;
+  flex:0 0 40px!important;border-radius:999px!important;
+}
+#app-topbar-actions button#header-bluetooth-status svg,
+#app-topbar-actions button#header-usb-status svg,
+#app-topbar-actions button#header-bluetooth-status i,
+#app-topbar-actions button#header-usb-status i{
+  width:15px!important;height:15px!important;
+}
+@media(max-width:480px){
+  #app-topbar-actions{gap:6px!important}
+  #app-topbar-actions button#header-bluetooth-status,
+  #app-topbar-actions button#header-usb-status{
+    width:36px!important;min-width:36px!important;max-width:36px!important;
+    height:26px!important;min-height:26px!important;max-height:26px!important;
+    flex-basis:36px!important;
+  }
+  #app-topbar-actions button#header-bluetooth-status svg,
+  #app-topbar-actions button#header-usb-status svg,
+  #app-topbar-actions button#header-bluetooth-status i,
+  #app-topbar-actions button#header-usb-status i{width:14px!important;height:14px!important}
+}
+</style>
+
 </head>
 <body>
 <div id="paper">${receiptHtml}</div>
@@ -6501,8 +6703,8 @@ window.addEventListener('afterprint', function () {
                 bluetoothStatus.classList.toggle('bg-amber-400', !bluetoothConnected);
                 bluetoothStatus.classList.toggle('hover:bg-amber-500', !bluetoothConnected);
                 bluetoothStatus.classList.add('text-white');
-                bluetoothStatus.setAttribute('aria-label', bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Klik untuk menghubungkan printer Bluetooth');
-                bluetoothStatus.title = bluetoothConnected ? 'Printer Bluetooth terhubung' : 'Klik untuk menghubungkan printer Bluetooth';
+                bluetoothStatus.setAttribute('aria-label', bluetoothConnected ? 'Nonaktifkan printer Bluetooth' : 'Aktifkan printer Bluetooth');
+                bluetoothStatus.title = bluetoothConnected ? 'Tekan untuk menonaktifkan Bluetooth' : 'Tekan untuk mengaktifkan Bluetooth';
             }
             const usbStatus = document.getElementById('header-usb-status');
             if (usbStatus) {
@@ -6512,8 +6714,8 @@ window.addEventListener('afterprint', function () {
                 usbStatus.classList.toggle('bg-amber-400', !usbConnected);
                 usbStatus.classList.toggle('hover:bg-amber-500', !usbConnected);
                 usbStatus.classList.add('text-white');
-                usbStatus.setAttribute('aria-label', usbConnected ? 'Printer USB terhubung' : 'Klik untuk menghubungkan printer USB');
-                usbStatus.title = usbConnected ? 'Printer USB terhubung' : 'Klik untuk menghubungkan printer USB';
+                usbStatus.setAttribute('aria-label', usbConnected ? 'Nonaktifkan printer USB' : 'Aktifkan printer USB');
+                usbStatus.title = usbConnected ? 'Tekan untuk menonaktifkan USB' : 'Tekan untuk mengaktifkan USB';
             }
             const scanDot = document.getElementById('header-scanner-dot');
             const scanText = document.getElementById('header-scanner-text');
@@ -6789,8 +6991,7 @@ window.addEventListener('afterprint', function () {
 
             if (!newUname || !newPass) {
                 showToast('Nama akun dan password tidak boleh kosong!', 'error');
-                return;
-            }
+                return;            }
 
             const duplicate = users.find(u => u.id !== currentSession.userId && u.username.toLowerCase() === newUname.toLowerCase());
             if (duplicate) {
@@ -6991,7 +7192,8 @@ window.addEventListener('afterprint', function () {
                         client_id: clientId,
                         scope: 'https://www.googleapis.com/auth/drive.file',
                         callback: (tokenResponse) => {
-                            if (tokenResponse && tokenResponse.access_token) {                                driveMeta.accessToken = tokenResponse.access_token;
+                            if (tokenResponse && tokenResponse.access_token) {
+                                driveMeta.accessToken = tokenResponse.access_token;
                                 driveMeta.tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3500) * 1000);
                                 driveMeta.lastError = null;
                                 saveAllData();
@@ -7571,21 +7773,47 @@ window.addEventListener('afterprint', function () {
             container.innerHTML = allCats.map(cat => {
                 const active = selectedPosCategory === cat;
                 return `
-                    <button onclick="selectPosCategory('${cat}')"
-                        class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shrink-0 ${
-                            active
-                            ? 'bg-royal-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }">
-                        ${cat}
-                    </button>
-                `;
+                    <button onclick="selectPosCategory('${String(cat).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"
+                        class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shrink-0 ${active ? 'bg-royal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        ${escapeHtml(cat)}
+                    </button>`;
+            }).join('');
+            renderPosSupplierFilters();
+        }
+
+        function renderPosSupplierFilters() {
+            const container = document.getElementById('supplier-filters');
+            if (!container) return;
+            const suppliers = selectedPosCategory !== 'Semua' && selectedPosCategory !== 'Jasa Servis' && typeof getCategorySuppliers === 'function'
+                ? getCategorySuppliers(selectedPosCategory) : [];
+            if (!suppliers.length) {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+                selectedPosSupplier = 'Semua';
+                container.innerHTML = '';
+                return;
+            }
+            if (!suppliers.some(item => item.id === selectedPosSupplier)) selectedPosSupplier = 'Semua';
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+            const choices = [{id:'Semua',name:'Semua Supplier'}, ...suppliers];
+            container.innerHTML = choices.map(item => {
+                const active = selectedPosSupplier === item.id;
+                const id = String(item.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                return `<button type="button" onclick="selectPosSupplier('${id}')" class="px-3 py-1.5 rounded-lg border text-[11px] font-bold whitespace-nowrap shrink-0 ${active ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100'}">${escapeHtml(item.name)}</button>`;
             }).join('');
         }
 
         function selectPosCategory(cat) {
             selectedPosCategory = cat;
+            selectedPosSupplier = 'Semua';
             renderPosCategories();
+            renderPosProducts();
+        }
+
+        function selectPosSupplier(supplierId) {
+            selectedPosSupplier = supplierId;
+            renderPosSupplierFilters();
             renderPosProducts();
         }
 
@@ -7600,8 +7828,12 @@ window.addEventListener('afterprint', function () {
 
             const filtered = products.filter(p => {
                 const matchCat = selectedPosCategory === 'Semua' || p.category === selectedPosCategory;
-                const matchText = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
-                return matchCat && matchText;
+                const isService = p.category === 'Jasa Servis';
+                const productSupplierIds = !isService && typeof getProductSupplierIds === 'function' ? getProductSupplierIds(p) : [];
+                const matchSupplier = isService || selectedPosSupplier === 'Semua' || productSupplierIds.includes(selectedPosSupplier);
+                const supplierName = !isService && typeof getProductSupplierName === 'function' ? getProductSupplierName(p) : '';
+                const matchText = String(p.name || '').toLowerCase().includes(search) || String(p.code || '').toLowerCase().includes(search) || String(supplierName || '').toLowerCase().includes(search);
+                return matchCat && matchSupplier && matchText;
             });
 
             const grid = document.getElementById('pos-product-grid');
@@ -7654,7 +7886,8 @@ window.addEventListener('afterprint', function () {
                                     </span>
                                     <span class="text-[9px] font-mono text-slate-400 truncate max-w-[78px]">${p.code}</span>
                                 </div>
-                                <h4 class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 min-h-[2rem]">${p.name}</h4>
+                                <h4 class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 min-h-[2rem]">${escapeHtml(String(p.name || 'Produk'))}</h4>
+                                ${getProductSupplierName(p) ? `<span class="inline-flex mt-1 max-w-full truncate text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700">Supplier: ${escapeHtml(getProductSupplierName(p))}</span>` : ''}
                             </div>
                             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
                                 <span class="font-extrabold text-royal-600 text-xs sm:text-sm">${formatRupiah(p.price)}</span>
@@ -7696,6 +7929,7 @@ window.addEventListener('afterprint', function () {
                                     </span>
                                     <span class="text-[10px] font-semibold text-slate-400">${escapeHtml(String(p.category || 'Lainnya'))}</span>
                                     <span class="text-[10px] font-mono text-slate-400">• ${escapeHtml(String(p.code || ''))}</span>
+                                    ${getProductSupplierName(p) ? `<span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">Supplier: ${escapeHtml(getProductSupplierName(p))}</span>` : ''}
                                 </div>
                                 <div class="ajm-list-title-price">
                                     <h4 class="ajm-list-product-name font-bold text-slate-800">${escapeHtml(String(p.name || 'Produk'))}</h4>
@@ -7756,9 +7990,10 @@ window.addEventListener('afterprint', function () {
                 }
                 cart.push({
                     id: product.id,
-                    code: product.code,
-                    category: product.category,
+                    code: product.code,                    category: product.category,
                     name: product.name,
+                    supplierId: product.supplierId || (Array.isArray(product.supplierIds) ? product.supplierIds[0] : '') || '',
+                    supplierName: typeof getProductSupplierName === 'function' ? getProductSupplierName(product) : '',
                     cost: product.cost,
                     price: product.price,
                     qty: 1
@@ -7776,6 +8011,15 @@ window.addEventListener('afterprint', function () {
             renderCart();
             renderPosProducts();
             showToast(`${removed.name || 'Produk'} dihapus dari keranjang`);
+        }
+
+        function updateCartPrice(productId, rawPrice) {
+            const item = cart.find(row => String(row.id) === String(productId));
+            if (!item) return;
+            const nextPrice = Math.max(0, Math.round(Number(rawPrice) || 0));
+            item.price = nextPrice;
+            renderCart();
+            showToast(`Harga ${item.name || 'produk'} diperbarui menjadi ${formatRupiah(nextPrice)}`);
         }
 
         function updateCartQty(productId, delta) {
@@ -7898,8 +8142,13 @@ window.addEventListener('afterprint', function () {
                             <div class="cart-line-item bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2">
                                 <div class="min-w-0 flex-1">
                                     <p class="font-bold text-slate-800 text-xs whitespace-normal break-words">${escapeHtml(String(item.name || 'Produk'))}</p>
-                                    <p class="text-[11px] text-royal-600 font-semibold mt-0.5">${formatRupiah(price)} <span class="text-slate-400 font-normal">× ${qty}</span></p>
-                                    <p class="text-[10px] text-slate-500 mt-0.5">Jumlah: <b>${formatRupiah(price * qty)}</b></p>
+                                    ${item.supplierName ? `<p class="text-[10px] text-indigo-700 font-semibold mt-0.5">Supplier: ${escapeHtml(String(item.supplierName))}</p>` : ''}
+                                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                        <label class="text-[10px] text-slate-500 font-semibold" for="cart-price-${escapeHtml(String(item.id))}">Harga jual</label>
+                                        <input id="cart-price-${escapeHtml(String(item.id))}" type="number" min="0" step="1" inputmode="numeric" value="${price}" onchange="updateCartPrice('${escapeJsQuote(String(item.id))}', this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" class="w-28 max-w-full px-2 py-1 rounded-lg border border-blue-200 bg-white text-[11px] font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Ubah harga jual ${escapeHtml(String(item.name || 'produk'))}">
+                                        <span class="text-[10px] text-slate-400">× ${qty}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 mt-1">Jumlah: <b>${formatRupiah(price * qty)}</b></p>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
                                     <button type="button" onclick="removeCartItem('${escapeJsQuote(String(item.id))}')" aria-label="Hapus ${escapeHtml(String(item.name || 'produk'))} dari keranjang" title="Hapus produk" class="cart-remove-item-btn w-7 h-7 rounded-lg bg-pink-100 border border-pink-300 text-pink-600 hover:bg-pink-200 shadow-sm flex items-center justify-center" style="flex:0 0 28px"><svg class="cart-remove-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
@@ -7990,7 +8239,8 @@ window.addEventListener('afterprint', function () {
 
             const dpm = document.getElementById('dpm-method');
             if (dpm) {
-                const current = dpm.value;                dpm.innerHTML = '';
+                const current = dpm.value;
+                dpm.innerHTML = '';
                 [['Tunai', 'Tunai'], ...lists.transfer.map(x => [`Transfer - ${x}`, `Transfer - ${x}`]), ...lists.ewallet.map(x => [`E-Wallet - ${x}`, `E-Wallet - ${x}`])].forEach(([value, label]) => {
                     const opt = document.createElement('option'); opt.value = value; opt.textContent = label; dpm.appendChild(opt);
                 });
@@ -8739,8 +8989,7 @@ window.addEventListener('afterprint', function () {
                     });
 
                     saveAllData();
-                    renderTransactionHistory();
-                    renderCustomerReceivablesReport();
+                    renderTransactionHistory();                    renderCustomerReceivablesReport();
                     renderFinancialReport();
                     showToast(`Seluruh piutang (${formatRupiah(totalToSettle)}) berhasil dilunasi!`);
                 }
@@ -8989,7 +9238,8 @@ window.addEventListener('afterprint', function () {
                             </button>
                             <button onclick="deleteProduct('${p.id}')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl" title="Hapus">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>                        </div>
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -9004,13 +9254,15 @@ window.addEventListener('afterprint', function () {
 
         function openProductModal(id = null) {
             const catSelect = document.getElementById('pm-category');
-            catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            catSelect.onchange = () => updateProductSupplierOptions();
 
             if (id) {
                 const p = products.find(item => item.id === id);
                 document.getElementById('product-modal-title').textContent = 'Edit Produk / Jasa';                document.getElementById('pm-id').value = p.id;
                 document.getElementById('pm-code').value = p.code || createAutoItemCode();
                 document.getElementById('pm-category').value = p.category;
+                updateProductSupplierOptions(p.supplierIds || (p.supplierId ? [p.supplierId] : []), p.supplierPrices || {});
                 document.getElementById('pm-name').value = p.name;
                 document.getElementById('pm-cost').value = p.cost;
                 document.getElementById('pm-price').value = p.price;
@@ -9020,6 +9272,7 @@ window.addEventListener('afterprint', function () {
                 document.getElementById('product-modal-title').textContent = 'Tambah Produk / Jasa';
                 document.getElementById('pm-id').value = '';
                 document.getElementById('pm-code').value = createAutoItemCode();
+                updateProductSupplierOptions([], {});
                 document.getElementById('pm-name').value = '';
                 document.getElementById('pm-cost').value = 0;
                 document.getElementById('pm-price').value = 0;
@@ -9029,32 +9282,99 @@ window.addEventListener('afterprint', function () {
             openModal('product-modal');
         }
 
+        function updateProductSupplierOptions(selectedIds = [], supplierPrices = {}) {
+            const category = document.getElementById('pm-category').value;
+            const container = document.getElementById('pm-supplier-options');
+            const field = document.getElementById('pm-supplier-field');
+            if (!container) return;
+            const isService = category === 'Jasa Servis';
+            if (field) field.classList.toggle('hidden', isService);
+            const suppliers = !isService && typeof getCategorySuppliers === 'function' ? getCategorySuppliers(category) : [];
+            const selected = Array.isArray(selectedIds) ? selectedIds : (selectedIds ? [selectedIds] : []);
+            if (!suppliers.length) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400">Belum ada supplier pada kategori ini. Tambahkan melalui Master Produk → Kategori.</p>';
+                return;
+            }
+            container.innerHTML = suppliers.map(item => {
+                const checked = selected.includes(item.id);
+                const cost = supplierPrices && supplierPrices[item.id] != null ? supplierPrices[item.id] : '';
+                const sid = String(item.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<div class="flex items-center gap-2 rounded-lg bg-white border border-slate-100 p-2"><label class="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-semibold text-slate-700"><input type="checkbox" class="pm-supplier-check accent-indigo-600" value="${escapeHtml(item.id)}" ${checked ? 'checked' : ''} onchange="toggleSupplierCostField(this)"><span class="truncate">${escapeHtml(item.name)}</span></label><div class="flex items-center gap-1"><span class="text-[9px] text-slate-400">Modal Rp</span><input type="number" min="0" data-supplier-cost="${escapeHtml(item.id)}" value="${cost}" placeholder="Harga beli" class="w-24 px-2 py-1.5 text-[10px] border border-slate-200 rounded-lg" ${checked ? '' : 'disabled'}></div></div>`;
+            }).join('');
+        }
+
+        function toggleSupplierCostField(checkbox) {
+            const input = document.querySelector(`[data-supplier-cost="${CSS.escape(checkbox.value)}"]`);
+            if (input) input.disabled = !checkbox.checked;
+        }
+
         function saveProductForm(e) {
             e.preventDefault();
             const id = document.getElementById('pm-id').value;
             const rawCode = document.getElementById('pm-code').value.trim().toUpperCase();
-            const payload = {
-                code: rawCode || createAutoItemCode(),
-                category: document.getElementById('pm-category').value,
+            const category = document.getElementById('pm-category').value;
+            const selectedIds = category === 'Jasa Servis' ? [] : Array.from(document.querySelectorAll('.pm-supplier-check:checked')).map(el => el.value);
+            const supplierPrices = category === 'Jasa Servis' ? {} : Object.fromEntries(selectedIds.map(sid => [sid, Math.max(0, parseFloat(document.querySelector(`[data-supplier-cost="${CSS.escape(sid)}"]`)?.value) || 0)]));
+            const basePayload = {
+                code: rawCode || createAutoItemCode(), category,
+                supplierIds: [], supplierPrices: {}, supplierId: '',
                 name: document.getElementById('pm-name').value.trim(),
                 cost: parseFloat(document.getElementById('pm-cost').value) || 0,
                 price: parseFloat(document.getElementById('pm-price').value) || 0,
                 stock: parseInt(document.getElementById('pm-stock').value) || 0,
                 minStock: parseInt(document.getElementById('pm-min-stock').value) || 0
             };
+            if (!basePayload.name) { showToast('Nama produk wajib diisi', 'error'); return; }
 
-            if (id) {
-                const idx = products.findIndex(p => p.id === id);
-                if (idx !== -1) products[idx] = { ...products[idx], ...payload };
+            const oldIndex = id ? products.findIndex(p => String(p.id) === String(id)) : -1;
+            const oldProduct = oldIndex >= 0 ? products[oldIndex] : null;
+            const supplierList = selectedIds.length ? selectedIds : [''];
+            const usedCodes = new Set(products.filter(p => !id || String(p.id) !== String(id)).map(p => String(p.code || '').toUpperCase()));
+            const makeUniqueCode = (preferred) => {
+                let code = String(preferred || '').trim().toUpperCase();
+                if (!code || usedCodes.has(code)) {
+                    do { code = createAutoItemCode(); } while (usedCodes.has(String(code).toUpperCase()));
+                }
+                usedCodes.add(String(code).toUpperCase());
+                return code;
+            };
+
+            // Satu record produk hanya boleh terhubung ke satu supplier agar SKU, modal, dan stok terpisah.
+            const splitRecords = supplierList.map((supplierId, index) => {
+                const supplier = (settings.categorySuppliers || []).find(x => x && x.id === supplierId);
+                const supplierCost = supplierId ? (supplierPrices[supplierId] ?? basePayload.cost) : basePayload.cost;
+                const isFirst = index === 0;
+                return {
+                    ...(oldProduct && isFirst ? oldProduct : {}),
+                    ...basePayload,
+                    id: oldProduct && isFirst ? oldProduct.id : ('p_' + Date.now() + '_' + index + '_' + Math.random().toString(36).slice(2, 7)),
+                    code: makeUniqueCode(isFirst ? basePayload.code : ''),
+                    supplierIds: supplierId ? [supplierId] : [],
+                    supplierId: supplierId || '',
+                    supplierPrices: supplierId ? { [supplierId]: supplierCost } : {},
+                    cost: supplierCost,
+                    // Stok lama hanya dipertahankan pada SKU pertama agar tidak terduplikasi.
+                    stock: isFirst ? basePayload.stock : 0,
+                    supplierNameSnapshot: supplier ? supplier.name : ''
+                };
+            });
+
+            if (oldIndex >= 0) {
+                products.splice(oldIndex, 1, ...splitRecords);
             } else {
-                products.unshift({ id: 'p_' + Date.now(), ...payload });
+                products.unshift(...splitRecords);
             }
 
             saveAllData();
             closeModal('product-modal');
             renderInventoryList();
+            renderPosCategories();
+            renderCategoryMasterList();
+            renderPosSupplierFilters();
             renderPosProducts();
-            showToast('Data produk disimpan (Barcode: ' + payload.code + ')');
+            showToast(selectedIds.length > 1
+                ? `${splitRecords.length} SKU dibuat, masing-masing untuk satu supplier`
+                : 'Data produk disimpan (SKU: ' + splitRecords[0].code + ')');
         }
 
         function deleteProduct(id) {
@@ -9067,21 +9387,114 @@ window.addEventListener('afterprint', function () {
             });
         }
 
+        function getCategorySuppliers(category) {
+            if (!Array.isArray(settings.categorySuppliers)) settings.categorySuppliers = [];
+            return settings.categorySuppliers.filter(item => item && item.category === category);
+        }
+
         function renderCategoryMasterList() {
             const container = document.getElementById('category-master-list');
-            container.innerHTML = categories.map(cat => {
+            if (!container) return;
+            container.innerHTML = categories.map((cat, index) => {
                 const count = products.filter(p => p.category === cat).length;
+                const suppliers = cat === 'Jasa Servis' ? [] : getCategorySuppliers(cat);
+                const safeCategory = String(cat).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const supplierRows = suppliers.length ? suppliers.map(supplier => `
+                    <div class="flex items-start justify-between gap-2 rounded-xl bg-slate-50 border border-slate-100 px-2.5 py-2">
+                        <div class="min-w-0"><p class="text-[11px] font-bold text-slate-700 truncate">${escapeHtml(supplier.name || '')}</p>
+                            <p class="text-[10px] text-slate-500">${escapeHtml([supplier.contact, supplier.phone].filter(Boolean).join(' • ') || 'Kontak belum diisi')}</p>
+                            ${supplier.notes ? `<p class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(supplier.notes)}</p>` : ''}</div>
+                        <div class="flex items-center gap-1 shrink-0"><button type="button" onclick="editCategorySupplier('${String(supplier.id).replace(/'/g, "\\'")}')" title="Edit supplier" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button><button type="button" onclick="deleteCategorySupplier('${String(supplier.id).replace(/'/g, "\\'")}')" title="Hapus supplier" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>
+                    </div>`).join('') : '<p class="text-[10px] text-slate-400 italic">Belum ada supplier untuk kategori ini.</p>';
                 return `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center justify-between">
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${cat}</h4>
-                            <p class="text-[11px] text-slate-400">${count} item terdaftar</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-3.5 space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0"><h4 class="font-bold text-slate-800 text-xs sm:text-sm">${escapeHtml(cat)}</h4><p class="text-[11px] text-slate-400">${count} item produk • ${suppliers.length} supplier</p></div>
+                            ${cat !== 'Jasa Servis' ? `<button type="button" onclick="deleteCategory('${safeCategory}')" title="Hapus kategori" class="shrink-0 p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">Sistem</span>'}
                         </div>
-                        ${cat !== 'Jasa Servis' ? `<button onclick="deleteCategory('${cat}')" class="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">Sistem</span>'}
-                    </div>
-                `;
+                        <div class="border-t border-slate-100 pt-2.5 space-y-2">
+                            <div class="flex items-center justify-between"><span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-500">Supplier kategori</span><button type="button" onclick="openCategorySupplierModal('${safeCategory}')" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px] font-bold"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Supplier</button></div>
+                            <div class="space-y-1.5">${supplierRows}</div>
+                        </div>
+                    </div>`;
             }).join('');
             lucide.createIcons();
+        }
+
+        function openCategorySupplierModal(category) {
+            document.getElementById('category-supplier-category').value = category;
+            document.getElementById('category-supplier-id').value = '';
+            document.getElementById('category-supplier-subtitle').textContent = 'Kategori: ' + category;
+            document.getElementById('category-supplier-modal-title').textContent = 'Tambah Supplier';
+            ['name','contact','phone','address','notes'].forEach(key => { const el = document.getElementById('category-supplier-' + key); if (el) el.value = ''; });
+            openModal('category-supplier-modal');
+        }
+
+        function editCategorySupplier(id) {
+            const supplier = (settings.categorySuppliers || []).find(item => item && item.id === id);
+            if (!supplier) return;
+            document.getElementById('category-supplier-category').value = supplier.category || '';
+            document.getElementById('category-supplier-id').value = supplier.id;
+            document.getElementById('category-supplier-subtitle').textContent = 'Kategori: ' + (supplier.category || '');
+            document.getElementById('category-supplier-modal-title').textContent = 'Edit Supplier';
+            ['name','contact','phone','address','notes'].forEach(key => {
+                const el = document.getElementById('category-supplier-' + key);
+                if (el) el.value = supplier[key] || '';
+            });
+            openModal('category-supplier-modal');
+        }
+
+        function saveCategorySupplierForm(e) {
+            e.preventDefault();
+            const category = document.getElementById('category-supplier-category').value;
+            const id = document.getElementById('category-supplier-id').value;
+            const name = document.getElementById('category-supplier-name').value.trim();
+            if (!category || !name) return;
+            if (!Array.isArray(settings.categorySuppliers)) settings.categorySuppliers = [];
+            const payload = {
+                category, name,
+                contact: document.getElementById('category-supplier-contact').value.trim(),
+                phone: document.getElementById('category-supplier-phone').value.trim(),
+                address: document.getElementById('category-supplier-address').value.trim(),
+                notes: document.getElementById('category-supplier-notes').value.trim(),
+                updatedAt: new Date().toISOString()
+            };
+            if (id) {
+                const index = settings.categorySuppliers.findIndex(item => item && item.id === id);
+                if (index >= 0) settings.categorySuppliers[index] = { ...settings.categorySuppliers[index], ...payload };
+                else settings.categorySuppliers.push({ id, ...payload, createdAt: new Date().toISOString() });
+            } else {
+                settings.categorySuppliers.push({ id: 'sup_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), ...payload, createdAt: new Date().toISOString() });
+            }
+            saveAllData();
+            closeModal('category-supplier-modal');
+            renderCategoryMasterList();
+            renderPosSupplierFilters();
+            renderPosProducts();
+            showToast(id ? 'Supplier berhasil diperbarui' : 'Supplier berhasil ditambahkan ke kategori ' + category);
+        }
+
+        function getProductSupplierIds(product) {
+            if (!product) return [];
+            const ids = Array.isArray(product.supplierIds) ? product.supplierIds : (product.supplierId ? [product.supplierId] : []);
+            return ids.filter(Boolean);
+        }
+
+        function getProductSupplierName(product) {
+            const ids = getProductSupplierIds(product);
+            return ids.map(id => (settings.categorySuppliers || []).find(item => item && item.id === id)).filter(Boolean).map(item => item.name || '').filter(Boolean).join(', ');
+        }
+
+        function deleteCategorySupplier(id) {
+            showConfirm('Hapus Supplier?', 'Data supplier ini akan dihapus dari kategori.', () => {
+                if (!Array.isArray(settings.categorySuppliers)) settings.categorySuppliers = [];
+                settings.categorySuppliers = settings.categorySuppliers.filter(item => item.id !== id);
+                saveAllData();
+                renderCategoryMasterList();
+                renderPosSupplierFilters();
+                renderPosProducts();
+                showToast('Supplier berhasil dihapus');
+            });
         }
 
         function saveCategoryForm(e) {
@@ -9408,11 +9821,11 @@ window.addEventListener('afterprint', function () {
 
         function downloadProductCsvTemplate() {
             const rows = [
-                ['kode_sku','nama_item','kategori','tipe','harga_beli','harga_jual','stok','stok_min','satuan','catatan'],
-                ['899100100901','Oli Shell Advance AX7 Matic 10W40 0.8L','Oli','produk',46000,62000,18,5,'Botol','Oli matic synthetic'],
-                ['899100300902','Kampas Rem Belakang Tromol Beat / Vario','Sparepart','produk',28000,48000,14,4,'Set','Original AHM'],
-                ['899100400903','Bohlam Lampu Depan LED H6 Putih','Kelistrikan','produk',24000,42000,12,3,'Pcs','Bebek & Matic'],
-                ['899100500904','Jasa Kuras Tangki & Pembersihan Throttle Body','Jasa Servis','jasa',0,75000,999,0,'Jasa','Servis injeksi lengkap']
+                ['kode_sku','nama_item','kategori','supplier','tipe','harga_beli','harga_jual','stok','stok_min','satuan','catatan'],
+                ['899100100901','Oli Shell Advance AX7 Matic 10W40 0.8L','Oli','PT Sumber Oli Motor','produk',46000,62000,18,5,'Botol','Oli matic synthetic'],
+                ['899100300902','Kampas Rem Belakang Tromol Beat / Vario','Sparepart','Toko Sparepart Jaya','produk',28000,48000,14,4,'Set','Original AHM'],
+                ['899100400903','Bohlam Lampu Depan LED H6 Putih','Kelistrikan','Toko Sparepart Jaya','produk',24000,42000,12,3,'Pcs','Bebek & Matic'],
+                ['899100500904','Jasa Kuras Tangki & Pembersihan Throttle Body','Jasa Servis','','jasa',0,75000,999,0,'Jasa','Servis injeksi lengkap']
             ];
             downloadXlsx(rows, 'template_produk_jasa_ajm_reborn.xlsx', 'Produk & Jasa');
             showToast('Template Excel berhasil diunduh!');
@@ -9433,10 +9846,10 @@ window.addEventListener('afterprint', function () {
 
         function insertSampleCsvToPaste() {
             document.getElementById('csv-raw-textarea').value = [
-                'kode_sku;nama_item;kategori;tipe;harga_beli;harga_jual;stok;stok_min;satuan;catatan',
-                '899100100911;Oli Federal Matic 30 0.8L;Oli;produk;38000;52000;20;5;Botol;Stok kulakan',
-                '899100300912;Filter Udara Vario 125 / 150 LED;Sparepart;produk;36000;55000;10;3;Pcs;AHM Genuine',
-                '899100500913;Jasa Ganti Roller & V-Belt CVT;Jasa Servis;jasa;0;35000;999;0;Jasa;Ongkos pasang CVT'
+                'kode_sku;nama_item;kategori;supplier;tipe;harga_beli;harga_jual;stok;stok_min;satuan;catatan',
+                '899100100911;Oli Federal Matic 30 0.8L;Oli;PT Sumber Oli Motor;produk;38000;52000;20;5;Botol;Stok kulakan',
+                '899100300912;Filter Udara Vario 125 / 150 LED;Sparepart;Toko Sparepart Jaya;produk;36000;55000;10;3;Pcs;AHM Genuine',
+                '899100500913;Jasa Ganti Roller & V-Belt CVT;Jasa Servis;;jasa;0;35000;999;0;Jasa;Ongkos pasang CVT'
             ].join('\n');
             document.getElementById('csv-selected-filename').textContent = 'Contoh data siap diimpor';
             parseAndPreviewCsv();
@@ -9549,7 +9962,7 @@ window.addEventListener('afterprint', function () {
             );
 
             let colMap = {
-                code: 0, name: 1, category: 2, type: 3, cost: 4, price: 5, stock: 6, minStock: 7, unit: 8, note: 9
+                code: 0, name: 1, category: 2, supplier: 3, type: 4, cost: 5, price: 6, stock: 7, minStock: 8, unit: 9, note: 10
             };
             let startIdx = 0;
 
@@ -9563,6 +9976,7 @@ window.addEventListener('afterprint', function () {
                     code: findCol(['kode_sku', 'kode', 'sku', 'barcode'], -1),
                     name: findCol(['nama_item', 'nama', 'nama_produk', 'item', 'name'], -1),
                     category: findCol(['kategori', 'category'], -1),
+                    supplier: findCol(['supplier', 'pemasok', 'distributor', 'vendor'], -1),
                     type: findCol(['tipe', 'jenis', 'type'], -1),
                     cost: findCol(['harga_beli', 'modal', 'hpp', 'cost'], -1),
                     price: findCol(['harga_jual', 'harga', 'price'], -1),
@@ -9575,7 +9989,6 @@ window.addEventListener('afterprint', function () {
 
             const dupMode = document.getElementById('csv-duplicate-mode').value;
             parsedCsvPreviewRows = [];
-
             let validCount = 0;
             let warnCount = 0;
             let errorCount = 0;
@@ -9587,6 +10000,7 @@ window.addEventListener('afterprint', function () {
                 const rawCode = colMap.code >= 0 ? (cols[colMap.code] || '').toUpperCase() : '';
                 const name = colMap.name >= 0 ? (cols[colMap.name] || '') : '';
                 let category = colMap.category >= 0 ? (cols[colMap.category] || '') : '';
+                const supplier = colMap.supplier >= 0 ? (cols[colMap.supplier] || '').trim() : '';
                 const rawType = colMap.type >= 0 ? (cols[colMap.type] || '').toLowerCase() : '';
                 const cost = colMap.cost >= 0 ? parseCleanNumber(cols[colMap.cost]) : 0;
                 const price = colMap.price >= 0 ? parseCleanNumber(cols[colMap.price]) : 0;
@@ -9637,6 +10051,7 @@ window.addEventListener('afterprint', function () {
                     code,
                     name,
                     category,
+                    supplier,
                     cost,
                     price,
                     stock,
@@ -9694,6 +10109,16 @@ window.addEventListener('afterprint', function () {
                 if (row.category && !categories.includes(row.category)) {
                     categories.push(row.category);
                 }
+                let supplierId = '';
+                if (row.supplier && !row.isService) {
+                    if (!Array.isArray(settings.categorySuppliers)) settings.categorySuppliers = [];
+                    let supplierRecord = settings.categorySuppliers.find(item => item && String(item.category || '').toLowerCase() === String(row.category || '').toLowerCase() && String(item.name || '').toLowerCase() === String(row.supplier).toLowerCase());
+                    if (!supplierRecord) {
+                        supplierRecord = { id: 'sup_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), category: row.category, name: row.supplier, contact: '', phone: '', address: '', notes: 'Ditambahkan melalui impor Excel', createdAt: new Date().toISOString() };
+                        settings.categorySuppliers.push(supplierRecord);
+                    }
+                    supplierId = supplierRecord.id;
+                }
 
                 const existingIdx = products.findIndex(p =>
                     p.code.toLowerCase() === row.code.toLowerCase() ||
@@ -9709,6 +10134,7 @@ window.addEventListener('afterprint', function () {
                         code: row.code,
                         name: row.name,
                         category: row.category,
+                        supplierId: supplierId || oldItem.supplierId || '',
                         cost: row.cost,
                         price: row.price,
                         stock: row.isService ? 999 : row.stock,
@@ -9736,6 +10162,7 @@ window.addEventListener('afterprint', function () {
                         code: finalCode,
                         name: row.name,
                         category: row.category,
+                        supplierId: supplierId || oldItem.supplierId || '',
                         cost: row.cost,
                         price: row.price,
                         stock: row.isService ? 999 : row.stock,
@@ -9760,6 +10187,8 @@ window.addEventListener('afterprint', function () {
             closeModal('csv-bulk-modal');
             renderInventoryList();
             renderPosCategories();
+            renderCategoryMasterList();
+            renderPosSupplierFilters();
             renderPosProducts();
             showToast(`Impor CSV selesai: ${addedCount} baru, ${updatedCount} diperbarui!`);
         }
@@ -9988,7 +10417,8 @@ window.addEventListener('afterprint', function () {
             const physicalItems = products.filter(p => p.category !== 'Jasa Servis');
             document.getElementById('op-product').innerHTML = physicalItems.map(p => `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`).join('');
             document.getElementById('op-qty').value = 1;
-            document.getElementById('op-note').value = '';            openModal('opname-modal');
+            document.getElementById('op-note').value = '';
+            openModal('opname-modal');
         }
 
         function saveStockOpnameForm(e) {
@@ -10557,7 +10987,6 @@ window.addEventListener('afterprint', function () {
             const every = buckets.length>8 ? 2 : 1;
             buckets.forEach((b,i)=>{if(i%every===0 || i===buckets.length-1) ctx.fillText(b.label,points[i].x,height-13);});
         }
-
         function renderReportCharts(list) {
             latestReportChartTransactions = Array.isArray(list) ? list.slice() : [];
             const buckets = getReportChartBuckets(latestReportChartTransactions);
@@ -10987,7 +11416,8 @@ window.addEventListener('afterprint', function () {
                 invoice: 'INV-20261123-001',
                 date: new Date().toISOString(),
                 plateMotor: 'G 4821 XM - Vario 150 LED',
-                mechanic: 'Mas Agung',                cashier: getActiveCashierDisplay(),
+                mechanic: 'Mas Agung',
+                cashier: getActiveCashierDisplay(),
                 items: [
                     { id: 'p1', code: '899100100011', name: 'Oli AHM MPX2 0.8L Matic', price: 55000, qty: 1 },
                     { id: 'p12', code: '899100500123', name: 'Jasa Servis Injeksi & CVT Lengkap', price: 65000, qty: 1 }
@@ -11309,7 +11739,7 @@ window.addEventListener('afterprint', function () {
             const duration = Math.max(18, Math.min(60, Number(settings.headerMarqueeSpeed) || 45)) * 1000;
 
             // Pisahkan gerak horizontal dari transform vertikal CSS (translateY).
-            // Properti individual translate tidak tertimpa aturan transform lama.
+            // Properti individual `translate` tidak tertimpa aturan transform lama.
             el.style.setProperty('animation', 'none', 'important');
             el.style.setProperty('transform', 'translateY(-50%)', 'important');
             el.style.setProperty('translate', '0 0');
@@ -11322,6 +11752,7 @@ window.addEventListener('afterprint', function () {
                 const textWidth = el.getBoundingClientRect().width;
                 if (!wrapWidth || !textWidth) return;
 
+                // Fallback animasi CSS bila Web Animations API tidak tersedia.
                 if (typeof el.animate !== 'function') {
                     el.style.setProperty('animation', 'ajm-marquee-rtl-gpu ' + (duration / 1000) + 's linear infinite', 'important');
                     return;
@@ -11555,8 +11986,7 @@ window.addEventListener('afterprint', function () {
             if (!container) return;
             const toast = document.createElement('div');
             const bgClass = type === 'error'
-                ? 'bg-rose-600 text-white'
-                : type === 'warning'
+                ? 'bg-rose-600 text-white'                : type === 'warning'
                     ? 'bg-amber-500 text-slate-950'
                     : 'bg-slate-900 text-white';
 
