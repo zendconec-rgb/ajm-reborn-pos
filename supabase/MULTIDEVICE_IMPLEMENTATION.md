@@ -191,3 +191,38 @@ duplicate invoices, insufficient stock, offline replay, and all transaction side
 **Still not implemented in this phase:** atomic posting of stockLogs, cashflows,
 workOrders, debtPayments, mechanic commissions, and corresponding reversal/refund flows.
 The production `index.html` remains unchanged and checkout is not cloud-enabled.
+
+
+## Phase 8 — atomic debt/DP collection RPC (staged; not deployed)
+
+Added `supabase/migrations/20261128_006_atomic_debt_payment.sql` and the
+read-only structural verifier `supabase/diagnostics/verify_atomic_debt_payment.sql`.
+
+The new `ajm_apply_debt_payment` RPC:
+
+- requires an authenticated user with an active Admin/Kasir server role and an
+  active registered device;
+- serializes changes by locking the existing AJM snapshot row;
+- applies a partial or final debt payment to the matching invoice;
+- appends the legacy-compatible `debtPayments` entry and updates
+  `paidAmount`, `remainingDebt`, `cashReceived`, `status`, and `settledAt`
+  when fully settled;
+- records an operation UUID in a separate unique operation ledger so retrying
+  the same request cannot add the payment twice;
+- rejects overpayment, duplicate payment IDs, invalid invoice/payment data, and
+  malformed legacy debt-payment arrays;
+- leaves customer, item, mechanic, commission, stock, and cashflow data untouched.
+
+No automatic cashflow row is created. The existing AJM reports derive transaction
+receipts from transaction payment fields and debtPayments; adding a second cashflow
+entry for the same receipt could double-count revenue.
+
+**Not yet wired into the browser app:** the local debt-payment form still follows
+the current local persistence/Drive path. The new RPC has not been executed in
+PostgreSQL or functionally tested. Do not enable it in production until staging
+tests cover partial/full settlement, duplicate replay, overpayment, concurrent
+collections from separate devices, and preservation of historical invoice fields.
+
+Work-order completion still needs a transaction-safe server path. The current
+sale processor has not yet been changed to include `workOrderId`; therefore the
+existing local work-order completion must not be considered cloud-atomic.
