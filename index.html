@@ -3161,6 +3161,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     <button type="button" onclick="openSettingsPanel('card-workshop-settings')" class="settings-category-tile"><span class="settings-category-icon bg-amber-50 text-amber-700"><i data-lucide="store"></i></span><span class="min-w-0 flex-1 text-left"><strong>Identitas Bengkel</strong><small>Logo, nama, alamat, dan konten struk</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
                     <button type="button" onclick="openSettingsPanel('card-drive-settings')" class="settings-category-tile"><span class="settings-category-icon bg-blue-50 text-blue-700"><i data-lucide="cloud"></i></span><span class="min-w-0 flex-1 text-left"><strong>Google Drive</strong><small>Mode koneksi dan sinkronisasi</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
                     <button type="button" onclick="openSettingsPanel('card-supabase-settings')" class="settings-category-tile"><span class="settings-category-icon bg-emerald-50 text-emerald-700"><i data-lucide="database"></i></span><span class="min-w-0 flex-1 text-left"><strong>Database Supabase</strong><small>Koneksi dan sinkronisasi cloud</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
+                    <button type="button" onclick="openSettingsPanel('card-device-management')" class="settings-category-tile"><span class="settings-category-icon bg-cyan-50 text-cyan-700"><i data-lucide="monitor-smartphone"></i></span><span class="min-w-0 flex-1 text-left"><strong>Manajemen Perangkat</strong><small>Daftar perangkat, aktivitas, dan akses</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
                     <button type="button" onclick="openSettingsPanel('card-user-settings')" class="settings-category-tile"><span class="settings-category-icon bg-indigo-50 text-indigo-700"><i data-lucide="users"></i></span><span class="min-w-0 flex-1 text-left"><strong>Akun & Keamanan</strong><small>Pengguna dan password admin</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
                     <button type="button" onclick="openSettingsPanel('backup-section-card')" class="settings-category-tile"><span class="settings-category-icon bg-orange-50 text-orange-700"><i data-lucide="database-backup"></i></span><span class="min-w-0 flex-1 text-left"><strong>Backup & Restore</strong><small>Cadangkan dan pulihkan data</small></span><i data-lucide="chevron-right" class="settings-category-arrow"></i></button>
                 </div>
@@ -3779,6 +3780,24 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 </div>
 
                 <!-- Card Manajemen Akun Login -->
+                <div id="card-device-management" class="settings-panel bg-white rounded-2xl border border-cyan-200 p-4 sm:p-5 shadow-sm space-y-4 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center"><i data-lucide="monitor-smartphone" class="w-5 h-5"></i></div>
+                            <div><h3 class="font-extrabold text-sm text-slate-800">Manajemen Perangkat Terdaftar</h3><p class="text-xs text-slate-500">Pantau aktivitas dan cabut akses perangkat yang tidak digunakan</p></div>
+                        </div>
+                        <button type="button" onclick="refreshAjmDeviceList()" class="px-3 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold inline-flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Muat Ulang</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="rounded-xl bg-emerald-50 p-3"><div class="text-[10px] font-bold text-emerald-700">ONLINE</div><div id="ajm-device-online-count" class="text-xl font-extrabold text-emerald-800">0</div></div>
+                        <div class="rounded-xl bg-slate-100 p-3"><div class="text-[10px] font-bold text-slate-600">OFFLINE</div><div id="ajm-device-offline-count" class="text-xl font-extrabold text-slate-800">0</div></div>
+                        <div class="rounded-xl bg-rose-50 p-3"><div class="text-[10px] font-bold text-rose-700">DINONAKTIFKAN</div><div id="ajm-device-revoked-count" class="text-xl font-extrabold text-rose-800">0</div></div>
+                    </div>
+                    <p id="ajm-device-management-status" class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-3">Memeriksa koneksi Supabase dan hak akses admin…</p>
+                    <div id="ajm-device-list" class="space-y-2"><div class="text-xs text-slate-400 text-center py-5">Daftar perangkat belum dimuat.</div></div>
+                    <p class="text-[10px] leading-relaxed text-slate-500">Status Online berarti perangkat mengirim heartbeat dalam 2 menit terakhir. Perangkat yang dicabut akses akan ditolak saat pemeriksaan berikutnya. Batas registrasi: maksimal 3 perangkat aktif per akun cloud.</p>
+                </div>
+
                 <div id="card-user-settings" class="settings-panel bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-4 hidden">
                     <div class="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
                         <div class="flex items-center gap-2.5">
@@ -5228,6 +5247,99 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         // ==========================================
         // 2C. DATABASE CLOUD SUPABASE
         // ==========================================
+        // ==========================================
+        // MANAJEMEN PERANGKAT (Supabase Auth + RPC)
+        // ==========================================
+        let ajmDeviceHeartbeatTimer = null;
+        let ajmDeviceLastId = null;
+        function getAjmDeviceId() {
+            const key='ajm_reborn_device_id_v1';
+            let id=localStorage.getItem(key);
+            if(!id){id=(crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);}));localStorage.setItem(key,id);}
+            return id;
+        }
+        function getAjmDeviceLabel() {
+            const ua=navigator.userAgent||'';
+            const platform=/Android/i.test(ua)?'Android':/iPhone|iPad|iPod/i.test(ua)?'iOS':/Windows/i.test(ua)?'Windows':/Macintosh/i.test(ua)?'macOS':/Linux/i.test(ua)?'Linux':'Browser';
+            const browser=/Edg\//i.test(ua)?'Edge':/Chrome\//i.test(ua)?'Chrome':/Firefox\//i.test(ua)?'Firefox':/Safari\//i.test(ua)?'Safari':'Browser';
+            return {platform, name:platform+' • '+browser};
+        }
+        async function sendAjmDeviceHeartbeat() {
+            if(!ajmSupabase) return false;
+            const {data:{session}}=await ajmSupabase.auth.getSession();
+            if(!session) return false;
+            const device=getAjmDeviceLabel();
+            const {data,error}=await ajmSupabase.rpc('ajm_pos_register_device',{
+                p_device_id:getAjmDeviceId(),p_device_name:device.name,p_platform:device.platform
+            });
+            if(error) {
+                const msg=String(error.message||error);
+                if(/AJM_DEVICE_REVOKED|AJM_DEVICE_LIMIT_REACHED/i.test(msg)) {
+                    clearInterval(ajmDeviceHeartbeatTimer); ajmDeviceHeartbeatTimer=null;
+                    showToast(msg.includes('REVOKED')?'Perangkat ini telah dinonaktifkan oleh Admin. Silakan hubungi Admin.':'Batas maksimal tiga perangkat aktif telah tercapai. Hubungi Admin.','error');
+                    currentSession=null;
+                    try{localStorage.removeItem(DB_KEYS.SESSION);localStorage.removeItem('ajm_reborn_login_session_v1');}catch(e){}
+                    await ajmSupabase.auth.signOut();
+                    syncLoginScreenVisibility();
+                    return false;
+                }
+                console.warn('AJM device heartbeat:',error);
+                return false;
+            }
+            ajmDeviceLastId=data?.device_id||getAjmDeviceId();
+            return true;
+        }
+        function startAjmDevicePresence() {
+            clearInterval(ajmDeviceHeartbeatTimer);
+            sendAjmDeviceHeartbeat();
+            ajmDeviceHeartbeatTimer=setInterval(sendAjmDeviceHeartbeat,60000);
+        }
+        async function refreshAjmDeviceList() {
+            const status=document.getElementById('ajm-device-management-status');
+            const list=document.getElementById('ajm-device-list');
+            if(!ajmSupabase){if(status)status.textContent='Supabase belum diinisialisasi. Hubungkan akun cloud terlebih dahulu.';return;}
+            const {data:{session}}=await ajmSupabase.auth.getSession();
+            if(!session){if(status)status.textContent='Silakan hubungkan akun cloud melalui Pengaturan → Database Supabase.';return;}
+            const localAdmin=users.find(u=>currentSession && String(u.id)===String(currentSession.userId) && u.role==='Admin');
+            const {data:userData,error:userError}=await ajmSupabase.auth.getUser();
+            const meta=userData?.user?.app_metadata||{};
+            if(!localAdmin || userError || !(meta.role==='admin'||meta.is_admin===true||meta.is_admin==='true')) {
+                if(status)status.textContent='Akses ditolak. Login aplikasi sebagai Admin dan pastikan app_metadata.role = admin pada akun Supabase Auth.';
+                if(list)list.innerHTML='<div class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">Daftar perangkat hanya dapat dibuka oleh Admin yang tervalidasi di server.</div>';
+                return;
+            }
+            if(status)status.textContent='Mengambil data perangkat dari Supabase…';
+            const {data,error}=await ajmSupabase.rpc('ajm_pos_list_devices');
+            if(error){if(status)status.textContent='Gagal memuat daftar. Pastikan migrasi manajemen perangkat sudah dijalankan di Supabase.';console.error(error);return;}
+            const rows=Array.isArray(data)?data:[];
+            const online=rows.filter(x=>!x.revoked_at&&x.is_online).length;
+            const revoked=rows.filter(x=>!!x.revoked_at).length;
+            const offline=rows.length-online-revoked;
+            document.getElementById('ajm-device-online-count').textContent=online;
+            document.getElementById('ajm-device-offline-count').textContent=offline;
+            document.getElementById('ajm-device-revoked-count').textContent=revoked;
+            if(!rows.length){list.innerHTML='<div class="text-xs text-slate-400 text-center py-5">Belum ada perangkat yang terdaftar.</div>';}
+            else list.innerHTML=rows.map(d=>{
+                const isRevoked=!!d.revoked_at, isOnline=!isRevoked&&!!d.is_online;
+                const state=isRevoked?'Dinonaktifkan':isOnline?'Online':'Offline';
+                const badge=isRevoked?'bg-rose-100 text-rose-700':isOnline?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-600';
+                const safe=(v)=>String(v??'-').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const last=d.last_seen_at?new Date(d.last_seen_at).toLocaleString('id-ID'):'-';
+                return '<div class="rounded-xl border border-slate-200 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><strong class="text-xs text-slate-800">'+safe(d.device_name)+'</strong><span class="text-[10px] font-bold rounded-full px-2 py-0.5 '+badge+'">'+state+'</span></div><p class="text-[10px] text-slate-500 mt-1">'+safe(d.email)+' • '+safe(d.platform)+'</p><p class="text-[10px] text-slate-400">Aktivitas terakhir: '+safe(last)+'</p></div><div class="shrink-0">'+(isRevoked?'<button onclick="restoreAjmDevice(\''+safe(d.id)+'\')" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-bold">Aktifkan</button>':'<button onclick="revokeAjmDevice(\''+safe(d.id)+'\')" class="px-3 py-2 rounded-lg bg-rose-600 text-white text-[10px] font-bold">Nonaktifkan</button>')+'</div></div>';
+            }).join('');
+            if(status)status.textContent='Berhasil memuat '+rows.length+' perangkat. Status Online dihitung dari heartbeat 2 menit terakhir.';
+        }
+        async function changeAjmDeviceState(id,action) {
+            if(!confirm(action==='revoke'?'Nonaktifkan perangkat ini? Perangkat akan kehilangan akses setelah pemeriksaan heartbeat berikutnya.':'Aktifkan kembali perangkat ini?'))return;
+            const fn=action==='revoke'?'ajm_pos_revoke_device':'ajm_pos_restore_device';
+            const {error}=await ajmSupabase.rpc(fn,{p_id:id});
+            if(error){showToast('Perubahan status gagal: '+error.message,'error');return;}
+            showToast(action==='revoke'?'Perangkat berhasil dinonaktifkan.':'Perangkat berhasil diaktifkan kembali.');
+            await refreshAjmDeviceList();
+        }
+        function revokeAjmDevice(id){return changeAjmDeviceState(id,'revoke');}
+        function restoreAjmDevice(id){return changeAjmDeviceState(id,'restore');}
+
         function initAjmSupabase() {
             try {
                 if (!window.supabase || !window.supabase.createClient) {
@@ -5240,6 +5352,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 ajmSupabase.auth.getSession().then(({data, error}) => {
                     if (error) throw error;
                     if (data.session) {
+                        startAjmDevicePresence();
                         setAjmCloudStatus('Akun cloud aktif', 'success');
                         pullAjmSupabaseNow(false);
                         subscribeAjmCloudChanges();
@@ -5309,6 +5422,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 const {data,error}=await ajmSupabase.auth.signInWithPassword({email,password});
                 if(error) throw error;
                 document.getElementById('supabase-cloud-password').value='';
+                startAjmDevicePresence();
                 setAjmCloudStatus('Terhubung', 'success');
                 await pullAjmSupabaseNow(false);
                 subscribeAjmCloudChanges();
@@ -5317,6 +5431,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
         }
         async function disconnectAjmSupabase(){
             try{if(ajmCloudChannel) await ajmSupabase.removeChannel(ajmCloudChannel); if(ajmSupabase) await ajmSupabase.auth.signOut();}catch(e){console.warn(e);}
+            clearInterval(ajmDeviceHeartbeatTimer); ajmDeviceHeartbeatTimer=null;
             ajmCloudChannel=null; ajmCloudRevision=0; setAjmCloudStatus('Belum terhubung','warning'); showToast('Koneksi database cloud diputus. Data lokal tetap ada.');
         }
         async function pullAjmSupabaseNow(showMessage=true){
