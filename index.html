@@ -5230,7 +5230,15 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                     realtime: { params: { eventsPerSecond: 2 } }
                 });
                 if (window.AJM_MULTI_DEVICE && typeof window.AJM_MULTI_DEVICE.configure === 'function') {
-                    window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase, appVersion: 'AJM-Reborn-POS' });
+                    window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase, appVersion: 'AJM-Reborn-POS' })
+                        .then(() => { window.ajmMultiDeviceModuleReady = true; })
+                        .catch(err => {
+                            window.ajmMultiDeviceModuleReady = false;
+                            console.error('AJM multi-device initialization:', err);
+                            setAjmCloudStatus('Modul multi-perangkat belum siap', 'warning');
+                        });
+                } else {
+                    window.ajmMultiDeviceModuleReady = false;
                 }
                 ajmSupabase.auth.getSession().then(({data, error}) => {
                     if (error) throw error;
