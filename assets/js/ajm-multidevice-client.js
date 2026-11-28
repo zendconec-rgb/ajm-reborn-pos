@@ -110,6 +110,14 @@
     return Array.isArray(data) ? data[0] : data;
   }
 
+  // Link the authenticated local operator before registering this browser/device.
+  // The server-side role remains authoritative; local storage never grants permissions.
+  async function prepareSession(localUser) {
+    const identity = await linkLocalIdentity(localUser);
+    const device = await registerDevice();
+    return { identity, device };
+  }
+
   async function registerDevice() {
     if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -435,6 +443,7 @@
 
   global.AJM_MULTI_DEVICE = Object.freeze({
     configure,
+    prepareSession,
     registerDevice,
     enqueueOperation,
     queueSale,
