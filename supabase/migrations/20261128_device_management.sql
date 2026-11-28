@@ -44,7 +44,7 @@ begin
   end if;
   select count(*) into v_count from public.ajm_pos_devices
     where user_id=v_user and revoked_at is null and device_id<>p_device_id;
-  if not v_exists and v_count >= 2 then
+  if not v_exists and v_count >= 3 then
     raise exception 'AJM_DEVICE_LIMIT_REACHED';
   end if;
   insert into public.ajm_pos_devices(user_id,device_id,device_name,platform,last_seen_at)
@@ -103,7 +103,7 @@ begin
   update public.ajm_pos_devices set revoked_at=null, revoked_by=null
     where id=p_id and revoked_at is not null;
   return found;
-end; $;
+end; $$;
 
 revoke all on function public.ajm_pos_is_device_admin() from public, anon;
 revoke all on function public.ajm_pos_register_device(uuid,text,text) from public, anon;
