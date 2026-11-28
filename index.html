@@ -7214,6 +7214,7 @@ window.addEventListener('afterprint', function () {
             'card-drive-settings':'Google Drive',
             'card-supabase-settings':'Database Supabase',
             'card-user-settings':'Akun & Keamanan',
+            'card-device-management':'Manajemen Perangkat',
             'backup-section-card':'Backup & Restore'
         };
 
@@ -7224,6 +7225,7 @@ window.addEventListener('afterprint', function () {
             document.getElementById('view-pengaturan')?.scrollTo({top:0,behavior:'smooth'});
         }
 
+        let ajmDeviceListRefreshTimer = null;
         function openSettingsPanel(panelId) {
             const panel = document.getElementById(panelId);
             if (!panel || !SETTINGS_PANEL_TITLES[panelId]) return;
@@ -7234,6 +7236,11 @@ window.addEventListener('afterprint', function () {
             const title = document.getElementById('settings-current-title');
             if (title) title.textContent = SETTINGS_PANEL_TITLES[panelId];
             panel.classList.remove('hidden');
+            clearInterval(ajmDeviceListRefreshTimer); ajmDeviceListRefreshTimer=null;
+            if (panelId === 'card-device-management') {
+                refreshAjmDeviceList();
+                ajmDeviceListRefreshTimer=setInterval(refreshAjmDeviceList,60000);
+            }
             if (window.lucide?.createIcons) window.lucide.createIcons();
             panel.scrollIntoView({behavior:'smooth',block:'start'});
         }
