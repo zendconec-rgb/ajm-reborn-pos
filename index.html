@@ -5485,7 +5485,7 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
                 catch(err){console.error(err);setAjmCloudStatus('Gagal menerapkan data','error');}
             }).subscribe();
         }
-        window.addEventListener('online',()=>{if(ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true)pushAjmCloudSnapshot(false);});
+        window.addEventListener('online',()=>{if(ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true && currentSession)flushAjmMultiDeviceQueue();else if(ajmSupabase)pushAjmCloudSnapshot(false);});
 
         // ==========================================
         // 2B. MODUL PERANGKAT SCANNER BARCODE
