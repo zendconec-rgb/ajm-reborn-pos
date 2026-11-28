@@ -120,8 +120,8 @@ begin
     return;
   end if;
 
-  if jsonb_typeof(p_transaction->'items') <> 'array'
-     or jsonb_array_length(p_transaction->'items') = 0 then
+  if coalesce(jsonb_typeof(p_transaction->'items'), '') <> 'array'
+     or jsonb_array_length(coalesce(p_transaction->'items', '[]'::jsonb)) = 0 then
     return query select 'invalid_items', v_invoice, null::bigint,
       'Transaksi harus memiliki minimal satu item.', null::jsonb;
     return;
