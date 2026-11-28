@@ -260,6 +260,41 @@
     }
   }
 
+  async function reconcileSubmitted() {
+    if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
+    const queue = (await listOutbox()).filter(item => item.status === 'submitted');
+    let processed = 0;
+    let conflicts = 0;
+    let rejected = 0;
+    for (const item of queue) {
+      const { data, error } = await supabase
+        .from('ajm_sync_operations')
+        .select('operation_id,processing_status,processing_error')
+        .eq('operation_id', item.operation_id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) continue; // Keep local copy if server cannot confirm the inbox row.
+      if (data.processing_status === 'processed') {
+        await removeOutbox(item.operation_id);
+        processed++;
+      } else if (data.processing_status === 'conflict') {
+        item.status = 'conflict';
+        item.last_error = data.processing_error || 'Operasi memerlukan penyelesaian konflik.';
+        await updateOutbox(item);
+        conflicts++;
+      } else if (data.processing_status === 'rejected') {
+        item.status = 'blocked';
+        item.last_error = data.processing_error || 'Operasi ditolak server.';
+        await updateOutbox(item);
+        rejected++;
+      } else {
+        item.last_error = data.processing_error || item.last_error;
+        await updateOutbox(item);
+      }
+    }
+    return { processed, conflicts, rejected, submitted: queue.length - processed - conflicts - rejected };
+  }
+
   async function flushQueue(options) {
     if (flushPromise) return flushPromise;
     if (!supabase) throw new Error('AJM multi-device belum dikonfigurasi.');
@@ -267,6 +302,7 @@
     const batchSize = Math.max(1, Math.min(100, Number(options && options.batchSize) || DEFAULT_BATCH_SIZE));
     flushPromise = (async () => {
       await registerDevice();
+      const reconciliation = await reconcileSubmitted();
       const queue = (await listOutbox()).filter(item => item.status === 'pending').slice(0, batchSize);
       let sent = 0;
       for (const item of queue) {
@@ -365,7 +401,8 @@
         pending: remaining.filter(item => item.status === 'pending').length,
         submitted: remaining.filter(item => item.status === 'submitted').length,
         blocked: remaining.filter(item => item.status === 'blocked').length,
-        conflicts: remaining.filter(item => item.status === 'conflict').length
+        conflicts: remaining.filter(item => item.status === 'conflict').length,
+        reconciliation
       };
     })().finally(() => { flushPromise = null; });
     return flushPromise;
@@ -406,6 +443,7 @@
     createOfflineInvoice,
     retryOperation,
     flushQueue,
+    reconcileSubmitted,
     getStatus,
     getDeviceKey
   });
