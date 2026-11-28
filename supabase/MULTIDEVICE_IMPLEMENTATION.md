@@ -268,3 +268,24 @@ a work order locally before server confirmation, and the sale transaction does
 not persist `workOrderId`. The app must not be considered multi-device-ready
 until the UI uses these APIs with rollback/reconciliation behavior and the sale
 RPC handles transaction + work-order completion atomically.
+
+
+## Client inbox reconciliation — durable submitted-operation lifecycle
+
+The client now exports `reconcileSubmitted()`. Before sending new queued work,
+`flushQueue()` checks submitted generic inbox operations against the authenticated
+user's own `ajm_sync_operations` rows:
+
+- `processed`: remove the local copy only after server confirmation;
+- `conflict`: retain it locally and expose a conflict state;
+- `rejected`: retain it locally as blocked;
+- `pending` or missing/unavailable server confirmation: retain it as submitted.
+
+The reconciliation result is returned by `flushQueue()`, and submitted counts
+remain visible through `getStatus()`. A failed lookup never deletes the local item.
+
+**Remaining system dependency:** the generic inbox still needs a trusted server-side
+processor for each operation type and a controlled way to transition inbox status.
+Until those processors exist, generic operations can remain submitted indefinitely.
+The three dedicated business operations (sale, debt payment, work-order completion)
+use their own RPCs and do not depend on this generic inbox worker.
