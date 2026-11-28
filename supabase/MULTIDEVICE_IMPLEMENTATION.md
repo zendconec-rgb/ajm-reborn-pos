@@ -77,3 +77,36 @@ rules against the intended Admin/Kasir permissions, reconcile custom cart price 
 and test all existing sale variants (service jobs, debt/DP, cash, transfer, e-wallet,
 work-order completion, and receipts). The current RPC preserves the supplied transaction
 JSON and should not yet be treated as a production-ready financial ledger.
+
+## Phase 3 — Admin-managed roles and device revocation (staged; not deployed)
+
+- `supabase/migrations/20261128_003_admin_role_management.sql` adds a secure
+  active-Admin helper, an Admin-only role assignment RPC, and an Admin-only device
+  activation/revocation RPC.
+- Admins can be granted access to view all role mappings and the sales ledger.
+  Ordinary users retain their own role and own-sale visibility.
+- The first Admin must be bootstrapped by the Supabase project owner using the real
+  Supabase Auth UUID. Do not map a local-only username or password.
+- The role policies use a SECURITY DEFINER helper with an empty search_path to avoid
+  recursive RLS evaluation. RPCs are not exposed to anon/public.
+- Device revocation prevents future registration/operation submissions from that device.
+
+## Important compatibility boundary
+
+The existing HTML uses its own local user list and local password matching. It is
+not yet bound to Supabase Auth identities. Therefore a local Admin/Kasir login is
+not, by itself, proof of server authorization. The app must complete Supabase Auth
+sign-in and obtain a valid session before calling these RPCs.
+
+## Remaining before production
+
+- Replace/bridge local authentication with Supabase Auth without exposing local
+  plaintext passwords or breaking existing accounts.
+- Map each Auth UUID to Admin/Kasir with the trusted Admin workflow.
+- Update the app checkout flow to queue the exact transaction object and only mark it
+  cloud-posted after `ajm_process_sale` returns `posted` or `already_posted`.
+- Resolve invoice generation collisions across devices. Existing invoice generation
+  based on local transaction count can collide when multiple devices work offline.
+- Reconcile stockLogs, cashflows, work-order completion, debt/DP, and any post-sale
+  side effects as part of the same server-side operation or a compensating workflow.
+- Build a cashier-visible conflict screen and admin resolution workflow.
