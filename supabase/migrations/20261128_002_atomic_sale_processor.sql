@@ -130,7 +130,7 @@ begin
     from jsonb_array_elements(p_transaction->'items') as item(value)
     where jsonb_typeof(item.value) <> 'object'
        or coalesce(item.value->>'id', '') = ''
-       or coalesce(item.value->>'qty', '') !~ '^[0-9]+(\\.[0-9]+)?$'
+       or coalesce(item.value->>'qty', '') !~ '^[0-9]+([.][0-9]+)?$'
        or (item.value->>'qty')::numeric <= 0
   ) then
     return query select 'invalid_item', v_invoice, null::bigint,
