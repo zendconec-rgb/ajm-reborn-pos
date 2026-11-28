@@ -29,17 +29,18 @@ create or replace function public.ajm_pos_register_device(
   p_device_id uuid, p_device_name text, p_platform text
 ) returns jsonb language plpgsql security definer
 set search_path = '' as $$
-declare v_user uuid := auth.uid(); v_row public.ajm_pos_devices%rowtype; v_count integer;
+declare v_user uuid := auth.uid(); v_row public.ajm_pos_devices%rowtype; v_count integer; v_exists boolean := false;
 begin
   if v_user is null then raise exception 'AJM_DEVICE_AUTH_REQUIRED'; end if;
   select * into v_row from public.ajm_pos_devices
     where user_id=v_user and device_id=p_device_id for update;
-  if found and v_row.revoked_at is not null then
+  v_exists := found;
+  if v_exists and v_row.revoked_at is not null then
     raise exception 'AJM_DEVICE_REVOKED';
   end if;
   select count(*) into v_count from public.ajm_pos_devices
     where user_id=v_user and revoked_at is null and device_id<>p_device_id;
-  if not found and v_count >= 2 then
+  if not v_exists and v_count >= 2 then
     raise exception 'AJM_DEVICE_LIMIT_REACHED';
   end if;
   insert into public.ajm_pos_devices(user_id,device_id,device_name,platform,last_seen_at)
