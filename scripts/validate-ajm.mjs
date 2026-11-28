@@ -43,6 +43,8 @@ assert.ok(html.includes('assets/js/ajm-multidevice-client.js'),
   'Multi-device client must be loaded by the application');
 assert.ok(html.includes('window.AJM_MULTI_DEVICE.configure({ supabase: ajmSupabase'),
   'Multi-device client must receive the initialized Supabase client');
+assert.ok(html.includes('.catch(err => {\n                            window.ajmMultiDeviceModuleReady = false;'),
+  'Multi-device initialization failures must be handled without breaking login');
 assert.ok(client.includes('async function prepareSession(localUser)'),
   'Client must expose ordered local-identity/device preparation');
 assert.ok(client.includes('const identity = await linkLocalIdentity(localUser)'));
