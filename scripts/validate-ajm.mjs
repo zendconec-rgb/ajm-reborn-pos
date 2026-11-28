@@ -53,8 +53,8 @@ assert.ok(html.includes("Pengambilan snapshot lama dinonaktifkan pada mode multi
   'Manual legacy snapshot pulls must be blocked in multi-device mode');
 assert.ok(html.includes("if (window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true) return;"),
   'Legacy realtime subscriptions must be blocked in multi-device mode');
-assert.ok(html.includes("ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED !== true"),
-  'Online reconnect must not trigger legacy snapshot writes in multi-device mode');
+assert.ok(html.includes("window.addEventListener('online',()=>{if(ajmSupabase && window.AJM_MULTI_DEVICE_RELEASE_ENABLED === true && currentSession)flushAjmMultiDeviceQueue();else if(ajmSupabase)pushAjmCloudSnapshot(false);});"),
+  'Online reconnect must retry the multi-device outbox and use legacy writes only outside multi-device mode');
 assert.ok(client.includes('async function fetchAuthoritativeSnapshot()'),
   'Client must expose a read-only authoritative server snapshot reader');
 assert.ok(client.includes(".select('payload,revision,updated_at')"),
