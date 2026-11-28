@@ -8811,6 +8811,7 @@ window.addEventListener('afterprint', function () {
             const seq = String(transactions.length + 1).padStart(3, '0');
             const newTrx = {
                 invoice: `INV-${datePrefix}-${seq}`,
+                workOrderId: activeWorkOrderId ? String(activeWorkOrderId) : null,
                 date: now.toISOString(), plateMotor,
                 customerId: checkoutCustomer?.id || null,
                 customerName: checkoutCustomer?.name || '',
