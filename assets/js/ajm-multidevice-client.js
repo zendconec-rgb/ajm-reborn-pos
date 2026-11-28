@@ -186,6 +186,39 @@
     return enqueueOperation('sale.create', transaction);
   }
 
+  // Queue debt collections with a stable payment ID generated before persistence.
+  // The same queued operation is retried with the same operation_id and payment_id.
+  async function queueDebtPayment(payment) {
+    if (!payment || typeof payment !== 'object' || Array.isArray(payment)) {
+      throw new Error('Data pembayaran piutang tidak valid.');
+    }
+    const invoice = String(payment.invoice || '').trim();
+    const amount = Number(payment.amount);
+    const method = String(payment.method || '').trim();
+    const cashier = String(payment.cashier || '').trim();
+    if (!invoice || !Number.isFinite(amount) || amount <= 0 || !method || !cashier) {
+      throw new Error('Invoice, jumlah, metode, dan kasir wajib valid.');
+    }
+    const paymentId = String(payment.payment_id || (
+      global.crypto && global.crypto.randomUUID ? global.crypto.randomUUID() :
+      'dp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)
+    ));
+    return enqueueOperation('debt.payment', {
+      invoice, payment_id: paymentId, amount, method, cashier,
+      note: payment.note == null ? null : String(payment.note)
+    });
+  }
+
+  async function queueWorkOrderCompletion(workOrder) {
+    if (!workOrder || typeof workOrder !== 'object' || !workOrder.id) {
+      throw new Error('ID work order wajib tersedia.');
+    }
+    return enqueueOperation('workorder.complete', {
+      work_order_id: String(workOrder.id),
+      completed_by: String(workOrder.completed_by || '')
+    });
+  }
+
   async function listOutbox() {
     const db = await openDb();
     try {
@@ -248,6 +281,28 @@
             });
             data = response.data;
             error = response.error;
+          } else if (item.operation_type === 'debt.payment') {
+            const response = await supabase.rpc('ajm_apply_debt_payment', {
+              p_operation_id: item.operation_id,
+              p_device_key: item.device_key,
+              p_invoice: item.payload.invoice,
+              p_payment_id: item.payload.payment_id,
+              p_amount: item.payload.amount,
+              p_method: item.payload.method,
+              p_cashier: item.payload.cashier,
+              p_note: item.payload.note
+            });
+            data = response.data;
+            error = response.error;
+          } else if (item.operation_type === 'workorder.complete') {
+            const response = await supabase.rpc('ajm_complete_work_order', {
+              p_operation_id: item.operation_id,
+              p_device_key: item.device_key,
+              p_work_order_id: item.payload.work_order_id,
+              p_completed_by: item.payload.completed_by
+            });
+            data = response.data;
+            error = response.error;
           } else {
             const response = await supabase.rpc('ajm_submit_sync_operation', {
               p_operation_id: item.operation_id,
@@ -261,16 +316,21 @@
           }
           if (error) throw error;
           if (!data || !data.length) throw new Error('Server tidak mengonfirmasi operasi; item tetap disimpan di antrean.');
-          if (item.operation_type === 'sale.create') {
+          if (['sale.create','debt.payment','workorder.complete'].includes(item.operation_type)) {
             const result = data[0];
-            if (result.result_status === 'posted' || result.result_status === 'already_posted') {
+            const successStatuses = item.operation_type === 'sale.create'
+              ? ['posted','already_posted']
+              : item.operation_type === 'debt.payment'
+                ? ['applied','already_applied']
+                : ['completed','already_completed'];
+            if (successStatuses.includes(result.result_status)) {
               await removeOutbox(item.operation_id);
               sent++;
               continue;
             }
-            item.status = result.result_status === 'stock_conflict' || result.result_status === 'duplicate_invoice'
+            item.status = ['stock_conflict','duplicate_invoice','amount_exceeds_debt','duplicate_payment_id'].includes(result.result_status)
               ? 'conflict' : 'blocked';
-            item.last_error = result.result_message || result.result_status || 'Transaksi belum diproses server.';
+            item.last_error = result.result_message || result.result_status || 'Operasi belum diproses server.';
             item.last_attempt_at = new Date().toISOString();
             await updateOutbox(item);
             break;
@@ -341,6 +401,8 @@
     registerDevice,
     enqueueOperation,
     queueSale,
+    queueDebtPayment,
+    queueWorkOrderCompletion,
     createOfflineInvoice,
     retryOperation,
     flushQueue,
