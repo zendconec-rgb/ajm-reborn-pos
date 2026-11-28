@@ -110,3 +110,30 @@ sign-in and obtain a valid session before calling these RPCs.
 - Reconcile stockLogs, cashflows, work-order completion, debt/DP, and any post-sale
   side effects as part of the same server-side operation or a compensating workflow.
 - Build a cashier-visible conflict screen and admin resolution workflow.
+
+## Phase 4 — local AJM identity bridge (staged; not deployed)
+
+- `supabase/migrations/20261128_004_local_auth_bridge.sql` adds
+  `ajm_local_identity_links` and `ajm_link_local_identity`.
+- The currently deployed HTML has a local username/password login and a separate
+  Supabase Auth email/password connection in Settings. The bridge allows the
+  authenticated Supabase user to associate with the already-authenticated local
+  AJM account ID, but only when the server-side role matches the local role.
+- Every operator must have an individual Supabase Auth user and matching server role.
+  Sharing one cloud Admin account across multiple local cashiers is not safe.
+- The module exposes `linkLocalIdentity(localUser)`; it is not called automatically
+  by the production HTML yet. The app must explicitly connect Supabase Auth, then
+  call this method after local login and handle mismatch errors before enabling
+  cloud transaction actions.
+- This does not migrate local passwords into Supabase and does not grant permissions
+  based on client-provided roles; the server role in `ajm_user_roles` is authoritative.
+
+## Current production integration status
+
+The production `index.html` remains unchanged. The existing checkout currently
+creates invoice numbers using the local transaction count, decrements local stock,
+writes the local JSON state, and prints the receipt immediately. Directly replacing
+this flow before a staged test would risk invoice collisions, inconsistent work-order
+and cashflow updates, and loss of receipt workflow. Therefore the cloud queue module
+and SQL processors remain staged until the full checkout transaction contract is
+validated.
