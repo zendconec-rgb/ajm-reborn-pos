@@ -173,12 +173,290 @@ begin
   -- Backward compatibility for legacy transactions without explicit payment fields.
   if not (v_transaction ? 'paidAmount') or not (v_transaction ? 'remainingDebt') then
     if coalesce(v_transaction->>'status','') = 'Piutang' then
-      v_paid := least(v_total, greatest(0, coalesce(nullif(v_transaction->>'cashReceived','')::numeric,0)));
+      if coalesce(v_transaction->>'cashReceived','') ~ '^[0-9]+(\\.[0-9]+)?
+
+  if v_remaining <= 0 then
+    return query select 'already_settled', v_invoice, v_revision,
+      'Invoice ini sudah lunas.', v_transaction;
+    return;
+  end if;
+
+  if p_amount > v_remaining then
+    return query select 'amount_exceeds_debt', v_invoice, v_revision,
+      'Jumlah pembayaran melebihi sisa piutang server.', v_transaction;
+    return;
+  end if;
+
+  if exists (
+    select 1
+    from jsonb_array_elements(coalesce(v_transaction->'debtPayments','[]'::jsonb)) as p(value)
+    where p.value->>'id' = v_payment_id
+  ) then
+    return query select 'duplicate_payment_id', v_invoice, v_revision,
+      'ID pembayaran sudah tercatat pada invoice ini.', v_transaction;
+    return;
+  end if;
+
+  v_new_paid := v_paid + p_amount;
+  v_new_remaining := greatest(0, v_total - v_new_paid);
+  v_payment := jsonb_build_object(
+    'id', v_payment_id,
+    'date', clock_timestamp(),
+    'amount', p_amount,
+    'method', v_method,
+    'cashier', v_cashier,
+    'note', coalesce(nullif(btrim(p_note), ''), case when v_new_remaining = 0 then 'Pelunasan piutang' else 'Cicilan piutang' end)
+  );
+
+  v_updated_transaction := jsonb_set(
+    coalesce(v_transaction, '{}'::jsonb),
+    '{debtPayments}',
+    coalesce(v_transaction->'debtPayments','[]'::jsonb) || jsonb_build_array(v_payment),
+    true
+  );
+  v_updated_transaction := jsonb_set(v_updated_transaction, '{paidAmount}', to_jsonb(v_new_paid), true);
+  v_updated_transaction := jsonb_set(v_updated_transaction, '{remainingDebt}', to_jsonb(v_new_remaining), true);
+  v_updated_transaction := jsonb_set(
+    v_updated_transaction, '{cashReceived}',
+    to_jsonb(greatest(
+      case when coalesce(v_transaction->>'cashReceived','') ~ '^[0-9]+(\\.[0-9]+)?
+  );
+
+  if v_new_remaining = 0 then
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Lunas'::text), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{paymentMethod}', to_jsonb(v_method), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{settledAt}', to_jsonb(clock_timestamp()), true);
+  else
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Piutang'::text), true);
+  end if;
+
+  v_transactions := jsonb_set(
+    v_transactions,
+    array[v_index::text],
+    v_updated_transaction,
+    false
+  );
+  v_payload := jsonb_set(v_payload, '{transactions}', v_transactions, true);
+  v_new_revision := coalesce(v_revision,0) + 1;
+
+  update public.ajm_pos_database
+  set payload = v_payload,
+      revision = v_new_revision,
+      updated_at = now(),
+      updated_by = v_user_id
+  where id = 'main';
+
+  insert into public.ajm_business_operations
+    (operation_id, user_id, device_key, operation_type, reference_key, result_data)
+  values
+    (p_operation_id, v_user_id, p_device_key, 'debt.payment', v_invoice,
+     jsonb_build_object('revision',v_new_revision,'transaction',v_updated_transaction));
+
+  return query select 'applied', v_invoice, v_new_revision,
+    'Pembayaran piutang berhasil dicatat pada database server.', v_updated_transaction;
+end;
+$function$;
+
+revoke all on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) from public;
+grant execute on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) to authenticated;
+
+commit;
+
+-- READ-ONLY verification:
+-- select p.proname, p.prosecdef, pg_get_function_identity_arguments(p.oid)
+-- from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+-- where n.nspname='public' and p.proname='ajm_apply_debt_payment';
+--
+-- Staging tests required:
+-- * partial payment; full settlement; repeated operation_id; duplicate payment_id;
+-- * amount greater than server balance; simultaneous payments from two devices;
+-- * verify existing transaction's items/customer/mechanic/commission fields remain intact.
+ then
+        v_paid := least(v_total, greatest(0, (v_transaction->>'cashReceived')::numeric));
+      else
+        v_paid := 0;
+      end if;
       v_remaining := greatest(0, v_total - v_paid);
     else
       v_paid := v_total;
       v_remaining := 0;
     end if;
+  end if;
+
+  if v_transaction ? 'debtPayments'
+     and jsonb_typeof(v_transaction->'debtPayments') <> 'array' then
+    return query select 'invalid_debt_payments', v_invoice, v_revision,
+      'Format riwayat pembayaran piutang pada invoice tidak valid.', v_transaction;
+    return;
+  end if;
+
+  if v_remaining <= 0 then
+    return query select 'already_settled', v_invoice, v_revision,
+      'Invoice ini sudah lunas.', v_transaction;
+    return;
+  end if;
+
+  if p_amount > v_remaining then
+    return query select 'amount_exceeds_debt', v_invoice, v_revision,
+      'Jumlah pembayaran melebihi sisa piutang server.', v_transaction;
+    return;
+  end if;
+
+  if exists (
+    select 1
+    from jsonb_array_elements(coalesce(v_transaction->'debtPayments','[]'::jsonb)) as p(value)
+    where p.value->>'id' = v_payment_id
+  ) then
+    return query select 'duplicate_payment_id', v_invoice, v_revision,
+      'ID pembayaran sudah tercatat pada invoice ini.', v_transaction;
+    return;
+  end if;
+
+  v_new_paid := v_paid + p_amount;
+  v_new_remaining := greatest(0, v_total - v_new_paid);
+  v_payment := jsonb_build_object(
+    'id', v_payment_id,
+    'date', clock_timestamp(),
+    'amount', p_amount,
+    'method', v_method,
+    'cashier', v_cashier,
+    'note', coalesce(nullif(btrim(p_note), ''), case when v_new_remaining = 0 then 'Pelunasan piutang' else 'Cicilan piutang' end)
+  );
+
+  v_updated_transaction := jsonb_set(
+    coalesce(v_transaction, '{}'::jsonb),
+    '{debtPayments}',
+    coalesce(v_transaction->'debtPayments','[]'::jsonb) || jsonb_build_array(v_payment),
+    true
+  );
+  v_updated_transaction := jsonb_set(v_updated_transaction, '{paidAmount}', to_jsonb(v_new_paid), true);
+  v_updated_transaction := jsonb_set(v_updated_transaction, '{remainingDebt}', to_jsonb(v_new_remaining), true);
+  v_updated_transaction := jsonb_set(
+    v_updated_transaction, '{cashReceived}',
+    to_jsonb(greatest(coalesce(nullif(v_transaction->>'cashReceived','')::numeric,0), v_new_paid)), true
+  );
+
+  if v_new_remaining = 0 then
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Lunas'::text), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{paymentMethod}', to_jsonb(v_method), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{settledAt}', to_jsonb(clock_timestamp()), true);
+  else
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Piutang'::text), true);
+  end if;
+
+  v_transactions := jsonb_set(
+    v_transactions,
+    array[v_index::text],
+    v_updated_transaction,
+    false
+  );
+  v_payload := jsonb_set(v_payload, '{transactions}', v_transactions, true);
+  v_new_revision := coalesce(v_revision,0) + 1;
+
+  update public.ajm_pos_database
+  set payload = v_payload,
+      revision = v_new_revision,
+      updated_at = now(),
+      updated_by = v_user_id
+  where id = 'main';
+
+  insert into public.ajm_business_operations
+    (operation_id, user_id, device_key, operation_type, reference_key, result_data)
+  values
+    (p_operation_id, v_user_id, p_device_key, 'debt.payment', v_invoice,
+     jsonb_build_object('revision',v_new_revision,'transaction',v_updated_transaction));
+
+  return query select 'applied', v_invoice, v_new_revision,
+    'Pembayaran piutang berhasil dicatat pada database server.', v_updated_transaction;
+end;
+$function$;
+
+revoke all on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) from public;
+grant execute on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) to authenticated;
+
+commit;
+
+-- READ-ONLY verification:
+-- select p.proname, p.prosecdef, pg_get_function_identity_arguments(p.oid)
+-- from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+-- where n.nspname='public' and p.proname='ajm_apply_debt_payment';
+--
+-- Staging tests required:
+-- * partial payment; full settlement; repeated operation_id; duplicate payment_id;
+-- * amount greater than server balance; simultaneous payments from two devices;
+-- * verify existing transaction's items/customer/mechanic/commission fields remain intact.
+
+        then (v_transaction->>'cashReceived')::numeric else 0 end,
+      v_new_paid
+    )), true
+  );
+
+  if v_new_remaining = 0 then
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Lunas'::text), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{paymentMethod}', to_jsonb(v_method), true);
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{settledAt}', to_jsonb(clock_timestamp()), true);
+  else
+    v_updated_transaction := jsonb_set(v_updated_transaction, '{status}', to_jsonb('Piutang'::text), true);
+  end if;
+
+  v_transactions := jsonb_set(
+    v_transactions,
+    array[v_index::text],
+    v_updated_transaction,
+    false
+  );
+  v_payload := jsonb_set(v_payload, '{transactions}', v_transactions, true);
+  v_new_revision := coalesce(v_revision,0) + 1;
+
+  update public.ajm_pos_database
+  set payload = v_payload,
+      revision = v_new_revision,
+      updated_at = now(),
+      updated_by = v_user_id
+  where id = 'main';
+
+  insert into public.ajm_business_operations
+    (operation_id, user_id, device_key, operation_type, reference_key, result_data)
+  values
+    (p_operation_id, v_user_id, p_device_key, 'debt.payment', v_invoice,
+     jsonb_build_object('revision',v_new_revision,'transaction',v_updated_transaction));
+
+  return query select 'applied', v_invoice, v_new_revision,
+    'Pembayaran piutang berhasil dicatat pada database server.', v_updated_transaction;
+end;
+$function$;
+
+revoke all on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) from public;
+grant execute on function public.ajm_apply_debt_payment(uuid,text,text,text,numeric,text,text,text) to authenticated;
+
+commit;
+
+-- READ-ONLY verification:
+-- select p.proname, p.prosecdef, pg_get_function_identity_arguments(p.oid)
+-- from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+-- where n.nspname='public' and p.proname='ajm_apply_debt_payment';
+--
+-- Staging tests required:
+-- * partial payment; full settlement; repeated operation_id; duplicate payment_id;
+-- * amount greater than server balance; simultaneous payments from two devices;
+-- * verify existing transaction's items/customer/mechanic/commission fields remain intact.
+ then
+        v_paid := least(v_total, greatest(0, (v_transaction->>'cashReceived')::numeric));
+      else
+        v_paid := 0;
+      end if;
+      v_remaining := greatest(0, v_total - v_paid);
+    else
+      v_paid := v_total;
+      v_remaining := 0;
+    end if;
+  end if;
+
+  if v_transaction ? 'debtPayments'
+     and jsonb_typeof(v_transaction->'debtPayments') <> 'array' then
+    return query select 'invalid_debt_payments', v_invoice, v_revision,
+      'Format riwayat pembayaran piutang pada invoice tidak valid.', v_transaction;
+    return;
   end if;
 
   if v_remaining <= 0 then
