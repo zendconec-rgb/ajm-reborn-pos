@@ -137,3 +137,14 @@ this flow before a staged test would risk invoice collisions, inconsistent work-
 and cashflow updates, and loss of receipt workflow. Therefore the cloud queue module
 and SQL processors remain staged until the full checkout transaction contract is
 validated.
+
+## Phase 5 — offline-safe invoice identity (client helper; staged)
+
+The multi-device client now exposes `createOfflineInvoice(date)`. It retains the
+familiar `INV-YYYYMMDD` prefix and appends a stable device fragment plus a random
+suffix. This avoids relying on `transactions.length + 1`, which can collide when
+multiple devices create invoices offline.
+
+This helper is not yet wired into the production checkout. Existing invoice formats
+remain unchanged until receipt, search, export, and workshop flows are regression-tested.
+The server's unique invoice constraint remains the final collision guard.
