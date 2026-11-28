@@ -15,11 +15,13 @@ The current `processCheckout()` builds a transaction object with these fields:
 - `paymentMethod`, `cashReceived`, `paidAmount`, `remainingDebt`, `change`
 - `status` (`Piutang` or `Lunas`), `debtPayments`, `driveSynced`
 
-The current transaction object does not contain a work-order ID. The checkout flow
-uses the in-memory `activeWorkOrderId` to mark the matching work order `Selesai`,
-then clears that variable after successful local persistence. A cloud contract must
-add a backward-compatible optional `workOrderId` field before it can update the
-matching server work order reliably.
+Newly created transaction records now include a backward-compatible
+`workOrderId` field (string ID or null), copied from `activeWorkOrderId`.
+The local checkout still completes the work order after local persistence.
+The staged `ajm_process_sale` RPC now validates the optional ID and completes the
+matching work order in the same locked snapshot update as stock and transaction
+posting. This server path is not wired into checkout yet; do not treat local
+completion as server confirmation.
 
 ## Existing checkout side effects
 
