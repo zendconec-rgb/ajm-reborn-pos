@@ -35,7 +35,17 @@ where schemaname = 'public'
   and tablename in ('ajm_user_roles', 'ajm_sales_ledger')
 order by tablename, policyname;
 
--- 5) Legacy snapshot still exists; only metadata is shown
+-- 5) Confirm optional work-order handling is included in the atomic sale RPC.
+select
+  position('workOrderId' in pg_get_functiondef(p.oid)) > 0 as supports_work_order_id,
+  position('work_order_conflict' in pg_get_functiondef(p.oid)) > 0 as detects_work_order_conflict,
+  position('completedInvoice' in pg_get_functiondef(p.oid)) > 0 as records_completion_invoice
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname = 'ajm_process_sale';
+
+-- 6) Legacy snapshot still exists; only metadata is shown
 select id, revision, updated_at, (payload is not null) as has_payload
 from public.ajm_pos_database
 where id = 'main';
