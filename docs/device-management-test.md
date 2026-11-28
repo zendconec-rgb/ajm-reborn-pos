@@ -30,3 +30,26 @@
 - Tabel registry tidak memberi akses langsung ke role anon/authenticated; akses melalui RPC.
 - Identitas browser berbasis localStorage bukan attestation perangkat keras. Penghapusan data browser dapat menghasilkan ID baru; untuk lingkungan berisiko tinggi diperlukan autentikasi/perangkat native yang lebih kuat.
 - Migrasi ini belum diterapkan ke database produksi. Uji di project/staging terlebih dahulu sebelum penerapan produksi.
+
+
+## Pemeriksaan otomatis tanpa biaya cloud
+Jalankan pemeriksaan statis dari folder proyek menggunakan Node.js 20 atau lebih baru:
+
+```bash
+node scripts/verify-device-management.mjs
+```
+
+Pemeriksaan ini memvalidasi struktur migrasi, pembatasan tiga perangkat, RLS, hak akses RPC, integrasi heartbeat, dan sintaks seluruh script inline aplikasi. Pemeriksaan statis bukan pengganti pengujian database langsung.
+
+## Pengujian database gratis (lokal)
+Jika komputer pengembang memiliki Docker Desktop dan Supabase CLI:
+1. Jalankan `supabase init` jika konfigurasi lokal belum tersedia.
+2. Pastikan file migrasi ini berada di `supabase/migrations/`.
+3. Jalankan `supabase start` untuk menyalakan stack lokal.
+4. Jalankan `supabase db reset` untuk menerapkan migrasi pada database lokal.
+5. Jalankan skenario uji wajib di atas menggunakan akun Auth uji terpisah.
+
+Jangan menjalankan perintah migrasi terhadap project-ref produksi. Jangan memasukkan kredensial service-role ke browser atau repositori.
+
+## Batasan lingkungan pengujian saat ini
+Organisasi Supabase AJM Reborn telah mencapai batas proyek aktif Free Plan. Pembuatan proyek pengujian gratis ditolak oleh kuota organisasi; branch Supabase dikenai biaya per jam. Karena itu, tidak ada database pengujian cloud yang dibuat dan migrasi belum dijalankan pada proyek utama. Pengujian runtime wajib dilakukan pada Supabase lokal atau setelah tersedia kuota proyek uji gratis.
