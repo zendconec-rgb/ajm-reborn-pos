@@ -2284,54 +2284,63 @@ button[aria-label*="Logout"] svg,button[title*="Logout"] svg{
 </style>
 
 <style id="ajm-receipt-finish-option1">
-/* Opsi 1 — modern, bersih, ikon centang melingkar dan chevron */
+/* Opsi 1 — tombol selesai sejajar dengan struk dan setinggi tombol cetak */
 #receipt-modal #receipt-actions-panel{
-  width:min(320px,100%)!important;
-  max-width:320px!important;
+  width:100%!important;max-width:320px!important;min-width:0!important;
+  gap:8px!important;box-sizing:border-box!important;
+}
+#receipt-modal #receipt-actions-panel > .grid,
+#receipt-modal #receipt-actions-panel > .grid > button{
+  width:100%!important;min-width:0!important;box-sizing:border-box!important;
+}
+#receipt-modal #receipt-actions-panel #receipt-print-action,
+#receipt-modal #receipt-actions-panel #receipt-finish-action{
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:48px!important;min-height:48px!important;max-height:48px!important;
+  box-sizing:border-box!important;border-radius:12px!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action{
   display:flex!important;align-items:center!important;justify-content:space-between!important;
-  width:100%!important;max-width:100%!important;min-width:0!important;
-  min-height:66px!important;height:auto!important;padding:10px 14px!important;
-  gap:12px!important;border:1.5px solid #bfdbfe!important;border-radius:15px!important;
-  color:#123b70!important;
+  padding:5px 10px!important;gap:9px!important;
+  border:1.5px solid #bfdbfe!important;color:#123b70!important;
   background:linear-gradient(115deg,#ffffff 0%,#f4f9ff 72%,#e5f3ff 100%)!important;
-  box-shadow:0 5px 16px rgba(37,99,235,.10),inset 0 1px 0 #fff!important;
+  box-shadow:0 4px 12px rgba(37,99,235,.10),inset 0 1px 0 #fff!important;
   font-family:Inter,Arial,sans-serif!important;text-align:left!important;
   transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action:hover{
-  border-color:#60a5fa!important;box-shadow:0 8px 20px rgba(37,99,235,.16)!important;
+  border-color:#60a5fa!important;box-shadow:0 6px 16px rgba(37,99,235,.15)!important;
   transform:translateY(-1px)!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action:active{transform:scale(.985)!important}
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-icon-wrap{
   display:flex!important;align-items:center!important;justify-content:center!important;
-  flex:0 0 42px!important;width:42px!important;height:42px!important;
+  flex:0 0 34px!important;width:34px!important;height:34px!important;
   border-radius:50%!important;background:linear-gradient(145deg,#eff8ff,#dbeafe)!important;
   color:#0878d1!important;box-shadow:inset 0 0 0 1px #bfdbfe,0 2px 5px rgba(37,99,235,.10)!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-check{
-  display:block!important;width:29px!important;height:29px!important;flex:0 0 29px!important;color:#0878d1!important;
+  display:block!important;width:24px!important;height:24px!important;flex:0 0 24px!important;color:#0878d1!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-copy{
   display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
-  justify-content:center!important;align-items:flex-start!important;gap:3px!important;
+  justify-content:center!important;align-items:flex-start!important;gap:2px!important;
   min-width:0!important;overflow:visible!important;white-space:normal!important;
-  color:#123b70!important;line-height:1.1!important;
+  color:#123b70!important;line-height:1.05!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-copy strong{
-  display:block!important;font-size:12px!important;font-weight:800!important;letter-spacing:.035em!important;
+  display:block!important;font-size:10.5px!important;font-weight:800!important;letter-spacing:.025em!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-copy small{
-  display:block!important;font-size:10px!important;font-weight:700!important;letter-spacing:.055em!important;color:#45698f!important;
+  display:block!important;font-size:9px!important;font-weight:700!important;letter-spacing:.045em!important;color:#45698f!important;
 }
 #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-arrow{
-  display:block!important;width:20px!important;height:20px!important;flex:0 0 20px!important;color:#0878d1!important;
+  display:block!important;width:18px!important;height:18px!important;flex:0 0 18px!important;color:#0878d1!important;
 }
 @media(max-width:360px){
- #receipt-modal #receipt-actions-panel{width:100%!important;max-width:320px!important}
- #receipt-modal #receipt-actions-panel #receipt-finish-action{padding:9px 10px!important;gap:9px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action{padding:5px 8px!important;gap:7px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-copy strong{font-size:10px!important}
+ #receipt-modal #receipt-actions-panel #receipt-finish-action .receipt-finish-copy small{font-size:8.5px!important}
 }
 </style>
 </head>
@@ -12015,10 +12024,12 @@ window.addEventListener('afterprint', function () {
             const paperWidth = Math.round(paper.getBoundingClientRect().width);
             const targetWidth = paperWidth;
             if (targetWidth > 0) {
-                actions.style.width = targetWidth + 'px';
-                actions.style.maxWidth = '100%';
-                actions.style.alignSelf = 'center';
+                actions.style.setProperty('width', targetWidth + 'px', 'important');
+                actions.style.setProperty('max-width', '100%', 'important');
+                actions.style.setProperty('align-self', 'center', 'important');
                 actions.style.boxSizing = 'border-box';
+                const finish = document.getElementById('receipt-finish-action');
+                if (finish) finish.style.width = '100%';
             }
         }
 
