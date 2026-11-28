@@ -367,3 +367,14 @@ This field addition does not enable cloud posting: the outbox module is still
 not wired into checkout, and the old local checkout remains active. Staging
 tests must verify valid work-order sale, missing ID, already-completed work
 order, idempotent replay, and rollback on stock conflict before enabling it.
+
+
+## Status antrean dan penanganan konflik (tahap UI)
+
+- Pengaturan Database Cloud menampilkan jumlah operasi pending, submitted, conflict, dan blocked.
+- Daftar operasi menampilkan jenis operasi, status, pesan terakhir, serta jumlah percobaan.
+- Pesan operasi dibuat dengan `textContent` (bukan HTML) agar pesan server tidak dieksekusi sebagai markup.
+- Operasi conflict/blocked hanya dapat dicoba ulang setelah operator menyetujui dialog peringatan. Pengiriman ulang memakai operation ID dan payload tersimpan yang sama.
+- Status antrean diperbarui setelah persiapan operator dan setelah proses flush.
+- Jangan mencoba ulang konflik stok/nomor invoice tanpa memeriksa data server terlebih dahulu. UI tidak menghapus operasi konflik secara otomatis.
+- Fitur UI ini tetap berada di balik `AJM_MULTI_DEVICE_RELEASE_ENABLED`, yang default-nya false. Ini bukan izin untuk mengaktifkan fitur pada produksi.
