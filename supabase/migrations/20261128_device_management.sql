@@ -87,7 +87,7 @@ end; $$;
 
 create or replace function public.ajm_pos_restore_device(p_id uuid)
 returns boolean language plpgsql security definer
-set search_path = '' as $
+set search_path = '' as $$
 declare v_user uuid; v_count integer;
 begin
   if auth.uid() is null or not public.ajm_pos_is_device_admin() then
